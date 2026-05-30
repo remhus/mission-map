@@ -74,7 +74,7 @@ function GridCell({
     (role === 'task' && !isCG && !isOuterTaskUnlocked(r, c, cells));
   const editable = !isOC && !locked;
 
-  const fs = fullscreen ? 'clamp(6px, 1.1vmin, 12px)' : half ? 'clamp(5px, 0.9vmin, 10px)' : 'clamp(6px, 1vw, 11px)';
+  const fs = fullscreen ? 'clamp(6px, 1.1vmin, 12px)' : half ? 'clamp(4px, 0.85vmin, 9px)' : 'clamp(5px, 0.85vw, 10px)';
   const br = fullscreen ? '3px' : 'clamp(2px, 0.5vw, 6px)';
 
   let style: React.CSSProperties = {
@@ -85,7 +85,7 @@ function GridCell({
     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
     fontSize: fs, fontWeight: 600, lineHeight: 1.2,
     textAlign: 'center', padding: '2px',
-    wordBreak: 'normal', overflowWrap: 'break-word',
+    wordBreak: 'break-word', overflowWrap: 'break-word',
   };
 
   if (role === 'ultimate') {
@@ -304,14 +304,24 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Mobile fullscreen button — above the grid card */}
+      <div className="flex md:hidden justify-end mb-2">
+        <button onClick={() => setFullscreen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen</span>
+          <span className="text-xs font-bold">Fullscreen</span>
+        </button>
+      </div>
+
       {/* Grid outer card */}
       <div className="relative rounded-[2rem] overflow-hidden p-2 md:p-6"
         style={{ background: 'rgba(14,14,19,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.08)', filter: 'blur(80px)' }} />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.06)', filter: 'blur(80px)' }} />
 
-        {/* Controls — top-right of the card */}
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        {/* Controls — top-right of the card (desktop only) */}
+        <div className="absolute top-3 right-3 z-20 hidden md:flex items-center gap-1.5">
           <button onClick={() => setHalfSize(v => { localStorage.setItem('grid-half', String(!v)); return !v; })}
             className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all"
             style={{

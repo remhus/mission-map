@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -15,7 +16,6 @@ const navItems = [
 export default function Header({ username }: { username: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -41,9 +41,6 @@ export default function Header({ username }: { username: string }) {
         style={{ background: 'rgba(31,31,37,0.7)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.37)' }}>
 
         <div className="flex items-center gap-4">
-          <button className="md:hidden p-2 rounded-lg" style={{ color: '#afc6ff' }} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <span className="material-symbols-outlined">{mobileMenuOpen ? 'close' : 'menu'}</span>
-          </button>
           <Link href="/dashboard" className="font-extrabold tracking-tighter text-lg" style={{ color: '#afc6ff', fontFamily: 'var(--font-jakarta)' }}>
             MISSION MAP
           </Link>
@@ -121,33 +118,6 @@ export default function Header({ username }: { username: string }) {
         })}
       </nav>
 
-      {/* Mobile slide-out menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 animate-fade-in" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
-          <div className="absolute left-0 top-0 h-full w-64 pt-20 pb-24 flex flex-col gap-1 px-4"
-            style={{ background: 'rgba(14,14,19,0.98)', backdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255,255,255,0.08)' }}
-            onClick={e => e.stopPropagation()}>
-            {navItems.map(item => {
-              const active = pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-4 px-4 py-3 rounded-xl transition-all"
-                  style={active ? { background: 'rgba(84,141,255,0.2)', color: '#afc6ff' } : { color: '#c1c6d8' }}>
-                  <span className="material-symbols-outlined">{item.icon}</span>
-                  <span className="text-sm font-semibold">{item.label}</span>
-                </Link>
-              );
-            })}
-            <div className="mt-auto border-t pt-4" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-              <button onClick={handleLogout} className="flex items-center gap-4 px-4 py-3 rounded-xl w-full" style={{ color: '#ffb4ab' }}>
-                <span className="material-symbols-outlined">logout</span>
-                <span className="text-sm font-semibold">Sign Out</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

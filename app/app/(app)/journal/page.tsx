@@ -39,6 +39,7 @@ export default function JournalPage() {
   const [filterFavourites, setFilterFavourites] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   const filterRef = useRef<HTMLDivElement>(null);
 
   const fetchEntries = useCallback(async () => {
@@ -65,12 +66,14 @@ export default function JournalPage() {
     setActive(null);
     setForm({ title: '', content: '', mood: 'focused' });
     setIsEditing(true);
+    setMobileView('detail');
   }
 
   function startEdit(entry: JournalEntry) {
     setActive(entry);
     setForm({ title: entry.title, content: entry.content, mood: entry.mood });
     setIsEditing(true);
+    setMobileView('detail');
   }
 
   async function save() {
@@ -116,12 +119,12 @@ export default function JournalPage() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="flex h-[calc(100vh-160px)] md:h-[calc(100vh-80px)] overflow-hidden" style={{ background: '#0A0A0F' }}>
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)', filter: 'blur(120px)' }} />
       <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.03)', filter: 'blur(100px)' }} />
 
       {/* ---- Left: Archive sidebar ---- */}
-      <div className="w-72 md:w-80 flex-shrink-0 flex flex-col h-full border-r relative z-10"
+      <div className={`${mobileView === 'detail' ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-shrink-0 flex-col h-full border-r relative z-10`}
         style={{ background: 'rgba(27,27,32,0.5)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.05)' }}>
 
         <div className="px-3 pt-4 pb-2 flex-shrink-0">
@@ -240,7 +243,7 @@ export default function JournalPage() {
               const mood = getMood(entry.mood);
               const isActive = active?.id === entry.id && !isEditing;
               return (
-                <button key={entry.id} onClick={() => { setActive(entry); setIsEditing(false); }}
+                <button key={entry.id} onClick={() => { setActive(entry); setIsEditing(false); setMobileView('detail'); }}
                   className="w-full text-left p-3.5 rounded-xl transition-all"
                   style={isActive
                     ? { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(175,198,255,0.2)' }
@@ -281,7 +284,18 @@ export default function JournalPage() {
       </div>
 
       {/* ---- Right: Editor / Viewer ---- */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full overflow-hidden relative z-10`}>
+
+        {/* Mobile back button */}
+        <div className="md:hidden flex items-center gap-2 px-4 py-3 flex-shrink-0 border-b"
+          style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.5)' }}>
+          <button onClick={() => setMobileView('list')}
+            className="flex items-center gap-1.5 text-sm font-semibold"
+            style={{ color: '#afc6ff' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>arrow_back</span>
+            Archive
+          </button>
+        </div>
 
         {isEditing ? (
           /* ---- EDITING VIEW ---- */

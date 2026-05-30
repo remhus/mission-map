@@ -4,6 +4,27 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 type VisionImage = { id: number; image_url: string; title: string; sort_order: number };
 
+function compressImage(file: File, maxDim = 1200, quality = 0.78): Promise<Blob> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else { width = Math.round(width * maxDim / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => resolve(blob!), 'image/jpeg', quality);
+    };
+    img.src = objectUrl;
+  });
+}
+
 // Cycle through spanning patterns matching the Stitch mosaic design
 const SPAN_PATTERNS = [
   'md:col-span-2 md:row-span-2',
@@ -49,9 +70,11 @@ export default function VisionBoardPage() {
     setUploading(true);
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
+      const compressed = await compressImage(file);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', new File([compressed], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
       const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!uploadRes.ok) continue;
       const uploadData = await uploadRes.json();
       if (uploadData.url) {
         await fetch('/api/vision-board', {
@@ -172,7 +195,8 @@ export default function VisionBoardPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={img.image_url} alt={img.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    loading="lazy" />
+                    loading="lazy"
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
 
                   {/* Hover overlay with editable title */}
                   <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -225,7 +249,8 @@ export default function VisionBoardPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={lightboxImg.image_url} alt={lightboxImg.title}
               className="max-w-full max-h-[85vh] object-contain rounded-2xl"
-              style={{ boxShadow: '0 0 60px rgba(0,0,0,0.8)' }} />
+              style={{ boxShadow: '0 0 60px rgba(0,0,0,0.8)' }}
+              onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
 
             <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between rounded-b-2xl"
               style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.8))' }}>
@@ -310,7 +335,9 @@ export default function VisionBoardPage() {
                     className={`relative group rounded-xl overflow-hidden cursor-pointer ${spans[idx % spans.length]}`}
                     onClick={() => { setFullscreen(false); setLightbox(idx); }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.image_url} alt={img.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={img.image_url} alt={img.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3"
                       style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
                       <p className="text-xs font-semibold text-white truncate">{img.title}</p>
