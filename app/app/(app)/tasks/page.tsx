@@ -79,6 +79,16 @@ function getDateForDay(dayIndex: number) {
   return d.getDate();
 }
 
+// Returns YYYY-MM-DD for the calendar date of a given day-tab index
+function getISODateForDay(dayIndex: number): string {
+  const today = new Date();
+  const todayDow = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const diff = dayIndex - todayDow;
+  const d = new Date(today);
+  d.setDate(today.getDate() + diff);
+  return d.toISOString().split('T')[0];
+}
+
 function isToday(dateStr: string | null) {
   if (!dateStr) return false;
   const d = new Date(dateStr);
@@ -86,11 +96,14 @@ function isToday(dateStr: string | null) {
   return d.toDateString() === now.toDateString();
 }
 
-// For every_day tasks: only show as complete on today's tab and only if completed today.
-// All other day tabs always show the task as available (not done).
+// For every_day tasks: show as complete only if completed on the specific day being viewed.
+// This allows retroactive logging for past days.
 function isEffectivelyComplete(task: Task, activeDay: number): boolean {
   if (task.every_day) {
-    return activeDay === getTodayIndex() && task.is_completed && isToday(task.completed_at);
+    if (!task.is_completed || !task.completed_at) return false;
+    const targetDate = getISODateForDay(activeDay);
+    const completedDate = task.completed_at.split('T')[0];
+    return completedDate === targetDate;
   }
   return task.is_completed;
 }
@@ -159,14 +172,15 @@ export default function TasksPage() {
   async function toggleTask(task: Task) {
     const currentlyDone = isEffectivelyComplete(task, activeDay);
     const newCompleted = !currentlyDone;
+    const targetDate = getISODateForDay(activeDay);
     await fetch('/api/tasks/complete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: task.id, is_completed: newCompleted }),
+      body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
     });
-    const now = new Date().toISOString();
+    const completedAt = newCompleted ? `${targetDate}T12:00:00.000Z` : null;
     setTasks(prev => prev.map(t => t.id === task.id
-      ? { ...t, is_completed: newCompleted, completed_at: newCompleted ? now : null }
+      ? { ...t, is_completed: newCompleted, completed_at: completedAt }
       : t
     ));
   }
@@ -267,8 +281,6 @@ export default function TasksPage() {
           {dayTasks.map(task => {
             const meta = SKILL_META[task.skill] || SKILL_META.energy;
             const done = isEffectivelyComplete(task, activeDay);
-            // Every-day tasks can only be ticked on today's tab
-            const canToggle = !task.every_day || activeDay === getTodayIndex();
             return (
               <div key={task.id}
                 className="glass-card rounded-2xl p-5 flex gap-4 group transition-all"
@@ -280,14 +292,12 @@ export default function TasksPage() {
 
                 {/* Checkbox */}
                 <div className="flex flex-col items-center justify-start pt-0.5">
-                  <button
-                    onClick={() => canToggle && toggleTask(task)}
+                  <button onClick={() => toggleTask(task)}
                     className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
                     style={{
                       border: `2px solid ${done ? meta.color : meta.color + '60'}`,
                       background: done ? meta.color : 'transparent',
-                      cursor: canToggle ? 'pointer' : 'default',
-                      opacity: canToggle ? 1 : 0.35,
+                      cursor: 'pointer',
                     }}>
                     {done && (
                       <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#000', fontVariationSettings: "'FILL' 1" }}>check</span>

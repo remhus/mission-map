@@ -7,23 +7,26 @@ export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, is_completed } = await req.json();
+  const { id, is_completed, target_date } = await req.json();
+  // Use the provided date (for retroactive logging) or fall back to today
+  const completionDate = target_date || new Date().toISOString().split('T')[0];
 
   const [task] = await sql`SELECT * FROM tasks WHERE id = ${id} AND user_id = ${user.userId}`;
   if (!task) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+  const completedAt = is_completed ? new Date(`${completionDate}T12:00:00Z`) : null;
   await sql`
-    UPDATE tasks SET is_completed = ${is_completed}, completed_at = ${is_completed ? new Date() : null}
+    UPDATE tasks SET is_completed = ${is_completed}, completed_at = ${completedAt}
     WHERE id = ${id} AND user_id = ${user.userId}
   `;
 
   const minsEarned = task.duration_minutes || 30;
 
   if (is_completed) {
-    // Record in history (idempotent — unique constraint prevents duplicates)
+    // Record in history for the specific date (idempotent — unique constraint prevents duplicates)
     await sql`
       INSERT INTO task_completions (user_id, task_id, task_title, skill, duration_minutes, completed_date)
-      VALUES (${user.userId}, ${task.id}, ${task.title}, ${task.skill}, ${minsEarned}, CURRENT_DATE)
+      VALUES (${user.userId}, ${task.id}, ${task.title}, ${task.skill}, ${minsEarned}, ${completionDate}::date)
       ON CONFLICT (user_id, task_id, completed_date) DO NOTHING
     `;
     // Award XP
@@ -36,10 +39,10 @@ export async function POST(req: NextRequest) {
       `;
     }
   } else {
-    // Remove today's completion record
+    // Remove the completion record for the specific date
     await sql`
       DELETE FROM task_completions
-      WHERE user_id = ${user.userId} AND task_id = ${task.id} AND completed_date = CURRENT_DATE
+      WHERE user_id = ${user.userId} AND task_id = ${task.id} AND completed_date = ${completionDate}::date
     `;
     // Deduct XP if it was earned today
     if (task.skill && task.is_completed) {
