@@ -83,7 +83,7 @@ export default function LoginPage() {
 
           <div className="mb-8">
             <h2 className="text-3xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>Welcome back</h2>
-            <p className="mt-1 text-sm" style={{ color: '#8c90a1' }}>Sign in to your mission control</p>
+            <p className="mt-1 text-sm" style={{ color: '#8c90a1' }}>Sign in to mission control</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
