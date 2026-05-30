@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 type Cell = { row_index: number; col_index: number; content: string; cell_type: string };
-type Task = { id: number; title: string; skill: string; duration_minutes: number; time_of_day: string | null; day_of_week: number; every_day: boolean; is_completed: boolean };
+type Task = { id: number; title: string; skill: string; duration_minutes: number; time_of_day: string | null; day_of_week: number; every_day: boolean; is_completed: boolean; completed_at: string | null };
 
 // --- Grid logic ---
 
@@ -212,10 +212,15 @@ export default function DashboardPage() {
     const statsData = await statsRes.json();
     const tasksData = await tasksRes.json();
 
-    // Upcoming = today's + every_day tasks not yet completed, sorted by time_of_day
+    // Upcoming = today's + every_day tasks not yet completed today, sorted by time_of_day
     const todayDow = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isDoneToday = (t: Task) => {
+      if (t.every_day) return t.is_completed && t.completed_at?.split('T')[0] === todayStr;
+      return t.is_completed;
+    };
     const todayTasks: Task[] = (tasksData.tasks || []).filter((t: Task) =>
-      !t.is_completed && (t.every_day || t.day_of_week === todayDow)
+      !isDoneToday(t) && (t.every_day || t.day_of_week === todayDow)
     ).sort((a: Task, b: Task) => {
       if (a.time_of_day && b.time_of_day) return a.time_of_day.localeCompare(b.time_of_day);
       if (a.time_of_day) return -1;
