@@ -202,7 +202,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Record<string, number>>({});
   const [fullscreen, setFullscreen] = useState(false);
-  const [halfSize, setHalfSize] = useState(false);
+  const [halfSize, setHalfSize] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('grid-half') === 'true'
+  );
 
   const fetchData = useCallback(async () => {
     const [gridRes, statsRes, tasksRes, achRes] = await Promise.all([fetch('/api/grid'), fetch('/api/stats'), fetch('/api/tasks'), fetch('/api/achievements')]);
@@ -305,7 +307,7 @@ export default function DashboardPage() {
 
         {/* Controls — top-right of the card */}
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-          <button onClick={() => setHalfSize(v => !v)}
+          <button onClick={() => setHalfSize(v => { localStorage.setItem('grid-half', String(!v)); return !v; })}
             className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all"
             style={{
               background: halfSize ? 'rgba(175,198,255,0.15)' : 'rgba(255,255,255,0.06)',
