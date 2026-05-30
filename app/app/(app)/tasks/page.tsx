@@ -267,6 +267,8 @@ export default function TasksPage() {
           {dayTasks.map(task => {
             const meta = SKILL_META[task.skill] || SKILL_META.energy;
             const done = isEffectivelyComplete(task, activeDay);
+            // Every-day tasks can only be ticked on today's tab
+            const canToggle = !task.every_day || activeDay === getTodayIndex();
             return (
               <div key={task.id}
                 className="glass-card rounded-2xl p-5 flex gap-4 group transition-all"
@@ -278,12 +280,14 @@ export default function TasksPage() {
 
                 {/* Checkbox */}
                 <div className="flex flex-col items-center justify-start pt-0.5">
-                  <button onClick={() => toggleTask(task)}
+                  <button
+                    onClick={() => canToggle && toggleTask(task)}
                     className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
                     style={{
                       border: `2px solid ${done ? meta.color : meta.color + '60'}`,
                       background: done ? meta.color : 'transparent',
-                      cursor: 'pointer',
+                      cursor: canToggle ? 'pointer' : 'default',
+                      opacity: canToggle ? 1 : 0.35,
                     }}>
                     {done && (
                       <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#000', fontVariationSettings: "'FILL' 1" }}>check</span>
