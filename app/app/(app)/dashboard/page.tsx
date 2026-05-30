@@ -341,9 +341,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats bento */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-start">
         {/* Upcoming tasks */}
-        <div className="md:col-span-2 glass-card p-6 rounded-3xl flex flex-col">
+        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
             <Link href="/tasks" className="text-xs font-bold transition-colors" style={{ color: '#afc6ff' }}
@@ -380,7 +380,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="md:col-span-2 glass-card p-6 rounded-3xl">
+        <div className="md:w-1/2 glass-card p-6 rounded-3xl">
           <h3 className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#8c90a1' }}>Skill XP</h3>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {allSkills.map(skill => {
