@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vision Board | APEX LEGACY</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#1b1b20",
+                        "surface-tint": "#afc6ff",
+                        "primary": "#afc6ff",
+                        "surface-container": "#1f1f25",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#510074",
+                        "surface-container-highest": "#35343a",
+                        "primary-fixed": "#d9e2ff",
+                        "surface-container-high": "#2a292f",
+                        "inverse-on-surface": "#303036",
+                        "outline": "#8c90a1",
+                        "secondary-fixed-dim": "#abd600",
+                        "on-tertiary-container": "#460066",
+                        "on-surface-variant": "#c1c6d8",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "primary-fixed-dim": "#afc6ff",
+                        "surface-container-lowest": "#0e0e13",
+                        "on-background": "#e4e1e9",
+                        "background": "#131318",
+                        "on-tertiary-fixed-variant": "#7200a3",
+                        "on-surface": "#e4e1e9",
+                        "on-secondary-container": "#556d00",
+                        "surface-dim": "#131318",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#f6d9ff",
+                        "inverse-primary": "#0058c9",
+                        "on-primary-fixed-variant": "#00429a",
+                        "secondary-fixed": "#c3f400",
+                        "inverse-surface": "#e4e1e9",
+                        "on-tertiary-fixed": "#310048",
+                        "secondary-container": "#c3f400",
+                        "outline-variant": "#414655",
+                        "tertiary-container": "#c863fb",
+                        "tertiary": "#e9b3ff",
+                        "on-primary-fixed": "#001944",
+                        "on-secondary-fixed": "#161e00",
+                        "surface-variant": "#35343a",
+                        "error-container": "#93000a",
+                        "surface": "#131318",
+                        "on-primary-container": "#002760",
+                        "on-secondary": "#283500",
+                        "on-secondary-fixed-variant": "#3c4d00",
+                        "primary-container": "#548dff",
+                        "on-primary": "#002d6d",
+                        "surface-bright": "#39383e",
+                        "secondary": "#ffffff",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "container-max": "1200px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .vision-card:hover .overlay {
+            opacity: 1;
+        }
+        .vision-card:hover {
+            box-shadow: 0 0 20px rgba(175, 198, 255, 0.3);
+            transform: translateY(-4px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .masonry-grid {
+            columns: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 768px) { .masonry-grid { columns: 2; } }
+        @media (min-width: 1280px) { .masonry-grid { columns: 3; } }
+        .break-inside-avoid { break-inside: avoid; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface-container/60 dark:bg-surface-container/60 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
+<div class="flex items-center gap-4">
+<span class="text-title-md font-title-md font-extrabold tracking-tighter text-primary dark:text-primary">APEX LEGACY</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-8 mr-4">
+<span class="text-on-surface-variant font-medium hover:bg-white/10 transition-all duration-300 cursor-pointer px-3 py-1 rounded-lg">Performance</span>
+<span class="text-primary font-bold hover:bg-white/10 transition-all duration-300 cursor-pointer px-3 py-1 rounded-lg">Vision</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-surface-container-high px-4 py-1.5 rounded-full border border-white/5">
+<span class="text-label-caps font-label-caps text-surface-tint">Platinum Tier</span>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-white/10 p-2 rounded-full transition-all">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-white/10 p-2 rounded-full transition-all">workspace_premium</button>
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center border border-primary/30 overflow-hidden">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC03cu13DJv36htfdjlh85f4GgmLFg8-d-qXibnXwQi2PgaN2UK7WfRIEORU6-N-A9h-wvP3Rlmq-6GOXn56RGjEXvJ4c953XfRcGisBRqR-TEdHYyfETe9QgsAsrqnAC-EXszBxIZVLARPuWNwoSljwij-GwjqfEOjzT1zIr9KTXv-Gqz_92ogBXmeSuzPX-fe1m9BXP8EIDqluZKGhKT2m98hIo7n9sn-xX0VIDKctMHeuQPvaNDsy3emZqpiXV0FXUbj7hFmUun"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col py-8 px-4 gap-y-4 fixed left-0 top-0 h-full w-72 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-2xl border-r border-white/5 shadow-2xl z-40 mt-20">
+<div class="mb-6 px-4">
+<h2 class="text-headline-lg font-headline-lg font-black text-surface-tint">Level 42</h2>
+<p class="text-label-caps font-label-caps text-on-surface-variant opacity-70">Elite Performer</p>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-title-md font-title-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="text-title-md font-title-md">Achievements</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="text-title-md font-title-md">Daily Tasks</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-title-md font-title-md">Journal</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary-container/20 text-primary border-r-4 border-primary shadow-[0_0_15px_rgba(175,198,255,0.3)] transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined">wb_sunny</span>
+<span class="text-title-md font-title-md">Vision Board</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-2">
+<button class="mx-4 mb-4 bg-primary text-on-primary font-bold py-3 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                Upgrade to Pro
+            </button>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-caps font-label-caps uppercase">Settings</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-label-caps font-label-caps uppercase">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="pt-28 pb-12 px-margin-mobile md:px-margin-desktop md:ml-72 min-h-screen">
+<header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-primary mb-2">My Legacy Vision</h1>
+<p class="text-on-surface-variant max-w-xl">Curating the life I am building. Each image represents a cornerstone of my future reality. Stay relentless, stay cinematic.</p>
+</div>
+<button class="group flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3 rounded-full transition-all duration-300">
+<span class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">add</span>
+<span class="text-label-caps font-label-caps">Upload New Vision</span>
+</button>
+</header>
+<!-- Masonry Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 grid-flow-dense">
+<!-- Vision Item 1: Luxury Lifestyle -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-2 md:row-span-2 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="A cinematic, low-angle shot of a matte black luxury sports car parked in front of a modern glass mansion at dusk. The scene is illuminated by cool blue neon lights and warm golden interior glows. The aesthetic is ultra-high-end and minimalist, featuring deep blacks and sharp metallic reflections consistent with an elite dark-mode professional dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7iDEpCoJZVfKBOU-LQQu6vBBcK3M6-r5Dv5Y9YY-nU7elH3jLYMgJF5dvSoWzKJuHrRLYSjtDGUxnQy8bpdNQ0kbE74XEvOiGIoWywYzkVhiju7EwPvTsbtHALD3Xrxq5jN9nnv4dJiGUti-hIiVRSNtb2wUaK_yvOM0zezoMIHqRIM0Pwyq3GdAfXB5UQE4PlHWgfgT5kG-YOf-0rApcgWvIzS7WY77IQeyFJN8T4r5ns72hhMIPUacxlgtfKwLnuNaP3Dj2J7EZ"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-surface-tint mb-2">LUXURY LIFESTYLE</span>
+<h3 class="text-title-md font-title-md text-white mb-1">Peak Performance Vehicle</h3>
+<p class="text-on-surface-variant text-sm">Target Date: Q4 2026</p>
+</div>
+</div>
+<!-- Vision Item 2: Travel -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-1 md:row-span-1 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="An expansive aerial view of an overwater luxury villa in the Maldives, surrounded by crystal clear turquoise water. The lighting is bright and vibrant, capturing the midday sun reflecting off the ocean floor. The image has a high-fidelity cinematic quality with rich textures and a focus on serene, elite travel experiences, using a palette of blues and bright whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJM1Zf2UNbgxqe6mV2IDdpHLAoQ3r5eEOyKykpLvnlKHuN1W5xmSvjL-4-CEcpbNdeiI395DFS3SEQAUAYBQPGUeKFdtUZk-HsM5cB7xJi5Q8_TSa5uZNAnvJ4f76N0kk-MlUsTJsKOIun-EWJbnUwXAaXxrVqNBHLVusGrkLwkAGusbSW3jRUiF9vzOmUfEFx539XjATwvfXV8RfBeirVKH7-ZOw94OllW-BYzmABCmVWdVi3UK-IgcEpdyFzEwawKfViz3OFKzKy"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-secondary-fixed mb-2">GLOBAL EXPLORATION</span>
+<h3 class="text-title-md font-title-md text-white mb-1">Maldives Retreat</h3>
+<p class="text-on-surface-variant text-sm">Status: 45% Funded</p>
+</div>
+</div>
+<!-- Vision Item 3: Professional Success -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-1 md:row-span-2 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="A sophisticated corporate headquarters interior featuring a minimalist bento-box glass office design. In the background, a sprawling city skyline at night is visible through floor-to-ceiling windows. The lighting is dramatic and cinematic, with moody shadows and sharp highlights on polished concrete and steel surfaces, reflecting an atmosphere of professional dominance and elite business success." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjjxeZGMzpOhHntTRrRUK5VOfm1rsZw_gWs4evX6VCzT4Meejzxec8UPjS1rfaYld_5nqQlUiQ4z-pjwZvlTlOHZnZOTMvjvC9PyNL-iJAAfttRz1X4WA_5gx1hufYr_E-fkP3fnfEyKic87KUz9lXz1gHe77k39j3lDKJuk86pl-MKIR1pvbRwywZVCdhw8PFDB_yphi8PCC__LTbHC-9uSKtM5TGtTuLwuHSKAN-isW3uYhD6CQxyfxyAHzx7Ec9sVFGB-tGiNG8"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-tertiary mb-2">PROFESSIONAL LEGACY</span>
+<h3 class="text-title-md font-title-md text-white mb-1">Apex HQ Founders Office</h3>
+<p class="text-on-surface-variant text-sm">Goal: 500 Employees</p>
+</div>
+</div>
+<!-- Vision Item 4: Wealth -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-1 md:row-span-1 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="A top-down view of a designer desk with a sleek financial terminal displaying stock market growth and crypto-assets. The composition is clean and organized, with a focus on gold-accents, matte black tech gadgets, and a premium leather journal. The lighting is focused and professional, creating an atmosphere of wealth generation and meticulous financial planning in a modern dark-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMEgWCO1j7yJWnDpgaP_tuvgzcDNhNmMsftG2hcFg5Cbsvl62zqF46erXGeOnmbwHT0fGwcPTNl7wtqwxOzvusPCVOupI7_bIjnDcRcHg9Yi2VShoIJrpNMmQf-WHdhWVrRdgDnQBbBr7lGXJRmolgomGfhYCur5tSd080Ft9f3DCelw6PFI-k3JSxJdKXyVYtaBR-R-SV7E49dNSxHXlyHUbV5fDvKtCOgZSuYtMsax0hknTXi1wbqOLt8sCjfD9xpNqs0-Bm5y7Q"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-primary mb-2">FINANCIAL FREEDOM</span>
+<h3 class="text-title-md font-title-md text-white mb-1">8-Figure Portfolio</h3>
+<p class="text-on-surface-variant text-sm">Current Progress: 12%</p>
+</div>
+</div>
+<!-- Vision Item 5: Architecture -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-1 md:row-span-1 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="A modern architectural masterpiece featuring sharp angles, infinity pool, and integrated greenery under a twilight sky. The lighting is cinematic with warm amber LEDs illuminating the stone paths and cool blue underwater pool lights. The overall mood is prestigious and secluded, representing the ultimate residential achievement in a high-fidelity digital art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGepfg2lTBDNN3Ri92XWHid0FDXdRTd4yZBEF8-Ck1nP36a85qaUp-fy3X1pYf4xuAvtSIWG8_6FFJEkboH2arPVLDcZS5rFm8dVQG-RlKq86orPzI3-DE3GQT4GHF8GzrzRRdKDr97nQ9dUsY-_FQpuLam4MrvojBGU8vo5qi6J_-EGOroth6vyzxFRuWSrqMpHbYy2dU6Yvu1VsssDDR7Mx4cmtrV_DvwP0ggM8sBuKMfzI2PTlEEEn6_ZphheWY1dFh75uvnTS4"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-secondary-fixed-dim mb-2">RESIDENTIAL ICON</span>
+<h3 class="text-title-md font-title-md text-white mb-1">Kyoto Inspired Estate</h3>
+<p class="text-on-surface-variant text-sm">Planning Phase</p>
+</div>
+</div>
+<!-- Vision Item 6: Adventure -->
+<div class="vision-card relative group rounded-2xl overflow-hidden glass-panel transition-all duration-500 break-inside-avoid md:col-span-2 md:row-span-1 h-full">
+<img class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110 h-full" data-alt="A high-contrast photo of a sleek private jet cabin interior during a flight at night. The lighting is intimate and moody, with warm reading lamps and glowing dashboard indicators. Soft textures of leather and wood are emphasized, creating a sense of elite comfort and silent efficiency. The color palette is composed of deep navies, charcoals, and sharp white accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdTiegdWlayXOvINvbEXvHEMbKIwwW3HUhZlOaUblSHHb4Ruf0TcRbTcGex0pGvSnv-8BG8I3KoZmLHZusr2DZDF-UnrMioEWqFpHbUWMd4mJWyG5Z2qnp7HHtxU6pSWFF-HLseP3dIA_gXSLk-I53BcY5u3w4lf9VdcmL3qxGkES23bClJRddJ8_8R-Aoa5gtA2Iu_UgUUfxB_oFB714rgP68JAtppdDA64KKSC0IebQ33qkGRyCYuEMajuo628zfEavlcjlHO3Gv"/>
+<div class="overlay absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-8">
+<span class="text-label-caps font-label-caps text-on-tertiary-fixed mb-2">PERSONAL AVIATION</span>
+<h3 class="text-title-md font-title-md text-white mb-1">Global Connectivity</h3>
+<p class="text-on-surface-variant text-sm">Target Date: 2030</p>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB (Contextual) -->
+<button class="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-primary-container text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 group z-50">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform">auto_awesome</span>
+</button>
+<script>
+        // Simple micro-interaction for adding glow to hover cards
+        document.querySelectorAll('.vision-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.borderColor = 'rgba(175, 198, 255, 0.4)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            });
+        });
+    </script>
+</body></html>

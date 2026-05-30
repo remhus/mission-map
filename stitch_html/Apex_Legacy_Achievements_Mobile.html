@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#c1c6d8",
+                    "on-error-container": "#ffdad6",
+                    "inverse-on-surface": "#303036",
+                    "surface-variant": "#35343a",
+                    "on-tertiary": "#510074",
+                    "background": "#131318",
+                    "error-container": "#93000a",
+                    "surface-container-lowest": "#0e0e13",
+                    "surface-tint": "#afc6ff",
+                    "error": "#ffb4ab",
+                    "on-primary-fixed": "#001944",
+                    "outline": "#8c90a1",
+                    "on-tertiary-fixed-variant": "#7200a3",
+                    "tertiary-fixed": "#f6d9ff",
+                    "surface-dim": "#131318",
+                    "surface-container-high": "#2a292f",
+                    "inverse-surface": "#e4e1e9",
+                    "tertiary-container": "#c863fb",
+                    "secondary-fixed-dim": "#abd600",
+                    "surface-container-highest": "#35343a",
+                    "on-surface": "#e4e1e9",
+                    "on-primary": "#002d6d",
+                    "secondary-container": "#c3f400",
+                    "primary-fixed-dim": "#afc6ff",
+                    "on-tertiary-container": "#460066",
+                    "on-primary-fixed-variant": "#00429a",
+                    "inverse-primary": "#0058c9",
+                    "primary-fixed": "#d9e2ff",
+                    "on-secondary-container": "#556d00",
+                    "on-secondary": "#283500",
+                    "on-background": "#e4e1e9",
+                    "on-primary-container": "#002760",
+                    "on-error": "#690005",
+                    "secondary": "#ffffff",
+                    "surface-bright": "#39383e",
+                    "primary": "#afc6ff",
+                    "on-secondary-fixed": "#161e00",
+                    "surface": "#131318",
+                    "primary-container": "#548dff",
+                    "tertiary": "#e9b3ff",
+                    "surface-container-low": "#1b1b20",
+                    "on-secondary-fixed-variant": "#3c4d00",
+                    "secondary-fixed": "#c3f400",
+                    "outline-variant": "#414655",
+                    "surface-container": "#1f1f25",
+                    "tertiary-fixed-dim": "#e9b3ff",
+                    "on-tertiary-fixed": "#310048"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "8px",
+                    "gutter": "16px",
+                    "margin-desktop": "40px",
+                    "container-max": "1200px",
+                    "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                    "title-md": ["Inter"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #0A0A0F; color: #e4e1e9; -webkit-font-smoothing: antialiased; }
+        .glass-panel { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel-active { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(175, 198, 255, 0.3); box-shadow: 0 0 20px rgba(175, 198, 255, 0.15); }
+        .trophy-glow-platinum { filter: drop-shadow(0 0 8px rgba(175, 198, 255, 0.6)); }
+        .trophy-glow-gold { filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4)); }
+        .trophy-glow-silver { filter: drop-shadow(0 0 8px rgba(192, 192, 192, 0.4)); }
+        .trophy-glow-bronze { filter: drop-shadow(0 0 8px rgba(205, 127, 50, 0.4)); }
+        .metallic-border-gold { border: 1px solid transparent; background: linear-gradient(#1f1f25, #1f1f25) padding-box, linear-gradient(135deg, #FFD700, #B8860B) border-box; }
+        .metallic-border-platinum { border: 1px solid transparent; background: linear-gradient(#1f1f25, #1f1f25) padding-box, linear-gradient(135deg, #E5E4E2, #AFC6FF) border-box; }
+        .progress-leading-edge { box-shadow: 0 0 12px 2px rgba(175, 198, 255, 0.8); }
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-lg text-body-lg">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] flex justify-between items-center px-margin-mobile h-16">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-white/20">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtURnYAo2lU40IIyvo6h1ndPKMwzkhbCoLNc-zoBFGq7BPFQUr71G1VJhOxnyt9qQ-ca9AF_VVFfRvmm3r1sdnTezKX-2S5J89TvNVEWAvGYyp4oNfPiHm3_nBlFoYBn4ACD8IedeGWQ6K7N7NS7ynjkVrFj1LEhM3lVy4glc3yMMSd8kk-Ert0yWpAMV8GCkiYqUYItrrScO4HZXQHgSYamYJL2StqNpXjyUAMaMt4MsQI1Ltb4CrrUr84unESkCc6k0bBcKU4nzG"/>
+</div>
+<h1 class="font-display-lg text-headline-lg-mobile font-extrabold tracking-tighter text-primary">APEX LEGACY</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile space-y-6">
+<!-- Hero: Grand Champion Card -->
+<section class="relative group">
+<div class="absolute -inset-0.5 bg-gradient-to-r from-primary to-tertiary rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+<div class="relative glass-panel metallic-border-platinum rounded-xl p-6 overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<div class="space-y-1">
+<span class="font-label-caps text-label-caps text-primary tracking-widest block">ULTIMATE STATUS</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Grand Champion</h2>
+</div>
+<div class="trophy-glow-platinum">
+<span class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="flex justify-between items-end mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SEASON PROGRESS</span>
+<span class="font-title-md text-title-md text-primary">84%</span>
+</div>
+<div class="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary-container to-primary rounded-full relative" style="width: 84%;">
+<div class="absolute right-0 top-0 h-full w-1 bg-white progress-leading-edge"></div>
+</div>
+</div>
+<p class="mt-4 font-body-lg text-body-lg text-on-surface-variant/80">Finish 4 more Elite tasks to claim the Season 4 Platinum Trophy.</p>
+</div>
+<!-- Abstract background graphic -->
+<div class="absolute -bottom-10 -right-10 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-[160px]">military_tech</span>
+</div>
+</div>
+</section>
+<!-- Stats Overview Row -->
+<div class="grid grid-cols-4 gap-2">
+<div class="glass-panel rounded-lg py-3 flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-1" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+<span class="font-title-md text-title-md">12</span>
+</div>
+<div class="glass-panel rounded-lg py-3 flex flex-col items-center">
+<span class="material-symbols-outlined text-[#FFD700] mb-1" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="font-title-md text-title-md">24</span>
+</div>
+<div class="glass-panel rounded-lg py-3 flex flex-col items-center">
+<span class="material-symbols-outlined text-[#C0C0C0] mb-1" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="font-title-md text-title-md">48</span>
+</div>
+<div class="glass-panel rounded-lg py-3 flex flex-col items-center">
+<span class="material-symbols-outlined text-[#CD7F32] mb-1" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="font-title-md text-title-md">102</span>
+</div>
+</div>
+<!-- Trophy Grid (2-Column) -->
+<section class="space-y-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant tracking-[0.2em]">RECENT ACHIEVEMENTS</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Unlocked Gold -->
+<div class="glass-panel metallic-border-gold rounded-xl p-4 flex flex-col items-center text-center space-y-3 active:scale-95 transition-transform">
+<div class="w-16 h-16 rounded-full bg-gradient-to-b from-white/10 to-transparent flex items-center justify-center trophy-glow-gold">
+<span class="material-symbols-outlined text-4xl text-[#FFD700]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-[#FFD700] block mb-1">GOLD</span>
+<h4 class="font-title-md text-[14px] leading-tight text-on-surface">The 5AM Club</h4>
+</div>
+</div>
+<!-- Unlocked Silver -->
+<div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center space-y-3 active:scale-95 transition-transform border-white/20">
+<div class="w-16 h-16 rounded-full bg-gradient-to-b from-white/10 to-transparent flex items-center justify-center trophy-glow-silver">
+<span class="material-symbols-outlined text-4xl text-[#C0C0C0]" style="font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-[#C0C0C0] block mb-1">SILVER</span>
+<h4 class="font-title-md text-[14px] leading-tight text-on-surface">Deep Work</h4>
+</div>
+</div>
+<!-- Locked Achievement -->
+<div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center space-y-3 opacity-40 border-dashed border-white/10">
+<div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">lock</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant block mb-1">LOCKED</span>
+<h4 class="font-title-md text-[14px] leading-tight text-on-surface">Iron Mind</h4>
+</div>
+</div>
+<!-- Unlocked Bronze -->
+<div class="glass-panel rounded-xl p-4 flex flex-col items-center text-center space-y-3 active:scale-95 transition-transform border-white/20">
+<div class="w-16 h-16 rounded-full bg-gradient-to-b from-white/10 to-transparent flex items-center justify-center trophy-glow-bronze">
+<span class="material-symbols-outlined text-4xl text-[#CD7F32]" style="font-variation-settings: 'FILL' 1;">mintmark</span>
+</div>
+<div>
+<span class="font-label-caps text-[10px] text-[#CD7F32] block mb-1">BRONZE</span>
+<h4 class="font-title-md text-[14px] leading-tight text-on-surface">Consistency</h4>
+</div>
+</div>
+</div>
+</section>
+<!-- Tier Mastery Section -->
+<section class="glass-panel rounded-xl p-5 border-white/10 bg-surface-container-low/40">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">trending_up</span> TIER MASTERY
+            </h3>
+<div class="space-y-5">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-tertiary/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="font-title-md text-[14px] text-on-surface">Energy Level 5</span>
+<span class="text-on-surface-variant text-[12px]">MAX</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 rounded-full">
+<div class="h-full bg-tertiary rounded-full shadow-[0_0_8px_rgba(233,179,255,0.4)]" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/20 flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="font-title-md text-[14px] text-on-surface">Mindset Focus</span>
+<span class="text-on-surface-variant text-[12px]">LVL 4</span>
+</div>
+<div class="h-1.5 w-full bg-white/5 rounded-full">
+<div class="h-full bg-secondary-fixed rounded-full shadow-[0_0_8px_rgba(195,244,0,0.4)]" style="width: 72%;"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface-container/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-8px_32px_0_rgba(0,0,0,0.5)] flex justify-around items-center px-2 py-3 safe-pb z-50 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 ring-1 ring-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.4)] active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="font-label-caps text-label-caps">Trophies</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span class="font-label-caps text-label-caps">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-caps text-label-caps">Journal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label-caps text-label-caps">Vision</span>
+</a>
+</nav>
+<script>
+        // Subtle ambient interaction: Glow follows mouse/touch on the Grand Champion card
+        const heroCard = document.querySelector('.group');
+        if (heroCard) {
+            heroCard.addEventListener('mousemove', (e) => {
+                const rect = heroCard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                heroCard.style.setProperty('--mouse-x', `${x}px`);
+                heroCard.style.setProperty('--mouse-y', `${y}px`);
+            });
+        }
+
+        // Pulse effect simulation for primary actions
+        const buttons = document.querySelectorAll('button, .glass-panel');
+        buttons.forEach(btn => {
+            btn.addEventListener('touchstart', () => {
+                btn.style.transform = 'scale(0.96)';
+            });
+            btn.addEventListener('touchend', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

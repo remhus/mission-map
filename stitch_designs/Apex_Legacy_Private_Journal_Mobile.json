@@ -1,0 +1,28 @@
+﻿{
+    "id":  1,
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "content":  [
+                                   {
+                                       "text":  "{\"name\":\"projects/10308781107394988146/screens/f7afff0fb48b4a8c95a5d989d08497c8\",\"title\":\"Apex Legacy - Private Journal (Mobile)\",\"screenshot\":{\"name\":\"projects/10308781107394988146/files/f3c0f4d9ea854a67904f1a30ee930805\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/ADBb0uj5PxuC12ibVIe2nYjmgYvTj3Z50MCMqG75qOkeqEeR7CFu5dGIJFQshRYAt4G6VYXH0QimC1ItvI395-KPfWh6scr7r-rqayirFvArn3VtNQ4fqoYhSivIwvUS4KSX5Ock0d9_2-LRB2hjZlFf-F1g_FOs_hvOdPHccWyM8bqufb2TdvNKxFYcNoDaI-PK8Vya3fqV6gaakK8W7KECrnH1ptj_9VHdTvEilVtRkhb9DwzPDGxo1_ci-Mc\"},\"htmlCode\":{\"name\":\"projects/10308781107394988146/files/486540373b6d490486b725d21a584697\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzc3OGYxZjA0NGM2ZTRiYWFhNGU5NWI5YjEwZDFlZjgyEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"780\",\"height\":\"2284\",\"deviceType\":\"MOBILE\"}",
+                                       "type":  "text"
+                                   }
+                               ],
+                   "structuredContent":  {
+                                             "deviceType":  "MOBILE",
+                                             "height":  "2284",
+                                             "htmlCode":  {
+                                                              "downloadUrl":  "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzc3OGYxZjA0NGM2ZTRiYWFhNGU5NWI5YjEwZDFlZjgyEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086",
+                                                              "mimeType":  "text/html",
+                                                              "name":  "projects/10308781107394988146/files/486540373b6d490486b725d21a584697"
+                                                          },
+                                             "name":  "projects/10308781107394988146/screens/f7afff0fb48b4a8c95a5d989d08497c8",
+                                             "screenshot":  {
+                                                                "downloadUrl":  "https://lh3.googleusercontent.com/aida/ADBb0uj5PxuC12ibVIe2nYjmgYvTj3Z50MCMqG75qOkeqEeR7CFu5dGIJFQshRYAt4G6VYXH0QimC1ItvI395-KPfWh6scr7r-rqayirFvArn3VtNQ4fqoYhSivIwvUS4KSX5Ock0d9_2-LRB2hjZlFf-F1g_FOs_hvOdPHccWyM8bqufb2TdvNKxFYcNoDaI-PK8Vya3fqV6gaakK8W7KECrnH1ptj_9VHdTvEilVtRkhb9DwzPDGxo1_ci-Mc",
+                                                                "name":  "projects/10308781107394988146/files/f3c0f4d9ea854a67904f1a30ee930805"
+                                                            },
+                                             "title":  "Apex Legacy - Private Journal (Mobile)",
+                                             "width":  "780"
+                                         }
+               }
+}

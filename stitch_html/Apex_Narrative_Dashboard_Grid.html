@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>APEX LEGACY | Billionaire Grid</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #0A0A0F;
+            color: #e4e1e9;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .ultimate-goal-glow {
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.5) !important;
+            background: rgba(255, 215, 0, 0.1) !important;
+        }
+        .pillar-center {
+            border: 1px solid rgba(175, 198, 255, 0.4) !important;
+            background: rgba(175, 198, 255, 0.05) !important;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 8px;
+            aspect-ratio: 1/1;
+        }
+        .sub-grid-border {
+            outline: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        /* Custom scrollbar for side nav */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#1b1b20",
+                        "surface-tint": "#afc6ff",
+                        "primary": "#afc6ff",
+                        "surface-container": "#1f1f25",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#510074",
+                        "surface-container-highest": "#35343a",
+                        "primary-fixed": "#d9e2ff",
+                        "surface-container-high": "#2a292f",
+                        "inverse-on-surface": "#303036",
+                        "outline": "#8c90a1",
+                        "secondary-fixed-dim": "#abd600",
+                        "on-tertiary-container": "#460066",
+                        "on-surface-variant": "#c1c6d8",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "primary-fixed-dim": "#afc6ff",
+                        "surface-container-lowest": "#0e0e13",
+                        "on-background": "#e4e1e9",
+                        "background": "#131318",
+                        "on-tertiary-fixed-variant": "#7200a3",
+                        "on-surface": "#e4e1e9",
+                        "on-secondary-container": "#556d00",
+                        "surface-dim": "#131318",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#f6d9ff",
+                        "inverse-primary": "#0058c9",
+                        "on-primary-fixed-variant": "#00429a",
+                        "secondary-fixed": "#c3f400",
+                        "inverse-surface": "#e4e1e9",
+                        "on-tertiary-fixed": "#310048",
+                        "secondary-container": "#c3f400",
+                        "outline-variant": "#414655",
+                        "tertiary-container": "#c863fb",
+                        "tertiary": "#e9b3ff",
+                        "on-primary-fixed": "#001944",
+                        "on-secondary-fixed": "#161e00",
+                        "surface-variant": "#35343a",
+                        "error-container": "#93000a",
+                        "surface": "#131318",
+                        "on-primary-container": "#002760",
+                        "on-secondary": "#283500",
+                        "on-secondary-fixed-variant": "#3c4d00",
+                        "primary-container": "#548dff",
+                        "on-primary": "#002d6d",
+                        "surface-bright": "#39383e",
+                        "secondary": "#ffffff",
+                        "error": "#ffb4ab"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "container-max": "1200px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-body-lg text-on-background antialiased">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface-container/60 dark:bg-surface-container/60 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
+<div class="flex items-center gap-4">
+<span class="text-title-md font-title-md font-extrabold tracking-tighter text-primary dark:text-primary">APEX LEGACY</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<nav class="flex gap-6">
+<a class="text-primary font-bold transition-all duration-300" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-medium hover:bg-white/10 transition-all duration-300 px-3 py-1 rounded-lg" href="#">Network</a>
+<a class="text-on-surface-variant font-medium hover:bg-white/10 transition-all duration-300 px-3 py-1 rounded-lg" href="#">Market</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex flex-col items-end">
+<span class="text-label-caps font-label-caps text-secondary-fixed">Platinum Tier</span>
+<span class="text-body-lg font-body-lg text-on-surface">Check-in</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-white/10 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+<button class="p-2 hover:bg-white/10 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined text-primary">workspace_premium</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-white/10">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdiW3MhYcHRrI6mdYCMDJFtcCwXi4a-Q5IxQcH2DmYOGC9urtW47dJs3mQfR3NZKWkAyyXmGxX1jeqgbMOzj8KWS0bMH3psGP3kH32Uqx8MkUNDjF6yYK4m2WvGdc57hhtXmkQSC_0DdkLfmoWPtnZPbZP24Iu5QHAndHCQuuH3aonYw0EtavJ72vYSaRflSiZ0Si_Cp4v4lEYOgdZ38ploakZaPBSUsnmPdA48wV8Jb4HjYiZ49M786coXRkngjqI1sqsFcyK7wE1"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-72 hidden md:flex flex-col py-8 px-4 gap-y-4 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-2xl border-r border-white/5 shadow-2xl z-40 pt-24">
+<div class="px-4 mb-6">
+<div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+<div class="w-12 h-12 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">bolt</span>
+</div>
+<div>
+<h3 class="text-title-md font-title-md text-surface-tint">Level 42</h3>
+<p class="text-label-caps font-label-caps text-on-surface-variant">Elite Performer</p>
+</div>
+</div>
+</div>
+<nav class="flex flex-col gap-1 overflow-y-auto no-scrollbar flex-grow">
+<!-- Active State Navigation -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl bg-primary-container/20 text-primary border-r-4 border-primary shadow-[0_0_15px_rgba(175,198,255,0.3)] transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="text-label-caps font-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="text-label-caps font-label-caps">Achievements</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="text-label-caps font-label-caps">Daily Tasks</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-label-caps font-label-caps">Journal</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/50 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">wb_sunny</span>
+<span class="text-label-caps font-label-caps">Vision Board</span>
+</a>
+</nav>
+<div class="mt-auto px-4 flex flex-col gap-4">
+<button class="w-full py-3 bg-primary text-on-primary-container font-bold rounded-xl shadow-lg hover:brightness-110 transition-all scale-95 duration-150">
+                Upgrade to Pro
+            </button>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-caps font-label-caps">Settings</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-label-caps font-label-caps">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-72 pt-24 pb-12 px-margin-mobile md:px-margin-desktop min-h-screen">
+<div class="max-w-[1400px] mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div>
+<p class="text-label-caps font-label-caps text-primary tracking-widest mb-2 uppercase">Core Operating System</p>
+<h1 class="text-display-lg font-display-lg text-white">Billionaire Grid</h1>
+</div>
+<div class="flex gap-3">
+<div class="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+<span class="text-label-caps font-label-caps">System Synced</span>
+</div>
+<div class="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-sm">filter_list</span>
+<span class="text-label-caps font-label-caps">Filter Views</span>
+</div>
+</div>
+</div>
+<!-- The Grid Container -->
+<div class="relative bg-surface-container-lowest/50 p-4 md:p-8 rounded-[2rem] border border-white/5 overflow-hidden group">
+<!-- Atmospheric Background Decoration -->
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="absolute -bottom-24 -left-24 w-96 h-96 bg-tertiary/10 blur-[120px] rounded-full pointer-events-none"></div>
+<!-- 9x9 Grid Layout -->
+<div class="grid grid-cols-9 gap-1 md:gap-2 aspect-square w-full max-w-[900px] mx-auto relative z-10" id="billionaire-grid">
+<!-- Dynamic Grid Generation via JS for cleaner HTML -->
+</div>
+</div>
+<!-- Stats & Pillars Breakdown (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mt-12">
+<div class="md:col-span-2 glass-card p-8 rounded-3xl flex flex-col justify-between overflow-hidden relative">
+<div class="relative z-10">
+<h3 class="text-title-md font-title-md mb-4">Total Grid Integrity</h3>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-display-lg font-display-lg text-primary">84.2</span>
+<span class="text-title-md font-title-md text-on-surface-variant">%</span>
+</div>
+<div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-surface-tint w-[84%] shadow-[0_0_10px_rgba(175,198,255,0.5)]"></div>
+</div>
+</div>
+<div class="mt-8 flex gap-4 relative z-10">
+<div class="flex-1 p-4 bg-white/5 rounded-2xl border border-white/5">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">Active Focus</p>
+<p class="text-body-lg font-body-lg text-white font-bold">Deep Work Sub-grid</p>
+</div>
+<div class="flex-1 p-4 bg-white/5 rounded-2xl border border-white/5">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">Core Pillars</p>
+<p class="text-body-lg font-body-lg text-white font-bold">8/9 Optimized</p>
+</div>
+</div>
+<img alt="Grid Visualization" class="absolute right-[-10%] bottom-[-10%] w-64 h-64 opacity-20 pointer-events-none rotate-12" data-alt="A close-up abstract digital render of a complex 3D grid structure glowing with neon blue and gold light. The camera angle is low, looking up at the illuminated pathways that represent data flow and strategic connections. The style is high-fidelity cinematic gaming UI, with deep shadows and sharp, luminous edges that suggest a powerful executive dashboard in a futuristic corporate environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACx102zP-bn6p3isKaS8kPgIHmt4lI38aZogdLdW_KZ74eTTiSa-ZyzrwSpcFE9wPgUI-T3SbV-qHDeW1GVXUgVkTe2j-7jRn1HhA0zuKMi9wfUEWfN2Iqiv_9IlOsJWZvbl84g9DJzSjRWwFjfxd0qu6dSaZYZALMR-Ba7s7mlmJ0vdufDzH57_nRuuSyy-EexWRp7Wtq97QgJYRTiY2D_ibobIkxznJUO3C303nrhnikJudHcQ8BHh3wMlqBifF_V6-dWc_NrndY"/>
+</div>
+<div class="glass-card p-6 rounded-3xl flex flex-col">
+<span class="material-symbols-outlined text-secondary-fixed mb-4 text-3xl">auto_awesome</span>
+<h3 class="text-title-md font-title-md mb-2">Pillar: Intelligence</h3>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-4">Strategic thinking and rapid pattern recognition modules are peaking.</p>
+<div class="mt-auto">
+<button class="w-full py-2 bg-white/10 hover:bg-white/20 rounded-xl text-label-caps font-label-caps transition-all">Details</button>
+</div>
+</div>
+<div class="glass-card p-6 rounded-3xl flex flex-col border-secondary-fixed/30 bg-secondary-fixed/5">
+<span class="material-symbols-outlined text-secondary-fixed mb-4 text-3xl">military_tech</span>
+<h3 class="text-title-md font-title-md mb-2">Next Milestone</h3>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-4">Complete the "Systems Design" sub-grid to unlock Executive Presence.</p>
+<div class="mt-auto">
+<div class="text-label-caps font-label-caps text-secondary-fixed">88% PROXIMITY</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        const gridContainer = document.getElementById('billionaire-grid');
+        const pillarNames = [
+            "Skills", "Network", "Capital", 
+            "Health", "Identity", "Mindset",
+            "Values", "Impact", "Systems"
+        ];
+        const icons = [
+            "psychology", "hub", "account_balance",
+            "fitness_center", "fingerprint", "visibility",
+            "diamond", "public", "settings_input_component"
+        ];
+
+        // 9x9 Grid Generation Logic
+        for (let row = 1; row <= 9; row++) {
+            for (let col = 1; col <= 9; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'glass-card rounded-md flex items-center justify-center relative cursor-pointer group/cell';
+                
+                // Absolute Center (5,5) - Ultimate Goal
+                if (row === 5 && col === 5) {
+                    cell.classList.add('ultimate-goal-glow', 'z-20');
+                    cell.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <span class="material-symbols-outlined text-secondary-fixed text-[2vw]" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                            <span class="hidden group-hover/cell:block absolute -top-12 bg-black/90 text-[10px] px-2 py-1 rounded border border-secondary-fixed text-secondary-fixed whitespace-nowrap z-30">ULTIMATE GOAL</span>
+                        </div>
+                    `;
+                } 
+                // Pillar Centers
+                else if ((row % 3 === 2) && (col % 3 === 2)) {
+                    const pillarIndex = (Math.floor((row-1)/3) * 3) + Math.floor((col-1)/3);
+                    cell.classList.add('pillar-center');
+                    cell.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <span class="material-symbols-outlined text-primary text-[1.5vw] opacity-80">${icons[pillarIndex]}</span>
+                            <span class="hidden group-hover/cell:block absolute -top-12 bg-black/90 text-[10px] px-2 py-1 rounded border border-primary text-primary whitespace-nowrap z-30 font-bold">${pillarNames[pillarIndex].toUpperCase()}</span>
+                        </div>
+                    `;
+                }
+                // Regular Cells
+                else {
+                    // Random progress state
+                    const opacity = Math.random() > 0.3 ? 'opacity-30' : 'opacity-10';
+                    cell.innerHTML = `<div class="w-1 h-1 rounded-full bg-white ${opacity}"></div>`;
+                }
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // Add subtle mouse-following glow effect
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.ultimate-goal-glow');
+            if (glow) {
+                const rect = glow.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                glow.style.setProperty('--mouse-x', `${x}px`);
+                glow.style.setProperty('--mouse-y', `${y}px`);
+            }
+        });
+    </script>
+</body></html>

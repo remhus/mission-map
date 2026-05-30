@@ -1,0 +1,28 @@
+﻿{
+    "id":  1,
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "content":  [
+                                   {
+                                       "text":  "{\"name\":\"projects/10308781107394988146/screens/9244ad432dcf458eac7104f2c9007848\",\"title\":\"Apex Narrative - Vision Board Mosaic\",\"screenshot\":{\"name\":\"projects/10308781107394988146/files/b05a2ea22c724dfdaa99c76f3ef253bb\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/ADBb0ujslRfqx9TtmRyerGf0ZoQCx4b8FCg0kP-HtRzsVC0VJke7xRtkhQckIfPwt3htLlCmcSI9ClzGYtyb0TWodNl4V8nPhQnb4_bAI-YNZ_0En_-4PmMD3wtzwUtpGlJpFzlV75YmSgbzW9PQJ3_DVDmIV88tVR_ntAxMds7RRlYHkGDWJ710pBuuaKIk9XBBC655XZkpGCRedytLwLbh6U0kTPUaKONDGkXFlRQiep5FAnq7rKPbbNIU3rQ6\"},\"htmlCode\":{\"name\":\"projects/10308781107394988146/files/4942787cb9334996bfffca0082473d8d\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sX2ZkOTQ5OTIwNjExYTQxZGE5MGIyMzI0Mzg3MGU5YzlhEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"2560\",\"height\":\"3680\",\"deviceType\":\"DESKTOP\"}",
+                                       "type":  "text"
+                                   }
+                               ],
+                   "structuredContent":  {
+                                             "deviceType":  "DESKTOP",
+                                             "height":  "3680",
+                                             "htmlCode":  {
+                                                              "downloadUrl":  "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sX2ZkOTQ5OTIwNjExYTQxZGE5MGIyMzI0Mzg3MGU5YzlhEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086",
+                                                              "mimeType":  "text/html",
+                                                              "name":  "projects/10308781107394988146/files/4942787cb9334996bfffca0082473d8d"
+                                                          },
+                                             "name":  "projects/10308781107394988146/screens/9244ad432dcf458eac7104f2c9007848",
+                                             "screenshot":  {
+                                                                "downloadUrl":  "https://lh3.googleusercontent.com/aida/ADBb0ujslRfqx9TtmRyerGf0ZoQCx4b8FCg0kP-HtRzsVC0VJke7xRtkhQckIfPwt3htLlCmcSI9ClzGYtyb0TWodNl4V8nPhQnb4_bAI-YNZ_0En_-4PmMD3wtzwUtpGlJpFzlV75YmSgbzW9PQJ3_DVDmIV88tVR_ntAxMds7RRlYHkGDWJ710pBuuaKIk9XBBC655XZkpGCRedytLwLbh6U0kTPUaKONDGkXFlRQiep5FAnq7rKPbbNIU3rQ6",
+                                                                "name":  "projects/10308781107394988146/files/b05a2ea22c724dfdaa99c76f3ef253bb"
+                                                            },
+                                             "title":  "Apex Narrative - Vision Board Mosaic",
+                                             "width":  "2560"
+                                         }
+               }
+}

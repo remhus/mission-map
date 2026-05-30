@@ -1,0 +1,28 @@
+﻿{
+    "id":  1,
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "content":  [
+                                   {
+                                       "text":  "{\"name\":\"projects/10308781107394988146/screens/55d3a0ff976d42679d543a91edd7c362\",\"title\":\"Apex Legacy - Login (Desktop)\",\"screenshot\":{\"name\":\"projects/10308781107394988146/files/9951ef438cf84c559e03ecc74cb9fe09\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/ADBb0uhu3TLiTsc9_zkMzkzH13G50hOT41bFfn_LvFR4vfAU5EG1vxmXLJG9_iIs5HHbNpWZ7xzEAW70ANa97u9ilACsLcd5zBLTDofOwqgP_1ZfDZRoplpAnaI-uOrA03LIOlpwN5PO21P--d-GVGYMqNO3csKXL8drSdXJoaFmRK0unNcilDZZp8A1MUnmays2NOxX4XjnPnpvLOJdjcxg74wZhpU0rpB94nbOfsrQS_0FPjHD5vqHaXVK90_4\"},\"htmlCode\":{\"name\":\"projects/10308781107394988146/files/0677d4df35c648b698099be83a32182e\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzFjMmY4M2ZkZGY0NDRiOGI4NTM5Yzc3MmU5OWY0ZDMxEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"2560\",\"height\":\"2048\",\"deviceType\":\"DESKTOP\"}",
+                                       "type":  "text"
+                                   }
+                               ],
+                   "structuredContent":  {
+                                             "deviceType":  "DESKTOP",
+                                             "height":  "2048",
+                                             "htmlCode":  {
+                                                              "downloadUrl":  "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzFjMmY4M2ZkZGY0NDRiOGI4NTM5Yzc3MmU5OWY0ZDMxEgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086",
+                                                              "mimeType":  "text/html",
+                                                              "name":  "projects/10308781107394988146/files/0677d4df35c648b698099be83a32182e"
+                                                          },
+                                             "name":  "projects/10308781107394988146/screens/55d3a0ff976d42679d543a91edd7c362",
+                                             "screenshot":  {
+                                                                "downloadUrl":  "https://lh3.googleusercontent.com/aida/ADBb0uhu3TLiTsc9_zkMzkzH13G50hOT41bFfn_LvFR4vfAU5EG1vxmXLJG9_iIs5HHbNpWZ7xzEAW70ANa97u9ilACsLcd5zBLTDofOwqgP_1ZfDZRoplpAnaI-uOrA03LIOlpwN5PO21P--d-GVGYMqNO3csKXL8drSdXJoaFmRK0unNcilDZZp8A1MUnmays2NOxX4XjnPnpvLOJdjcxg74wZhpU0rpB94nbOfsrQS_0FPjHD5vqHaXVK90_4",
+                                                                "name":  "projects/10308781107394988146/files/9951ef438cf84c559e03ecc74cb9fe09"
+                                                            },
+                                             "title":  "Apex Legacy - Login (Desktop)",
+                                             "width":  "2560"
+                                         }
+               }
+}

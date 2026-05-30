@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>APEX LEGACY | Precision Planner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#c1c6d8",
+                        "on-error-container": "#ffdad6",
+                        "inverse-on-surface": "#303036",
+                        "surface-variant": "#35343a",
+                        "on-tertiary": "#510074",
+                        "background": "#131318",
+                        "error-container": "#93000a",
+                        "surface-container-lowest": "#0e0e13",
+                        "surface-tint": "#afc6ff",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed": "#001944",
+                        "outline": "#8c90a1",
+                        "on-tertiary-fixed-variant": "#7200a3",
+                        "tertiary-fixed": "#f6d9ff",
+                        "surface-dim": "#131318",
+                        "surface-container-high": "#2a292f",
+                        "inverse-surface": "#e4e1e9",
+                        "tertiary-container": "#c863fb",
+                        "secondary-fixed-dim": "#abd600",
+                        "surface-container-highest": "#35343a",
+                        "on-surface": "#e4e1e9",
+                        "on-primary": "#002d6d",
+                        "secondary-container": "#c3f400",
+                        "primary-fixed-dim": "#afc6ff",
+                        "on-tertiary-container": "#460066",
+                        "on-primary-fixed-variant": "#00429a",
+                        "inverse-primary": "#0058c9",
+                        "primary-fixed": "#d9e2ff",
+                        "on-secondary-container": "#556d00",
+                        "on-secondary": "#283500",
+                        "on-background": "#e4e1e9",
+                        "on-primary-container": "#002760",
+                        "on-error": "#690005",
+                        "secondary": "#ffffff",
+                        "surface-bright": "#39383e",
+                        "primary": "#afc6ff",
+                        "on-secondary-fixed": "#161e00",
+                        "surface": "#131318",
+                        "primary-container": "#548dff",
+                        "tertiary": "#e9b3ff",
+                        "surface-container-low": "#1b1b20",
+                        "on-secondary-fixed-variant": "#3c4d00",
+                        "secondary-fixed": "#c3f400",
+                        "outline-variant": "#414655",
+                        "surface-container": "#1f1f25",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "on-tertiary-fixed": "#310048"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "margin-desktop": "40px",
+                        "container-max": "1200px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .date-scroller::-webkit-scrollbar { display: none; }
+        .date-scroller { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(175, 198, 255, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(175, 198, 255, 0.7); }
+        }
+        .fab-pulse { animation: pulse-glow 2s infinite; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen font-body-lg overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] flex justify-between items-center px-margin-mobile h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/30">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHNmQ4yCV4OWis9LrjhNx7gkcF3SWjpzyXwgt7T_XNtdim8B7oP1Y1EulJb04ZIxKcKIsQEW8j4uBVMptDlsZNQQPXrOHDFUp5UBxkQELYWrKXusPXpkq_nMk5-EO8BxUeQOTy8_xjAjf6Ie-2-q23w5lTaJJrshG7kL4p-9XIjwDIjX9FbYpsq5HQGp9zN_LfY2dUeDMZWyLu5EG6WVO-PKj7uTQyYaquADgAnYNPQfUe8s68D05gywgroZy1PMS3jldodAEAtMDu"/>
+</div>
+<h1 class="font-display-lg text-headline-lg-mobile font-extrabold tracking-tighter text-primary">APEX LEGACY</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="pt-20 pb-32 px-margin-mobile max-w-md mx-auto">
+<!-- Date Scroller Container -->
+<section class="mb-8 overflow-hidden">
+<div class="flex justify-between items-end mb-4">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Precision Schedule</h2>
+<span class="font-label-caps text-label-caps text-primary opacity-80">OCTOBER 2023</span>
+</div>
+<div class="date-scroller flex gap-3 overflow-x-auto pb-4 snap-x">
+<!-- Date Items -->
+<div class="snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50">
+<span class="font-label-caps text-[10px] uppercase opacity-60">Mon</span>
+<span class="font-headline-lg text-headline-lg-mobile">23</span>
+</div>
+<div class="snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50">
+<span class="font-label-caps text-[10px] uppercase opacity-60">Tue</span>
+<span class="font-headline-lg text-headline-lg-mobile">24</span>
+</div>
+<div class="snap-center flex-shrink-0 w-20 h-28 flex flex-col items-center justify-center rounded-2xl bg-primary-container/20 border border-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.3)] relative -top-2">
+<span class="font-label-caps text-[12px] uppercase text-primary">Wed</span>
+<span class="font-headline-lg text-headline-lg text-primary">25</span>
+<div class="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-primary"></div>
+</div>
+<div class="snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50">
+<span class="font-label-caps text-[10px] uppercase opacity-60">Thu</span>
+<span class="font-headline-lg text-headline-lg-mobile">26</span>
+</div>
+<div class="snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50">
+<span class="font-label-caps text-[10px] uppercase opacity-60">Fri</span>
+<span class="font-headline-lg text-headline-lg-mobile">27</span>
+</div>
+<div class="snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50">
+<span class="font-label-caps text-[10px] uppercase opacity-60">Sat</span>
+<span class="font-headline-lg text-headline-lg-mobile">28</span>
+</div>
+</div>
+</section>
+<!-- Tasks List -->
+<section class="space-y-4">
+<!-- Active Task Group -->
+<div class="space-y-4">
+<!-- Task 1: Primary Priority -->
+<div class="glass-card rounded-2xl p-5 border-l-4 border-l-primary flex gap-4 transition-all hover:bg-white/10">
+<div class="flex flex-col items-center justify-start pt-1">
+<button class="w-6 h-6 rounded-lg border-2 border-primary/50 flex items-center justify-center active:scale-90 transition-transform">
+<!-- Empty for unselected -->
+</button>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-[10px] text-primary tracking-[0.2em]">MISSION CRITICAL</span>
+<span class="text-on-surface-variant text-[12px]">08:00 AM</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface mb-2">Deep Work: Architecture V2</h3>
+<div class="flex gap-2">
+<span class="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-primary/20">TECH</span>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded-md text-[10px] font-bold">90 MIN</span>
+</div>
+</div>
+</div>
+<!-- Task 2: Secondary Priority -->
+<div class="glass-card rounded-2xl p-5 border-l-4 border-l-secondary-fixed flex gap-4 transition-all hover:bg-white/10">
+<div class="flex flex-col items-center justify-start pt-1">
+<button class="w-6 h-6 rounded-lg border-2 border-secondary-fixed/50 flex items-center justify-center active:scale-90 transition-transform">
+<!-- Empty -->
+</button>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-[10px] text-secondary-fixed tracking-[0.2em]">VITAL RECOVERY</span>
+<span class="text-on-surface-variant text-[12px]">10:30 AM</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface mb-2">Physiological Reset Session</h3>
+<div class="flex gap-2">
+<span class="bg-secondary-fixed/10 text-secondary-fixed px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-secondary-fixed/20">HEALTH</span>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded-md text-[10px] font-bold">45 MIN</span>
+</div>
+</div>
+</div>
+<!-- Task 3: Tertiary Priority -->
+<div class="glass-card rounded-2xl p-5 border-l-4 border-l-tertiary flex gap-4 transition-all hover:bg-white/10">
+<div class="flex flex-col items-center justify-start pt-1">
+<button class="w-6 h-6 rounded-lg border-2 border-tertiary/50 bg-tertiary/20 flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">check_small</span>
+</button>
+</div>
+<div class="flex-1 opacity-60">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-[10px] text-tertiary tracking-[0.2em]">STRATEGIC ASSET</span>
+<span class="text-on-surface-variant text-[12px]">07:00 AM</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface mb-2 line-through">Morning Vision Journaling</h3>
+<div class="flex gap-2">
+<span class="bg-tertiary/10 text-tertiary px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-tertiary/20">MINDSET</span>
+</div>
+</div>
+</div>
+<!-- Image Break (Aesthetic) -->
+<div class="relative h-40 rounded-2xl overflow-hidden glass-card border-white/10 mt-6 group">
+<img class="w-full h-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-110" data-alt="A cinematic, high-contrast photograph of a dark workspace at night with a single glowing monitor and neon accent lighting. The mood is focused and elite, with deep shadows and vibrant blue highlights reflecting off glass surfaces. The visual style is modern, technical, and prestigious, representing the relentless pursuit of high-performance goals in a digital arena." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPjGXIr9InvHnSDFvANTiqc4KDyCNXLDrHjlH5qHfgK7rduM2kCxDg9WdW-Gfcj5tmBP0ppgtJLkkw_7eOl-dpYpFeY_So6S7nXfGMgFl-_gYTGemG2vQUEFOb0i8h8YaEOof6hzyNae9pa1arMEEKdBrc7PHmCNkfWxQuHFiRaO6qE8-FsSqbhSUSXCLb0h6pHT2eHOVVF_l_DtZ9tJqOmxE-h4bPmk_3Sal9XvkJ-zGkX6knGMzJlbfxeQatfz8DgezKy99NRuJp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<span class="font-label-caps text-label-caps text-primary">DAILY QUOTE</span>
+<p class="font-title-md text-on-surface italic">"The architect of greatness builds in silence."</p>
+</div>
+</div>
+<!-- Task 4 -->
+<div class="glass-card rounded-2xl p-5 border-l-4 border-l-error flex gap-4 transition-all hover:bg-white/10 mt-6">
+<div class="flex flex-col items-center justify-start pt-1">
+<button class="w-6 h-6 rounded-lg border-2 border-error/50 flex items-center justify-center active:scale-90 transition-transform">
+<!-- Empty -->
+</button>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-caps text-[10px] text-error tracking-[0.2em]">OVERDUE RISK</span>
+<span class="text-error text-[12px] font-bold">12:00 PM</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface mb-2">Stakeholder Sync: Apex Q4</h3>
+<div class="flex gap-2">
+<span class="bg-error/10 text-error px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ring-error/20">MANAGEMENT</span>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded-md text-[10px] font-bold">30 MIN</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-margin-mobile w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-2xl flex items-center justify-center z-[60] fab-pulse active:scale-90 transition-all">
+<span class="material-symbols-outlined text-3xl" data-icon="add" style="font-variation-settings: 'wght' 600;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-surface-container/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-8px_32px_0_rgba(0,0,0,0.5)] rounded-t-xl flex justify-around items-center px-2 py-3 pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-[10px]">DASHBOARD</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="military_tech">military_tech</span>
+<span class="font-label-caps text-[10px]">TROPHIES</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 ring-1 ring-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.4)] transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="checklist">checklist</span>
+<span class="font-label-caps text-[10px]">TASKS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="edit_note">edit_note</span>
+<span class="font-label-caps text-[10px]">JOURNAL</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-[10px]">VISION</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for task completion
+        document.querySelectorAll('button[class*="border-2"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.closest('.glass-card');
+                const title = parent.querySelector('h3');
+                const isChecked = this.querySelector('.material-symbols-outlined');
+
+                if (isChecked) {
+                    this.innerHTML = '';
+                    title.classList.remove('line-through');
+                    parent.classList.remove('opacity-60');
+                    this.classList.remove('bg-primary/20', 'bg-secondary-fixed/20', 'bg-tertiary/20', 'bg-error/20');
+                } else {
+                    const colorClass = parent.classList.contains('border-l-primary') ? 'text-primary' : 
+                                     parent.classList.contains('border-l-secondary-fixed') ? 'text-secondary-fixed' :
+                                     parent.classList.contains('border-l-tertiary') ? 'text-tertiary' : 'text-error';
+                    const bgClass = colorClass.replace('text-', 'bg-') + '/20';
+                    
+                    this.innerHTML = `<span class="material-symbols-outlined ${colorClass} text-lg" style="font-variation-settings: 'FILL' 1;">check_small</span>`;
+                    this.classList.add(bgClass.split('/')[0] + '/20');
+                    title.classList.add('line-through');
+                    parent.classList.add('opacity-60');
+                }
+            });
+        });
+
+        // Horizontal scroller visual focus
+        const dateItems = document.querySelectorAll('.date-scroller > div');
+        dateItems.forEach(item => {
+            item.addEventListener('click', () => {
+                dateItems.forEach(i => {
+                    i.className = 'snap-center flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center rounded-2xl glass-card border-white/5 opacity-50';
+                    const dot = i.querySelector('.absolute');
+                    if(dot) dot.remove();
+                    const day = i.querySelector('.font-label-caps');
+                    const num = i.querySelector('.font-headline-lg-mobile, .font-headline-lg');
+                    day.className = 'font-label-caps text-[10px] uppercase opacity-60';
+                    num.className = 'font-headline-lg text-headline-lg-mobile';
+                });
+                
+                item.className = 'snap-center flex-shrink-0 w-20 h-28 flex flex-col items-center justify-center rounded-2xl bg-primary-container/20 border border-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.3)] relative -top-2';
+                const day = item.querySelector('.font-label-caps');
+                const num = item.querySelector('.font-headline-lg-mobile, .font-headline-lg');
+                day.className = 'font-label-caps text-[12px] uppercase text-primary';
+                num.className = 'font-headline-lg text-headline-lg text-primary';
+                item.innerHTML += '<div class="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-primary"></div>';
+            });
+        });
+    </script>
+</body></html>

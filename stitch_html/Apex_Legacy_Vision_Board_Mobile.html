@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .masonry-grid {
+            column-count: 2;
+            column-gap: 16px;
+        }
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 16px;
+        }
+        .glow-border:focus-within {
+            box-shadow: 0 0 15px rgba(175, 198, 255, 0.4);
+            border-color: #afc6ff;
+        }
+        body {
+            background-color: #131318;
+            color: #e4e1e9;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#c1c6d8",
+                        "on-error-container": "#ffdad6",
+                        "inverse-on-surface": "#303036",
+                        "surface-variant": "#35343a",
+                        "on-tertiary": "#510074",
+                        "background": "#131318",
+                        "error-container": "#93000a",
+                        "surface-container-lowest": "#0e0e13",
+                        "surface-tint": "#afc6ff",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed": "#001944",
+                        "outline": "#8c90a1",
+                        "on-tertiary-fixed-variant": "#7200a3",
+                        "tertiary-fixed": "#f6d9ff",
+                        "surface-dim": "#131318",
+                        "surface-container-high": "#2a292f",
+                        "inverse-surface": "#e4e1e9",
+                        "tertiary-container": "#c863fb",
+                        "secondary-fixed-dim": "#abd600",
+                        "surface-container-highest": "#35343a",
+                        "on-surface": "#e4e1e9",
+                        "on-primary": "#002d6d",
+                        "secondary-container": "#c3f400",
+                        "primary-fixed-dim": "#afc6ff",
+                        "on-tertiary-container": "#460066",
+                        "on-primary-fixed-variant": "#00429a",
+                        "inverse-primary": "#0058c9",
+                        "primary-fixed": "#d9e2ff",
+                        "on-secondary-container": "#556d00",
+                        "on-secondary": "#283500",
+                        "on-background": "#e4e1e9",
+                        "on-primary-container": "#002760",
+                        "on-error": "#690005",
+                        "secondary": "#ffffff",
+                        "surface-bright": "#39383e",
+                        "primary": "#afc6ff",
+                        "on-secondary-fixed": "#161e00",
+                        "surface": "#131318",
+                        "primary-container": "#548dff",
+                        "tertiary": "#e9b3ff",
+                        "surface-container-low": "#1b1b20",
+                        "on-secondary-fixed-variant": "#3c4d00",
+                        "secondary-fixed": "#c3f400",
+                        "outline-variant": "#414655",
+                        "surface-container": "#1f1f25",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "on-tertiary-fixed": "#310048"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "margin-desktop": "40px",
+                        "container-max": "1200px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body-lg text-on-background">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] flex justify-between items-center px-margin-mobile h-16">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container/30 border border-primary/20 flex items-center justify-center overflow-hidden">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A close-up professional portrait of a confident young man with sharp features, set against a dark, moody studio background. The lighting is dramatic and cinematic, highlighting his face with a cool blue rim light that matches the Apex Legacy brand aesthetic. The overall mood is prestigious and focused, embodying a high-achiever persona." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACv-7Ql_J-fDgKP9O6moBtEtXrojTYHDgglTiiIjOW-Tk8bklX99Y8yf559hS_temUkI4dtVQkYWGijakOlFQnS8Ocopnzh1m085FSEG78r_2lY2cFVY2sZV7zMsSJBu6IMnVJUoxFTXtHqFGMzkASKDzBTCAnFYX2RCC1Ny9CHvsl0Upn3vjG-ATt3YldGIO3gvH_h091iOL9V8Rv7EnHMP4KuFqAdT3q4P5jQ7N5E6ILhusyPplqgc8mof-dzD1xDw8sdXSqT-ly"/>
+</div>
+<h1 class="font-display-lg text-headline-lg-mobile font-extrabold tracking-tighter text-primary">APEX LEGACY</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</header>
+<main class="pt-20 pb-24 px-margin-mobile">
+<!-- Vision Header & Filter -->
+<div class="mb-6 flex flex-col gap-4">
+<div class="flex justify-between items-end">
+<div>
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-widest">MANIFESTATION</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile mt-1">Vision Board</h2>
+</div>
+<button class="glass-card px-4 py-2 rounded-full flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span class="font-label-caps text-label-caps">SORT</span>
+</button>
+</div>
+<div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+<button class="px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-caps text-label-caps whitespace-nowrap shadow-[0_0_15px_rgba(175,198,255,0.4)]">ALL VISIONS</button>
+<button class="px-4 py-1.5 rounded-full glass-card text-on-surface-variant font-label-caps text-label-caps whitespace-nowrap">CAREER</button>
+<button class="px-4 py-1.5 rounded-full glass-card text-on-surface-variant font-label-caps text-label-caps whitespace-nowrap">LIFESTYLE</button>
+<button class="px-4 py-1.5 rounded-full glass-card text-on-surface-variant font-label-caps text-label-caps whitespace-nowrap">PHYSICAL</button>
+</div>
+</div>
+<!-- Masonry Grid -->
+<div class="masonry-grid">
+<!-- Item 1: Tall -->
+<div class="masonry-item group relative overflow-hidden rounded-2xl glass-card">
+<img class="w-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A cinematic, high-contrast shot of a sleek, dark metallic super car parked on a rainy city street at night. Neon signs in electric blue and vibrant purple reflect off the wet pavement and the car's polished surface. The atmosphere is prestigious and high-fidelity, suggesting a luxury lifestyle goal. Lighting is focused and moody, emphasizing sharp edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB10By14bQUIGLpQ6zXctGUKnDj-g8YP3IdQPSWKtT0u8adMObGtns1F8o6FR6gJcluOAV9Qb2neK1namsU31Y6hXIrbL9Kb2npnB_pxZjChH6gbHNhk1WmwNN-MNKFWAJKHitdcCACUzzKzIN6j1E2AlC2AETER0acy7OfJENYFF_4EsxTI2uXYzxyqDj6r3t5RqOLbDSIpm4KCYsJKDt1YE_Aw-Kx9ZPR0Aa67NCT9-mwmGkDtrl0xVacBUiw1cKdc5GjXTOslhbu"/>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+<span class="font-label-caps text-[10px] text-primary">LIFESTYLE</span>
+<p class="font-title-md text-sm text-white">The Stealth Peak</p>
+</div>
+</div>
+<!-- Item 2: Standard -->
+<div class="masonry-item group relative overflow-hidden rounded-2xl glass-card">
+<img class="w-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A minimalist, high-end corporate office workspace overlooking a dense metropolis at dawn. The room features dark wood textures, floor-to-ceiling glass windows, and a single glowing holographic display on a desk. The color palette consists of deep blacks, cool grays, and soft blue light from the rising sun. The mood is one of focused ambition and elite career success." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCha8GiAdCeU6GCGaNpWrAYQv0IXQNBX5674VBXki2p9ij5OapQG3AC9yxRfqpSGUup4JRQEbITIx2nFtmLSgLiX92MPNZ6_hENbgcLnqsMespNOFW5sEM4A7HZNIWDCPV14A8h0K6N4yq2hsyiKJJvUmH6fwu_tWz7TsJ7glr5wotgF7OcE92eD3R0vGL9df7So2pcHPBebymTglLIiWtYHnmLyCL0KUJqatM2Bc2LDQcVsMOobJAHSEP6yrE0RXjtBJLlBwMHITTM"/>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+<span class="font-label-caps text-[10px] text-tertiary">CAREER</span>
+<p class="font-title-md text-sm text-white">Global Headquarters</p>
+</div>
+</div>
+<!-- Item 3: Standard -->
+<div class="masonry-item group relative overflow-hidden rounded-2xl glass-card">
+<img class="w-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A high-intensity fitness shot featuring a muscular silhouette performing a heavy lift in a gritty, high-performance gym. The space is illuminated by overhead industrial lights and neon blue accent strips. Dust particles catch the light, creating a sense of raw energy and physical excellence. The aesthetic is relentless and cinematic, using deep shadows and sharp highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkuY55LozQbeQZZBd1LAB53jmc3oKL637ts70u7AVroj7ZWTyhkqz-weOLAY_IcPYLV_Rx_GKtr_jpZ90-vDCOxArjK61cGyVBwkR5A7Q0jTaEiZ8hl_omaABV6KxGAog4_e4TdmdFYXF3QtxShIt4YO4t9VW5ppGvFa5uY2eeSBApr5deNQGff4K-qYI6XqooG2hTZG4Hqmlngr7jFuZxUgDvMuj_xw6zkT4K5rOXGT67DPG3aqlKJjSEa_eUD0cV4tETtCbnrUII"/>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+<span class="font-label-caps text-[10px] text-secondary-fixed">PHYSICAL</span>
+<p class="font-title-md text-sm text-white">Peak Condition</p>
+</div>
+</div>
+<!-- Item 4: Tall -->
+<div class="masonry-item group relative overflow-hidden rounded-2xl glass-card">
+<img class="w-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="An ultra-luxury private island villa at twilight, with an infinity pool that seems to merge with the deep blue ocean. The architecture is modern and geometric, lit by warm golden interior lights and cool blue exterior accents. The sky is a gradient of deep indigo and violet. This image represents the ultimate level of achievement and serenity in a cinematic, prestigious visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApq-Ll7iSXFvZ9W6whW-wtqJMqyUk0lH0IwrIo9FPy2SUxeCRGKIIvL7SC_mt9wIvYxA6BU2RgMdigGHKoLORj1TJt9FItEG9-uk7rr9L27eIz1wM_LW_X7X95UTLS9XCvxyn7xV3yWaSmPoIDkqmIMor8sIGj8JtDkbzPm93VVyKY4bTmgmypQZx67Oyd_E7aeffI6Wt4a-IKwA_2YNAwkCXBp0tM_0vzRZwCVdd8ta-VMSOzOkXzuO711qdybUmADhTxzb7yGsY2"/>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+<span class="font-label-caps text-[10px] text-primary">LIFESTYLE</span>
+<p class="font-title-md text-sm text-white">Zenith Retreat</p>
+</div>
+</div>
+<!-- Item 5: Standard -->
+<div class="masonry-item group relative overflow-hidden rounded-2xl glass-card">
+<img class="w-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A futuristic digital visualization of Earth seen from a high-orbit satellite, layered with glowing data networks and golden light pulses representing global connectivity. The background is the infinite black of space. The lighting is crisp and cinematic, with vibrant neon accents. It communicates a vision of technological impact and world-class mastery in a modern, glassmorphism-inspired aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtIuzgnvE98pRl3SNdeY9oDqDVQFe1kcAGsibERkauHvje8x3IC4c3J0ewZuEHEDC5JiWinAgK2u25V8Yyj6pdGJQP6hla1aRTMR55uO-Cg97ihA8TE31qL9AE6EI_AtRzGtpqt-2j2BqHeBFSLsVohTM_ejeBIHpxz5Yg_gox2qdoqcTi32eToZ3vmKohrrY2lGtShaeRsbQ_5XQom9jtX2HnSC4zjSJX_Jmhk3h4y_nLpFmUkN9OgrO3GCpkF745Bib_SYk_Jt3r"/>
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+<span class="font-label-caps text-[10px] text-tertiary">CAREER</span>
+<p class="font-title-md text-sm text-white">Global Impact</p>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB: Upload New Vision -->
+<button class="fixed right-6 bottom-24 z-50 w-14 h-14 bg-primary text-on-primary rounded-full shadow-[0_0_20px_rgba(175,198,255,0.6)] flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined font-bold text-2xl">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-3 pb-safe bg-surface-container/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-8px_32px_0_rgba(0,0,0,0.5)] z-50 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="font-label-caps text-label-caps mt-1">Trophies</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span class="font-label-caps text-label-caps mt-1">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label-caps text-label-caps mt-1">Journal</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 ring-1 ring-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.4)] active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-caps text-label-caps mt-1">Vision</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for masonry items
+        document.querySelectorAll('.masonry-item').forEach(item => {
+            item.addEventListener('touchstart', () => {
+                item.style.transform = 'scale(0.98)';
+                item.style.transition = 'transform 0.2s ease';
+            });
+            item.addEventListener('touchend', () => {
+                item.style.transform = 'scale(1)';
+            });
+        });
+
+        // Pull to refresh simulation / Atmospheric fade-in
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.masonry-item').forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+        });
+    </script>
+</body></html>

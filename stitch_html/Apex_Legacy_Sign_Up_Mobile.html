@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Legacy - Join the Elite</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#afc6ff",
+                    "secondary-container": "#c3f400",
+                    "on-secondary-fixed": "#161e00",
+                    "on-error-container": "#ffdad6",
+                    "outline-variant": "#414655",
+                    "surface-container-lowest": "#0e0e13",
+                    "surface-container-high": "#2a292f",
+                    "on-tertiary-fixed-variant": "#7200a3",
+                    "on-background": "#e4e1e9",
+                    "inverse-surface": "#e4e1e9",
+                    "tertiary-fixed": "#f6d9ff",
+                    "on-surface-variant": "#c1c6d8",
+                    "on-surface": "#e4e1e9",
+                    "surface-dim": "#131318",
+                    "surface": "#131318",
+                    "inverse-on-surface": "#303036",
+                    "on-primary-container": "#002760",
+                    "on-tertiary-container": "#460066",
+                    "surface-container": "#1f1f25",
+                    "tertiary": "#e9b3ff",
+                    "tertiary-container": "#c863fb",
+                    "tertiary-fixed-dim": "#e9b3ff",
+                    "surface-tint": "#afc6ff",
+                    "error": "#ffb4ab",
+                    "secondary-fixed-dim": "#abd600",
+                    "primary-fixed": "#d9e2ff",
+                    "on-secondary-fixed-variant": "#3c4d00",
+                    "surface-variant": "#35343a",
+                    "surface-bright": "#39383e",
+                    "on-secondary-container": "#556d00",
+                    "on-primary-fixed": "#001944",
+                    "surface-container-low": "#1b1b20",
+                    "secondary-fixed": "#c3f400",
+                    "outline": "#8c90a1",
+                    "on-secondary": "#283500",
+                    "secondary": "#ffffff",
+                    "primary-container": "#548dff",
+                    "error-container": "#93000a",
+                    "on-error": "#690005",
+                    "inverse-primary": "#0058c9",
+                    "primary": "#afc6ff",
+                    "on-tertiary": "#510074",
+                    "background": "#131318",
+                    "on-primary-fixed-variant": "#00429a",
+                    "surface-container-highest": "#35343a",
+                    "on-tertiary-fixed": "#310048",
+                    "on-primary": "#002d6d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "unit": "8px",
+                    "container-max": "1200px",
+                    "margin-mobile": "20px",
+                    "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        background-color: #0A0A0F;
+        color: #e4e1e9;
+        overflow-x: hidden;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .neon-glow {
+        box-shadow: 0 0 15px rgba(175, 198, 255, 0.3);
+      }
+      .neon-border-focus:focus-within {
+        border-color: #afc6ff;
+        box-shadow: 0 0 10px rgba(175, 198, 255, 0.4);
+      }
+      .btn-pulse:active {
+        transform: scale(0.96);
+      }
+      .bg-cinematic {
+        background: radial-gradient(circle at center, rgba(0, 88, 201, 0.15) 0%, rgba(10, 10, 15, 1) 70%);
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col font-body-lg text-body-lg">
+<!-- Background Atmospheric Elements -->
+<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-tertiary-container/5 rounded-full blur-[150px]"></div>
+<div class="absolute inset-0 bg-cinematic"></div>
+</div>
+<!-- Main Content Container -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile py-12">
+<!-- Brand Header -->
+<header class="mb-12 text-center">
+<h1 class="font-display-lg text-display-lg text-primary-fixed tracking-tighter uppercase mb-2">APEX LEGACY</h1>
+<div class="h-1 w-12 bg-primary mx-auto rounded-full neon-glow"></div>
+</header>
+<!-- Sign Up Card -->
+<section class="w-full max-w-[400px] glass-card rounded-xl p-8 flex flex-col gap-8 shadow-2xl relative overflow-hidden">
+<!-- Decorative corner accent -->
+<div class="absolute top-0 right-0 w-16 h-16 bg-primary/10 blur-xl rounded-full"></div>
+<div class="space-y-2">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Start Your Journey</h2>
+<p class="text-on-surface-variant/70 text-sm">Forge your legacy among the world's highest achievers.</p>
+</div>
+<form class="flex flex-col gap-6" onsubmit="event.preventDefault();">
+<!-- Name Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-outline uppercase tracking-widest ml-1">Full Name</label>
+<div class="relative group neon-border-focus transition-all duration-300 rounded-lg border border-white/10 bg-white/5">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+<input class="w-full bg-transparent border-none py-4 pl-12 pr-4 text-on-surface placeholder:text-outline-variant focus:ring-0" placeholder="John Doe" type="text"/>
+</div>
+</div>
+<!-- Email Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-outline uppercase tracking-widest ml-1">Email Address</label>
+<div class="relative group neon-border-focus transition-all duration-300 rounded-lg border border-white/10 bg-white/5">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">mail</span>
+<input class="w-full bg-transparent border-none py-4 pl-12 pr-4 text-on-surface placeholder:text-outline-variant focus:ring-0" placeholder="apex@legacy.com" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-outline uppercase tracking-widest ml-1">Secret Access</label>
+<div class="relative group neon-border-focus transition-all duration-300 rounded-lg border border-white/10 bg-white/5">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+<input class="w-full bg-transparent border-none py-4 pl-12 pr-12 text-on-surface placeholder:text-outline-variant focus:ring-0" placeholder="••••••••" type="password"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline cursor-pointer hover:text-on-surface">visibility</span>
+</div>
+</div>
+<!-- Primary CTA -->
+<button class="mt-4 w-full py-4 rounded-lg bg-gradient-to-r from-primary-container to-on-primary-fixed-variant text-white font-bold text-lg shadow-[0_0_20px_rgba(84,141,255,0.4)] hover:shadow-[0_0_30px_rgba(84,141,255,0.6)] btn-pulse transition-all duration-300 flex items-center justify-center gap-2">
+<span>Join the Elite</span>
+<span class="material-symbols-outlined">trending_up</span>
+</button>
+</form>
+<!-- Social Proof / Decorative Divider -->
+<div class="flex items-center gap-4">
+<div class="h-[1px] flex-grow bg-white/10"></div>
+<span class="font-label-caps text-[10px] text-outline uppercase">Tier: Platinum Ready</span>
+<div class="h-[1px] flex-grow bg-white/10"></div>
+</div>
+</section>
+<!-- Footer / Toggle -->
+<footer class="mt-12 text-center space-y-4">
+<p class="text-on-surface-variant/70 text-sm">
+                Already a member of the inner circle?
+                <a class="text-primary-fixed-dim font-bold hover:text-primary transition-colors ml-1" href="#">Log In</a>
+</p>
+<div class="flex justify-center gap-6 pt-4">
+<span class="material-symbols-outlined text-outline-variant/50 hover:text-primary transition-colors cursor-pointer" title="Privacy">verified_user</span>
+<span class="material-symbols-outlined text-outline-variant/50 hover:text-primary transition-colors cursor-pointer" title="Security">security</span>
+<span class="material-symbols-outlined text-outline-variant/50 hover:text-primary transition-colors cursor-pointer" title="Support">support_agent</span>
+</div>
+</footer>
+</main>
+<!-- Background Decorative Image (Low Opacity Backdrop) -->
+<div class="fixed inset-0 z-[-2] opacity-20 grayscale pointer-events-none">
+<img alt="Tech background" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast photograph of a futuristic control room with multiple glowing blue holographic interfaces and data streams. The lighting is deep and moody, featuring sharp highlights and rich shadows that emphasize a sense of elite technology and advanced performance. The scene is clean and professional, using a cold color palette of deep navies and electric blues to convey a relentless and prestigious atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4xzLGMdYhf-Ygd2CNKqRAYKaCa3_Z5mMvfNrTA8VAh8LCu0h3LQ0E7fNXI1bI2Q6w8Qr6tkwiCZPQ3sM5Cr13147-f2LCeSvguDXkSCJl7diJxZyD4ptnJUm536M825ANxwbFZ5nzCJrRYm3B5QoDlDzzFqpOFhnXJzDxoS2mHxxdiRUPCuBwbQRFoYfDvpIt67kZLL6A4f0I6L2D4YrEP9x55rj0_dztX2PEVsJtQGlIQlUmgbrlfdWvtC-phpckjE2okVIc_Hyt"/>
+</div>
+<script>
+        // Simple micro-interaction for password toggle
+        const togglePass = document.querySelector('.material-symbols-outlined:last-of-type');
+        const passInput = document.querySelector('input[type="password"]');
+        
+        if (togglePass && passInput) {
+            togglePass.addEventListener('click', () => {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                togglePass.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            });
+        }
+
+        // Add a subtle parallax effect on mouse/tilt for the glass card
+        document.addEventListener('mousemove', (e) => {
+            const card = document.querySelector('.glass-card');
+            const x = (window.innerWidth / 2 - e.pageX) / 50;
+            const y = (window.innerHeight / 2 - e.pageY) / 50;
+            card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
+    </script>
+</body></html>

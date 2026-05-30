@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Apex Legacy | Billionaire Grid</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .grid-glow-center {
+            box-shadow: 0 0 60px 10px rgba(175, 198, 255, 0.2);
+        }
+        .neon-border-pulse {
+            animation: borderPulse 4s infinite secondary;
+        }
+        @keyframes borderPulse {
+            0%, 100% { border-color: rgba(175, 198, 255, 0.3); box-shadow: 0 0 5px rgba(175, 198, 255, 0.1); }
+            50% { border-color: rgba(175, 198, 255, 0.8); box-shadow: 0 0 15px rgba(175, 198, 255, 0.4); }
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#c1c6d8",
+                        "on-error-container": "#ffdad6",
+                        "inverse-on-surface": "#303036",
+                        "surface-variant": "#35343a",
+                        "on-tertiary": "#510074",
+                        "background": "#131318",
+                        "error-container": "#93000a",
+                        "surface-container-lowest": "#0e0e13",
+                        "surface-tint": "#afc6ff",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed": "#001944",
+                        "outline": "#8c90a1",
+                        "on-tertiary-fixed-variant": "#7200a3",
+                        "tertiary-fixed": "#f6d9ff",
+                        "surface-dim": "#131318",
+                        "surface-container-high": "#2a292f",
+                        "inverse-surface": "#e4e1e9",
+                        "tertiary-container": "#c863fb",
+                        "secondary-fixed-dim": "#abd600",
+                        "surface-container-highest": "#35343a",
+                        "on-surface": "#e4e1e9",
+                        "on-primary": "#002d6d",
+                        "secondary-container": "#c3f400",
+                        "primary-fixed-dim": "#afc6ff",
+                        "on-tertiary-container": "#460066",
+                        "on-primary-fixed-variant": "#00429a",
+                        "inverse-primary": "#0058c9",
+                        "primary-fixed": "#d9e2ff",
+                        "on-secondary-container": "#556d00",
+                        "on-secondary": "#283500",
+                        "on-background": "#e4e1e9",
+                        "on-primary-container": "#002760",
+                        "on-error": "#690005",
+                        "secondary": "#ffffff",
+                        "surface-bright": "#39383e",
+                        "primary": "#afc6ff",
+                        "on-secondary-fixed": "#161e00",
+                        "surface": "#131318",
+                        "primary-container": "#548dff",
+                        "tertiary": "#e9b3ff",
+                        "surface-container-low": "#1b1b20",
+                        "on-secondary-fixed-variant": "#3c4d00",
+                        "secondary-fixed": "#c3f400",
+                        "outline-variant": "#414655",
+                        "surface-container": "#1f1f25",
+                        "tertiary-fixed-dim": "#e9b3ff",
+                        "on-tertiary-fixed": "#310048"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "16px",
+                        "margin-desktop": "40px",
+                        "container-max": "1200px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg min-h-screen overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] h-16 flex justify-between items-center px-margin-mobile">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/30">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast close-up portrait of a successful modern professional in a dark studio setting. The lighting is dramatic with cool blue rim highlights and deep shadows, reflecting a prestigious and focused billionaire aesthetic. The background is a blurred high-tech workspace with subtle glowing data interfaces." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcTfqH9ntCgrHFvhsFqOnB2NTIfbtgRcnpED5JYZZXH06VJCIxfLtGGHgKbm98nHlvUt7LkEYy-71Z0sBqCCfncnbNMtZMv4KNtKvoi09U7HQ3WhLYUhOXPa3J8ZkIs8aWA12NuihM5-YMnl14qz_vGmYM_isXu6HojFlP9Nv3ql_xxWmwXOjzTQjjHFxGHr4jO0DaXvF5exjLhiC1v9jIoFG_Q8zb9RnrNqBL3kgcZyn0POrVpmTxrFPoHU4WVavP-1wenR4Ao2ee"/>
+</div>
+<h1 class="font-display-lg text-headline-lg-mobile font-extrabold tracking-tighter text-primary">APEX LEGACY</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors active:scale-95 transition-transform text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="pt-20 pb-32 px-margin-mobile flex flex-col gap-6">
+<!-- Interactive 9x9 Grid Viewport -->
+<section class="relative">
+<div class="flex justify-between items-end mb-4">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Billionaire Grid</h2>
+<p class="text-label-caps font-label-caps text-on-surface-variant opacity-60">SYSTEM STATUS: OPTIMAL</p>
+</div>
+<div class="glass-panel px-3 py-1 rounded-full flex items-center gap-2 border border-primary/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-widest">Live Sync</span>
+</div>
+</div>
+<!-- The Grid Container -->
+<div class="relative aspect-square w-full glass-panel rounded-2xl overflow-hidden border border-white/10 p-2 shadow-2xl">
+<div class="grid grid-cols-9 grid-rows-9 gap-1 h-full w-full transition-transform duration-500 origin-center" id="grid-canvas">
+<!-- Grid cells generated by script for high-density 9x9 -->
+</div>
+<!-- Zoom/Overlay UI -->
+<div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+<div class="w-24 h-24 rounded-full bg-primary/10 blur-3xl grid-glow-center animate-pulse"></div>
+</div>
+</div>
+<!-- Grid Controls -->
+<div class="flex justify-center gap-4 mt-4">
+<button class="glass-panel p-3 rounded-full border border-white/10 active:scale-90 transition-transform" onclick="zoomGrid(1.5)">
+<span class="material-symbols-outlined text-primary" data-icon="zoom_in">zoom_in</span>
+</button>
+<button class="glass-panel p-3 rounded-full border border-white/10 active:scale-90 transition-transform" onclick="resetZoom()">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="recenter">recenter</span>
+</button>
+<button class="glass-panel p-3 rounded-full border border-white/10 active:scale-90 transition-transform" onclick="zoomGrid(0.7)">
+<span class="material-symbols-outlined text-primary" data-icon="zoom_out">zoom_out</span>
+</button>
+</div>
+</section>
+<!-- Stats Grid (Bento Style) -->
+<div class="grid grid-cols-2 gap-4">
+<!-- Total Grid Integrity -->
+<div class="col-span-2 glass-panel p-6 rounded-2xl border border-white/10 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl" data-icon="shield">shield</span>
+</div>
+<h3 class="text-label-caps font-label-caps text-on-surface-variant mb-2">Total Grid Integrity</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-headline-lg text-primary">94.8%</span>
+<span class="text-secondary-fixed text-xs font-bold">+2.1% ↑</span>
+</div>
+<!-- Progress Bar -->
+<div class="mt-4 w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container w-[94.8%] shadow-[0_0_10px_rgba(175,198,255,0.6)]"></div>
+</div>
+</div>
+<!-- Next Milestone -->
+<div class="glass-panel p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
+<div>
+<h3 class="text-[10px] font-label-caps text-on-surface-variant uppercase tracking-widest mb-3">Next Milestone</h3>
+<p class="font-title-md text-title-md text-on-surface leading-tight">Expansion Phase III</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-xs text-on-surface-variant opacity-60">12/15 Nodes</span>
+<span class="material-symbols-outlined text-primary" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+<!-- Active Assets -->
+<div class="glass-panel p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
+<div>
+<h3 class="text-[10px] font-label-caps text-on-surface-variant uppercase tracking-widest mb-3">Active Assets</h3>
+<p class="font-title-md text-title-md text-on-surface leading-tight">64 Nodes</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-xs text-secondary-fixed">Level 42</span>
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="military_tech">military_tech</span>
+</div>
+</div>
+</div>
+<!-- Trophy Teaser -->
+<section class="glass-panel p-6 rounded-2xl border border-secondary-fixed/20 bg-secondary-fixed/5">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary-fixed/30 to-transparent flex items-center justify-center border border-secondary-fixed/40">
+<span class="material-symbols-outlined text-secondary-fixed" data-icon="workspace_premium" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-secondary-fixed">Apex Architect</h4>
+<p class="text-xs text-on-surface-variant">Platinum Tier Achievement</p>
+</div>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant italic opacity-80">"Consistency is the currency of champions. Maintain 90%+ integrity for 30 days."</p>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface-container/80 backdrop-blur-xl border-t border-white/20 shadow-[0_-8px_32px_0_rgba(0,0,0,0.5)] flex justify-around items-center px-2 py-3 pb-safe z-50 rounded-t-xl">
+<a class="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 ring-1 ring-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.4)] active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-label-caps mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="military_tech">military_tech</span>
+<span class="font-label-caps text-label-caps mt-1">Trophies</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="checklist">checklist</span>
+<span class="font-label-caps text-label-caps mt-1">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-caps text-label-caps mt-1">Journal</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-caps text-label-caps mt-1">Vision</span>
+</a>
+</nav>
+<script>
+        // Generate 9x9 Grid Cells
+        const grid = document.getElementById('grid-canvas');
+        for (let i = 0; i < 81; i++) {
+            const cell = document.createElement('div');
+            const row = Math.floor(i / 9);
+            const col = i % 9;
+            const isCenter = row >= 3 && row <= 5 && col >= 3 && col <= 5;
+            const isFilled = Math.random() > 0.3;
+            
+            cell.className = `w-full h-full rounded-[2px] transition-all duration-300 transform cursor-pointer border border-white/5`;
+            
+            if (isCenter) {
+                cell.classList.add('bg-primary/40', 'shadow-[0_0_8px_rgba(175,198,255,0.4)]', 'border-primary/50');
+                if (Math.random() > 0.5) cell.classList.add('animate-pulse');
+            } else if (isFilled) {
+                cell.classList.add('bg-white/10');
+                if (Math.random() > 0.8) cell.classList.add('bg-primary/20', 'border-primary/20');
+            } else {
+                cell.classList.add('bg-white/[0.02]');
+            }
+
+            cell.onclick = () => {
+                cell.classList.toggle('scale-110');
+                cell.classList.toggle('bg-primary');
+                cell.classList.toggle('z-10');
+            };
+
+            grid.appendChild(cell);
+        }
+
+        let currentZoom = 1;
+        function zoomGrid(factor) {
+            currentZoom *= factor;
+            if (currentZoom < 1) currentZoom = 1;
+            if (currentZoom > 3) currentZoom = 3;
+            grid.style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            grid.style.transform = `scale(1)`;
+        }
+
+        // Random atmospheric glow flicker
+        setInterval(() => {
+            const cells = grid.children;
+            const randomIdx = Math.floor(Math.random() * cells.length);
+            const cell = cells[randomIdx];
+            if (cell.classList.contains('bg-primary/40')) {
+                cell.style.filter = `brightness(${1 + Math.random()})`;
+                setTimeout(() => cell.style.filter = 'none', 500);
+            }
+        }, 2000);
+    </script>
+</body></html>

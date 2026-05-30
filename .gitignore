@@ -1,0 +1,23 @@
+# Dependencies
+app/node_modules/
+
+# Build output
+app/.next/
+app/out/
+
+# Environment variables (secrets)
+app/.env
+app/.env.local
+app/.env*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+
+# Claude graphify output
+graphify-out/
+
+# Uploads (user content — not source code)
+app/public/uploads/

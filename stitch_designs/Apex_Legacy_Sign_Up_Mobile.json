@@ -1,0 +1,28 @@
+﻿{
+    "id":  1,
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "content":  [
+                                   {
+                                       "text":  "{\"name\":\"projects/10308781107394988146/screens/215806af7bb741089e10ce720befca6f\",\"title\":\"Apex Legacy - Sign Up (Mobile)\",\"screenshot\":{\"name\":\"projects/10308781107394988146/files/d66508110ee7447cbbe51f00ae47013d\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/ADBb0ugzOcdjzpzNSxvyjUlcaPwH_EBKXh0z7Yz5UIbGzgAUmouML0BDnVMr6M7tdH5scMd0_eU5j__1ejANcAo7ZM6kGi3IVJrBtW1YtgBnKZ0Wg5pd59cxRL6QwRZXzJjWe67qeXtYTnY38hwEAQDMPiO55wYStM9uZ2vScrAIyPPu8FFt5ZOXvGkvwbTfpweNdqqkw0GvLAj4mln-qVd3UM9yIC8TvEFox7yC9A6ShH1kXsWIV-jh8LZhCPc\"},\"htmlCode\":{\"name\":\"projects/10308781107394988146/files/515800041c2a42a0a666477b24144119\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzJlMDU4M2Y5OTZmNjQ2NDI4N2VhMGU1ZWE5NDJjYzA1EgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086\",\"mimeType\":\"text/html\"},\"width\":\"780\",\"height\":\"1928\",\"deviceType\":\"MOBILE\"}",
+                                       "type":  "text"
+                                   }
+                               ],
+                   "structuredContent":  {
+                                             "deviceType":  "MOBILE",
+                                             "height":  "1928",
+                                             "htmlCode":  {
+                                                              "downloadUrl":  "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzJlMDU4M2Y5OTZmNjQ2NDI4N2VhMGU1ZWE5NDJjYzA1EgsSBxDA8svj_gYYAZIBJAoKcHJvamVjdF9pZBIWQhQxMDMwODc4MTEwNzM5NDk4ODE0Ng\u0026filename=\u0026opi=89354086",
+                                                              "mimeType":  "text/html",
+                                                              "name":  "projects/10308781107394988146/files/515800041c2a42a0a666477b24144119"
+                                                          },
+                                             "name":  "projects/10308781107394988146/screens/215806af7bb741089e10ce720befca6f",
+                                             "screenshot":  {
+                                                                "downloadUrl":  "https://lh3.googleusercontent.com/aida/ADBb0ugzOcdjzpzNSxvyjUlcaPwH_EBKXh0z7Yz5UIbGzgAUmouML0BDnVMr6M7tdH5scMd0_eU5j__1ejANcAo7ZM6kGi3IVJrBtW1YtgBnKZ0Wg5pd59cxRL6QwRZXzJjWe67qeXtYTnY38hwEAQDMPiO55wYStM9uZ2vScrAIyPPu8FFt5ZOXvGkvwbTfpweNdqqkw0GvLAj4mln-qVd3UM9yIC8TvEFox7yC9A6ShH1kXsWIV-jh8LZhCPc",
+                                                                "name":  "projects/10308781107394988146/files/d66508110ee7447cbbe51f00ae47013d"
+                                                            },
+                                             "title":  "Apex Legacy - Sign Up (Mobile)",
+                                             "width":  "780"
+                                         }
+               }
+}

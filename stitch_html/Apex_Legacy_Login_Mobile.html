@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Apex Legacy - Elite Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#afc6ff",
+                    "secondary-container": "#c3f400",
+                    "on-secondary-fixed": "#161e00",
+                    "on-error-container": "#ffdad6",
+                    "outline-variant": "#414655",
+                    "surface-container-lowest": "#0e0e13",
+                    "surface-container-high": "#2a292f",
+                    "on-tertiary-fixed-variant": "#7200a3",
+                    "on-background": "#e4e1e9",
+                    "inverse-surface": "#e4e1e9",
+                    "tertiary-fixed": "#f6d9ff",
+                    "on-surface-variant": "#c1c6d8",
+                    "on-surface": "#e4e1e9",
+                    "surface-dim": "#131318",
+                    "surface": "#131318",
+                    "inverse-on-surface": "#303036",
+                    "on-primary-container": "#002760",
+                    "on-tertiary-container": "#460066",
+                    "surface-container": "#1f1f25",
+                    "tertiary": "#e9b3ff",
+                    "tertiary-container": "#c863fb",
+                    "tertiary-fixed-dim": "#e9b3ff",
+                    "surface-tint": "#afc6ff",
+                    "error": "#ffb4ab",
+                    "secondary-fixed-dim": "#abd600",
+                    "primary-fixed": "#d9e2ff",
+                    "on-secondary-fixed-variant": "#3c4d00",
+                    "surface-variant": "#35343a",
+                    "surface-bright": "#39383e",
+                    "on-secondary-container": "#556d00",
+                    "on-primary-fixed": "#001944",
+                    "surface-container-low": "#1b1b20",
+                    "secondary-fixed": "#c3f400",
+                    "outline": "#8c90a1",
+                    "on-secondary": "#283500",
+                    "secondary": "#ffffff",
+                    "primary-container": "#548dff",
+                    "error-container": "#93000a",
+                    "on-error": "#690005",
+                    "inverse-primary": "#0058c9",
+                    "primary": "#afc6ff",
+                    "on-tertiary": "#510074",
+                    "background": "#131318",
+                    "on-primary-fixed-variant": "#00429a",
+                    "surface-container-highest": "#35343a",
+                    "on-tertiary-fixed": "#310048",
+                    "on-primary": "#002d6d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "unit": "8px",
+                    "container-max": "1200px",
+                    "margin-mobile": "20px",
+                    "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .neon-glow-primary:focus-within {
+            box-shadow: 0 0 15px rgba(175, 198, 255, 0.4);
+        }
+        .btn-pulse:active {
+            transform: scale(0.96);
+            filter: brightness(1.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex flex-col overflow-hidden">
+<!-- Cinematic Background -->
+<div class="fixed inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background z-10"></div>
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-fidelity digital environment with deep multi-layered dark space and subtle flowing neon blue energy trails. The atmosphere is prestigious and relentless, mimicking a premium gaming console interface with high-contrast shadows and futuristic depth. Professional studio lighting highlights the dark, sleek textures and infinite horizon of a high-performance achievement arena." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYsl3BoXFhZ51aFIJg6BZ-1cDFB-eHW4TCaxXrHsaIKjAMaaCQTSar8Ub2ucRhmsxLli5WOnupN9eAhI7aGbKpWNGI9lt-01CYprez_xYD_1NOjxdiSHjmDnAnqYHfnMW7A644S81ytt4tqJtEqniqQaK5BF6aox0Y3WjaOBNu6IWQkmWDQKSUoFw3xGczOW-WIuLVcrSGoEXb0pqyrTEBPp7t5M5kyuy4ozHNrUCFJOJ55LXnBOop-0_Mp8YIY4JyGNYzGs9RzlUe"/>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-20 flex-grow flex items-center justify-center px-margin-mobile">
+<!-- Login Card -->
+<div class="glass-panel w-full max-w-[400px] p-8 rounded-xl flex flex-col items-center">
+<!-- Brand Identity -->
+<div class="mb-10 text-center">
+<h1 class="font-display-lg text-primary-fixed tracking-tighter uppercase mb-2">
+                    APEX LEGACY
+                </h1>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface-variant/90">
+                    Elite Login
+                </h2>
+</div>
+<!-- Form Fields -->
+<div class="w-full space-y-6">
+<!-- Email Input -->
+<div class="space-y-2 group">
+<label class="font-label-caps text-label-caps text-on-surface-variant/70 ml-1">IDENTIFIER</label>
+<div class="relative flex items-center glass-panel rounded-lg px-4 py-4 transition-all duration-300 neon-glow-primary">
+<span class="material-symbols-outlined text-primary-fixed-dim mr-3" data-icon="alternate_email">alternate_email</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface placeholder-on-surface-variant/30 w-full p-0" placeholder="Email Address" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2 group">
+<label class="font-label-caps text-label-caps text-on-surface-variant/70 ml-1">ACCESS KEY</label>
+<div class="relative flex items-center glass-panel rounded-lg px-4 py-4 transition-all duration-300 neon-glow-primary">
+<span class="material-symbols-outlined text-primary-fixed-dim mr-3" data-icon="lock_open">lock_open</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface placeholder-on-surface-variant/30 w-full p-0" placeholder="••••••••" type="password"/>
+<span class="material-symbols-outlined text-on-surface-variant/50 cursor-pointer" data-icon="visibility">visibility</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-gradient-to-r from-primary-container to-on-primary-fixed-variant text-on-primary py-5 rounded-lg font-bold text-lg shadow-[0_0_20px_rgba(84,141,255,0.3)] btn-pulse transition-all duration-300 mt-4">
+                    ENTER ARENA
+                </button>
+<!-- Footer Links -->
+<div class="flex flex-col items-center gap-4 pt-4">
+<a class="font-label-caps text-label-caps text-primary hover:text-white transition-colors tracking-widest" href="#">
+                        FORGOT PASSWORD?
+                    </a>
+</div>
+</div>
+<!-- Social Auth -->
+<div class="w-full mt-10">
+<div class="flex items-center gap-4 mb-8">
+<div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+<span class="font-label-caps text-[10px] text-outline tracking-[0.2em]">SOCIAL SYNC</span>
+<div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+</div>
+<div class="flex justify-center gap-6">
+<button class="glass-panel w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface" data-icon="google" style="font-variation-settings: 'FILL' 1;">google</span>
+</button>
+<button class="glass-panel w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface" data-icon="apple" style="font-variation-settings: 'FILL' 1;">ios</span>
+</button>
+<button class="glass-panel w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface" data-icon="shield_person" style="font-variation-settings: 'FILL' 1;">shield_person</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="relative z-20 w-full py-8 mt-auto border-t border-outline-variant/20 bg-surface-container-lowest/50 backdrop-blur-md">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-4 max-w-container-max mx-auto">
+<span class="font-label-caps text-label-caps text-outline">© 2024 APEX LEGACY. ENGINEERED FOR THE RELENTLESS.</span>
+<div class="flex gap-6">
+<a class="font-label-caps text-label-caps text-outline hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-on-surface transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions for input focus
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('border-primary-fixed-dim');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('border-primary-fixed-dim');
+            });
+        });
+
+        // Simple parallax effect for background
+        document.body.addEventListener('mousemove', (e) => {
+            const bg = document.querySelector('img[data-alt]');
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            bg.style.transform = `scale(1.1) translate(${x}px, ${y}px)`;
+        });
+    </script>
+</body></html>

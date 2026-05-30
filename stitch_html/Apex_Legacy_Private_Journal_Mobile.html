@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #131318;
+            color: #e4e1e9;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow-primary {
+            box-shadow: 0 0 15px rgba(175, 198, 255, 0.3);
+        }
+        .writing-area:focus {
+            outline: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for glass containers */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#c1c6d8",
+                      "on-error-container": "#ffdad6",
+                      "inverse-on-surface": "#303036",
+                      "surface-variant": "#35343a",
+                      "on-tertiary": "#510074",
+                      "background": "#131318",
+                      "error-container": "#93000a",
+                      "surface-container-lowest": "#0e0e13",
+                      "surface-tint": "#afc6ff",
+                      "error": "#ffb4ab",
+                      "on-primary-fixed": "#001944",
+                      "outline": "#8c90a1",
+                      "on-tertiary-fixed-variant": "#7200a3",
+                      "tertiary-fixed": "#f6d9ff",
+                      "surface-dim": "#131318",
+                      "surface-container-high": "#2a292f",
+                      "inverse-surface": "#e4e1e9",
+                      "tertiary-container": "#c863fb",
+                      "secondary-fixed-dim": "#abd600",
+                      "surface-container-highest": "#35343a",
+                      "on-surface": "#e4e1e9",
+                      "on-primary": "#002d6d",
+                      "secondary-container": "#c3f400",
+                      "primary-fixed-dim": "#afc6ff",
+                      "on-tertiary-container": "#460066",
+                      "on-primary-fixed-variant": "#00429a",
+                      "inverse-primary": "#0058c9",
+                      "primary-fixed": "#d9e2ff",
+                      "on-secondary-container": "#556d00",
+                      "on-secondary": "#283500",
+                      "on-background": "#e4e1e9",
+                      "on-primary-container": "#002760",
+                      "on-error": "#690005",
+                      "secondary": "#ffffff",
+                      "surface-bright": "#39383e",
+                      "primary": "#afc6ff",
+                      "on-secondary-fixed": "#161e00",
+                      "surface": "#131318",
+                      "primary-container": "#548dff",
+                      "tertiary": "#e9b3ff",
+                      "surface-container-low": "#1b1b20",
+                      "on-secondary-fixed-variant": "#3c4d00",
+                      "secondary-fixed": "#c3f400",
+                      "outline-variant": "#414655",
+                      "surface-container": "#1f1f25",
+                      "tertiary-fixed-dim": "#e9b3ff",
+                      "on-tertiary-fixed": "#310048"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "16px",
+                      "margin-desktop": "40px",
+                      "container-max": "1200px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "title-md": ["Inter"],
+                      "display-lg": ["Plus Jakarta Sans"],
+                      "body-lg": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "headline-lg-mobile": ["Plus Jakarta Sans"],
+                      "headline-lg": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-lg text-body-lg selection:bg-primary/30">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-margin-mobile h-16 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a high-achiever with sharp features, illuminated by dramatic cinematic blue and purple lighting. The style is hyper-realistic and high-fidelity, reflecting an elite gamer or tech executive aesthetic. The background is a dark, sophisticated studio setting with subtle lens flares and a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAisXE1zakvA7RXGwjCK16BGM8KvDpXywuwTgZtJ529P2FCbtJYyaOfiG5KNiPJq0rI6FyOvH-20nHKQC5eswswHdm1ZESIrWZ65xebwBpPhKjvV96u-VVjLBj7spehOwbEq1Wtw25_lwqb2-y9z0pPhqLukM9PvqJXXhFHJ1H-7ujWRcpGfdDrVkK7aq_IQcDi_64dZhcuhNIsC9I3V0hTCTXLQSOXNwlB6SaYNC4h9WUGajdFPpfipUIB6eFrFBwnuVT1o_6raKBA"/>
+</div>
+<h1 class="font-display-lg text-headline-lg-mobile font-extrabold tracking-tighter text-primary">APEX LEGACY</h1>
+</div>
+<button class="material-symbols-outlined text-primary hover:bg-white/10 transition-colors p-2 rounded-full active:scale-95 transition-transform">
+            notifications
+        </button>
+</header>
+<main class="pt-20 pb-32 px-margin-mobile min-h-screen">
+<!-- Section Header: The Breakthrough -->
+<div class="mb-8">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">The Breakthrough</h2>
+<p class="text-on-surface-variant opacity-70 mt-1">Refining the elite mindset.</p>
+</div>
+<!-- Recent Entries Horizontal List (Bento-style scroll) -->
+<div class="mb-10">
+<div class="flex justify-between items-end mb-4">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-widest">Recent Entries</span>
+<span class="text-[10px] text-on-surface-variant font-medium">VIEW ARCHIVE</span>
+</div>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-1 px-1">
+<!-- Entry Card 1 -->
+<div class="glass-panel min-w-[200px] p-5 rounded-xl border-primary/20 flex flex-col justify-between h-40 active:scale-95 transition-transform cursor-pointer">
+<div>
+<p class="text-on-surface-variant font-label-caps text-[10px] mb-2 uppercase tracking-tighter">OCT 24, 2023</p>
+<h3 class="font-title-md text-[16px] leading-tight line-clamp-2">Overcoming the Plateau</h3>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed text-[10px] font-bold ring-1 ring-secondary-fixed/30 uppercase tracking-widest">Focused</span>
+<span class="material-symbols-outlined text-secondary-fixed text-sm">trending_up</span>
+</div>
+</div>
+<!-- Entry Card 2 -->
+<div class="glass-panel min-w-[200px] p-5 rounded-xl border-white/5 flex flex-col justify-between h-40 active:scale-95 transition-transform cursor-pointer">
+<div>
+<p class="text-on-surface-variant font-label-caps text-[10px] mb-2 uppercase tracking-tighter">OCT 22, 2023</p>
+<h3 class="font-title-md text-[16px] leading-tight line-clamp-2">Systematic Recovery</h3>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary text-[10px] font-bold ring-1 ring-tertiary/30 uppercase tracking-widest">Calm</span>
+<span class="material-symbols-outlined text-tertiary text-sm">battery_charging_full</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Entry: Daily Prompt -->
+<div class="mb-6">
+<div class="relative overflow-hidden glass-panel p-6 rounded-2xl border-primary/30 shadow-[0_0_20px_rgba(175,198,255,0.15)]">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl -mr-16 -mt-16"></div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-primary uppercase">Daily Prompt</span>
+</div>
+<p class="font-title-md text-on-surface leading-snug">What is the one friction point currently slowing your momentum, and how will you eliminate it by sunset?</p>
+</div>
+</div>
+<!-- Writing Area -->
+<div class="relative">
+<textarea class="writing-area w-full min-h-[400px] bg-transparent border-none text-on-surface font-body-lg p-0 resize-none placeholder:text-on-surface-variant/30" placeholder="Start your breakthrough..."></textarea>
+<!-- Atmospheric floating background glow -->
+<div class="fixed bottom-40 right-10 w-64 h-64 bg-primary/5 blur-[100px] -z-10 pointer-events-none"></div>
+</div>
+</main>
+<!-- Contextual Context Bar (Above Nav) -->
+<div class="fixed bottom-[88px] left-0 w-full px-margin-mobile z-40 pointer-events-none">
+<div class="glass-panel p-3 rounded-2xl border-white/10 flex justify-between items-center pointer-events-auto shadow-2xl">
+<div class="flex items-center gap-4">
+<div class="flex flex-col">
+<span class="text-[9px] font-label-caps text-on-surface-variant uppercase tracking-widest mb-1 opacity-60">Sentiment</span>
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_8px_#abd600]"></div>
+<span class="text-xs font-bold text-secondary-fixed uppercase tracking-tighter">High Resolve</span>
+</div>
+</div>
+<div class="w-[1px] h-6 bg-white/10"></div>
+<div class="flex flex-col">
+<span class="text-[9px] font-label-caps text-on-surface-variant uppercase tracking-widest mb-1 opacity-60">Word Count</span>
+<span class="text-xs font-bold text-on-surface">142 WORDS</span>
+</div>
+</div>
+<button class="bg-primary px-4 py-2 rounded-xl text-on-primary font-bold text-xs uppercase tracking-widest active:scale-95 transition-all shadow-[0_0_15px_rgba(175,198,255,0.4)]">
+                Save
+            </button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-3 pb-safe bg-surface-container/80 backdrop-blur-xl z-50 rounded-t-xl border-t border-white/20 shadow-[0_-8px_32px_0_rgba(0,0,0,0.5)]">
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-label-caps text-[10px] uppercase">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">military_tech</span>
+<span class="font-label-caps text-[10px] uppercase">Trophies</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">checklist</span>
+<span class="font-label-caps text-[10px] uppercase">Tasks</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary-container/20 text-primary rounded-xl px-3 py-1 ring-1 ring-primary/50 shadow-[0_0_15px_rgba(175,198,255,0.4)] active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="font-label-caps text-[10px] uppercase">Journal</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-primary transition-all active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">auto_awesome</span>
+<span class="font-label-caps text-[10px] uppercase">Vision</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for word count
+        const textarea = document.querySelector('.writing-area');
+        const countDisplay = document.querySelector('.flex.flex-col:nth-child(3) span:nth-child(2)');
+        
+        textarea.addEventListener('input', () => {
+            const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+            countDisplay.innerText = `${words} WORDS`;
+            
+            // Subtle glow intensification on type
+            textarea.parentElement.style.textShadow = '0 0 10px rgba(175, 198, 255, 0.1)';
+            setTimeout(() => {
+                textarea.parentElement.style.textShadow = 'none';
+            }, 100);
+        });
+
+        // Click interaction for cards
+        document.querySelectorAll('.glass-panel').forEach(card => {
+            card.addEventListener('click', () => {
+                // Haptic simulation
+                if (window.navigator.vibrate) window.navigator.vibrate(10);
+            });
+        });
+    </script>
+</body></html>
