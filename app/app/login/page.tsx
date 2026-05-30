@@ -61,7 +61,7 @@ export default function LoginPage() {
             SYSTEM OPTIMIZED
           </div>
           <p className="text-xl font-semibold leading-relaxed italic" style={{ color: 'rgba(228,225,233,0.8)' }}>
-            "The arena is where potential becomes performance. Map your mission. Build your legacy."
+            "Ambition is the path to success. Persistence is the vehicle you arrive in. Bill Bradley"
           </p>
 
           <div className="mt-8 grid grid-cols-3 gap-4">
