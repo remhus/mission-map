@@ -21,3 +21,6 @@ graphify-out/
 
 # Uploads (user content — not source code)
 app/public/uploads/
+
+# Local Netlify folder
+.netlify
