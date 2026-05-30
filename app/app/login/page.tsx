@@ -58,7 +58,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-xs font-bold tracking-widest uppercase"
             style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            SYSTEM OPTIMIZED
+            SYSTEM OPTIMISED
           </div>
           <p className="text-xl font-semibold leading-relaxed italic" style={{ color: 'rgba(228,225,233,0.8)' }}>
             "Ambition is the path to success. Persistence is the vehicle you arrive in."
