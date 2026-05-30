@@ -67,14 +67,6 @@ export default function LoginPage() {
             — Bill Bradley
           </p>
 
-          <div className="mt-8 grid grid-cols-3 gap-4">
-            {[{ label: 'Skills', val: '8' }, { label: 'Disciplines', val: 'âˆž' }, { label: 'Grid Cells', val: '81' }].map(s => (
-              <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="text-2xl font-black" style={{ color: '#afc6ff', fontFamily: 'var(--font-jakarta)' }}>{s.val}</div>
-                <div className="text-xs font-bold tracking-widest uppercase mt-1" style={{ color: '#8c90a1' }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
