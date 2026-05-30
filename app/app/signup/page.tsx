@@ -52,8 +52,11 @@ export default function SignupPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-lg font-semibold leading-relaxed italic mb-8" style={{ color: 'rgba(228,225,233,0.8)' }}>
-            "Map your mission. Track your skills. Visualise your legacy."
+          <p className="text-lg font-semibold leading-relaxed italic mb-2" style={{ color: 'rgba(228,225,233,0.8)' }}>
+            "You don't have to be great to start, but you have to start to be great."
+          </p>
+          <p className="text-sm font-bold mb-8 tracking-widest uppercase" style={{ color: 'rgba(175,198,255,0.5)' }}>
+            — Zig Ziglar
           </p>
           <div className="flex flex-col gap-3">
             {[
