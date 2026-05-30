@@ -58,21 +58,6 @@ export default function SignupPage() {
           <p className="text-sm font-bold mb-8 tracking-widest uppercase" style={{ color: 'rgba(175,198,255,0.5)' }}>
             — Zig Ziglar
           </p>
-          <div className="flex flex-col gap-3">
-            {[
-              { icon: 'grid_view', text: 'Build your 9x9 Mission Map' },
-              { icon: 'emoji_events', text: 'Earn trophy achievements' },
-              { icon: 'radar', text: 'Track 8 core skill dimensions' },
-              { icon: 'wb_sunny', text: 'Visualise your vision board' },
-            ].map(f => (
-              <div key={f.text} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '16px' }}>{f.icon}</span>
-                </div>
-                <span className="text-sm" style={{ color: '#c1c6d8' }}>{f.text}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
