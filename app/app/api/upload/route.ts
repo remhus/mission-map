@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+
+const MAX_BYTES = 8 * 1024 * 1024; // 8 MB limit
 
 export async function POST(req: NextRequest) {
   const user = await getUser();
@@ -13,15 +13,13 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
   const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
+  if (bytes.byteLength > MAX_BYTES) {
+    return NextResponse.json({ error: 'File too large (max 8 MB)' }, { status: 413 });
+  }
 
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await mkdir(uploadDir, { recursive: true });
+  const base64 = Buffer.from(bytes).toString('base64');
+  const mimeType = file.type || 'image/jpeg';
+  const url = `data:${mimeType};base64,${base64}`;
 
-  const ext = file.name.split('.').pop() || 'jpg';
-  const filename = `${user.userId}-${Date.now()}.${ext}`;
-  const filepath = path.join(uploadDir, filename);
-  await writeFile(filepath, buffer);
-
-  return NextResponse.json({ url: `/uploads/${filename}` });
+  return NextResponse.json({ url });
 }
