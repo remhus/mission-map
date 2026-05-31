@@ -149,9 +149,9 @@ export default function AchievementsPage() {
   const activeSortLabel = SORT_OPTIONS.find(o => o.key === sortMode)?.label ?? 'Sort';
 
   return (
-    <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
+    <div className="px-4 md:px-8 py-4 max-w-6xl mx-auto">
       {/* Hero Banner */}
-      <div className="relative w-full rounded-3xl overflow-hidden mb-10 group" style={{ minHeight: 200 }}>
+      <div className="relative w-full rounded-3xl overflow-hidden mb-6 group" style={{ minHeight: 180 }}>
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0d1a35 0%, #1a0a2e 50%, #0A0A0F 100%)' }} />
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(175,198,255,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(200,99,251,0.3) 0%, transparent 50%)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0A0A0F 0%, transparent 60%)' }} />

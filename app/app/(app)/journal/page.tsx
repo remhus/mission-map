@@ -119,7 +119,7 @@ export default function JournalPage() {
   });
 
   return (
-    <div className="flex md:h-[calc(100vh-80px)] md:overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="md:flex md:h-[calc(100vh-80px)] md:overflow-hidden" style={{ background: '#0A0A0F' }}>
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)', filter: 'blur(120px)' }} />
       <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.03)', filter: 'blur(100px)' }} />
 
@@ -320,7 +320,7 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 md:px-10 py-4">
+            <div className="md:flex-1 md:overflow-y-auto px-6 md:px-10 py-4">
               <div className="glass-panel rounded-2xl border-l-4 overflow-hidden relative"
                 style={{ borderLeftColor: '#afc6ff' }}>
                 <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(175,198,255,0.05)' }} />
