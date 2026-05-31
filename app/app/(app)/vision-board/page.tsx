@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-type VisionImage = { id: number; image_url: string; title: string; sort_order: number };
+type VisionImage = { id: number; title: string; sort_order: number };
 
 function compressImage(file: File, maxDim = 1200, quality = 0.78): Promise<Blob> {
   return new Promise((resolve) => {
@@ -169,18 +169,6 @@ export default function VisionBoardPage() {
         </div>
       ) : images.length > 0 && (
         <>
-          {/* Drop more zone */}
-          <div
-            className="rounded-2xl flex items-center justify-center py-4 mb-6 transition-all cursor-pointer"
-            style={{ border: `1px dashed ${dragOver ? '#afc6ff' : 'rgba(255,255,255,0.08)'}`, background: dragOver ? 'rgba(175,198,255,0.05)' : 'transparent' }}
-            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-            onClick={() => fileRef.current?.click()}>
-            <span className="material-symbols-outlined mr-2" style={{ color: dragOver ? '#afc6ff' : '#414655', fontSize: '18px' }}>upload</span>
-            <span className="text-sm" style={{ color: dragOver ? '#afc6ff' : '#414655' }}>Drop more images or click to add</span>
-          </div>
-
           {/* Mosaic grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ gridAutoRows: '220px', gridAutoFlow: 'dense' }}>
             {images.map((img, idx) => {
@@ -193,7 +181,7 @@ export default function VisionBoardPage() {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(175,198,255,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(175,198,255,0.4)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.image_url} alt={img.title}
+                  <img src={`/api/vision-board/image?id=${img.id}`} alt={img.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                     onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
@@ -247,7 +235,7 @@ export default function VisionBoardPage() {
           onClick={() => setLightbox(null)}>
           <div className="relative max-w-5xl max-h-[90vh] mx-4 md:mx-14" onClick={e => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={lightboxImg.image_url} alt={lightboxImg.title}
+            <img src={`/api/vision-board/image?id=${lightboxImg.id}`} alt={lightboxImg.title}
               className="max-w-full max-h-[85vh] object-contain rounded-2xl"
               style={{ boxShadow: '0 0 60px rgba(0,0,0,0.8)' }}
               onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
@@ -335,7 +323,7 @@ export default function VisionBoardPage() {
                     className={`relative group rounded-xl overflow-hidden cursor-pointer ${spans[idx % spans.length]}`}
                     onClick={() => { setFullscreen(false); setLightbox(idx); }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.image_url} alt={img.title}
+                    <img src={`/api/vision-board/image?id=${img.id}`} alt={img.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3"

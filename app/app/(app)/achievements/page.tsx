@@ -69,6 +69,8 @@ export default function AchievementsPage() {
   const [form, setForm] = useState({ title: '', description: '', trophy_tier: 'gold' as Achievement['trophy_tier'], is_locked: true });
   const [sortMode, setSortMode] = useState<SortMode>('default');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showAllAch, setShowAllAch] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -81,6 +83,13 @@ export default function AchievementsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -230,8 +239,9 @@ export default function AchievementsPage() {
           </button>
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {sorted.map(ach => {
+          {(isMobile && !showAllAch ? sorted.slice(0, 3) : sorted).map(ach => {
             const t = TROPHY[ach.trophy_tier];
             const isLocked = ach.is_locked;
             return (
@@ -317,6 +327,19 @@ export default function AchievementsPage() {
             );
           })}
         </div>
+
+        {/* Show more button — mobile only */}
+        {isMobile && !showAllAch && sorted.length > 3 && (
+          <div className="flex justify-center mt-4 sm:hidden">
+            <button onClick={() => setShowAllAch(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_more</span>
+              Show {sorted.length - 3} more
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* Tier Mastery + Radar */}

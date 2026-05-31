@@ -9,7 +9,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const images = await sql`
-    SELECT * FROM vision_board_images WHERE user_id = ${user.userId} ORDER BY sort_order, created_at
+    SELECT id, title, sort_order, created_at FROM vision_board_images WHERE user_id = ${user.userId} ORDER BY sort_order, created_at
   `;
   return NextResponse.json({ images });
 }

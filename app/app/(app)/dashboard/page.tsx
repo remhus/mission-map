@@ -81,11 +81,10 @@ function GridCell({
     borderRadius: br,
     cursor: editable ? 'pointer' : 'default',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden', position: 'relative',
+    overflow: 'hidden', position: 'relative', minWidth: 0,
     transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
     fontSize: fs, fontWeight: 600, lineHeight: 1.2,
     textAlign: 'center', padding: '2px',
-    wordBreak: 'break-word', overflowWrap: 'break-word',
   };
 
   if (role === 'ultimate') {
@@ -118,7 +117,7 @@ function GridCell({
           'rgba(255,255,255,0.03)';
       }}>
       {displayContent ? (
-        <span style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', padding: '1px' }}>
+        <span style={{ width: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', wordBreak: 'break-word', overflowWrap: 'break-word', padding: '1px' }}>
           {displayContent}
         </span>
       ) : isOC ? (
@@ -309,8 +308,7 @@ export default function DashboardPage() {
         <button onClick={() => setFullscreen(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen</span>
-          <span className="text-xs font-bold">Fullscreen</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fullscreen</span>
         </button>
       </div>
 
@@ -351,10 +349,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats bento */}
-      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-start">
-        {/* Upcoming tasks */}
-        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col">
-          <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch">
+        {/* Today's Tasks — fixed height (4-task equivalent) */}
+        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col" style={{ minHeight: 340 }}>
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
             <Link href="/tasks" className="text-xs font-bold transition-colors" style={{ color: '#afc6ff' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.7'}
@@ -390,26 +388,37 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="md:w-1/2 glass-card p-6 rounded-3xl">
-          <h3 className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#8c90a1' }}>Skill XP</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {allSkills.map(skill => {
-              const pts = stats[skill] || 0;
-              return (
-                <div key={skill}>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <div className="flex items-center gap-1">
-                      <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '10px' }}>{SKILL_ICONS[skill]}</span>
-                      <span className="text-xs capitalize" style={{ color: '#c1c6d8' }}>{skill}</span>
+        {/* Right column: Skill XP + Dream Capsule */}
+        <div className="md:w-1/2 flex flex-col gap-4">
+          <div className="glass-card p-6 rounded-3xl flex-shrink-0">
+            <h3 className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#8c90a1' }}>Skill XP</h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {allSkills.map(skill => {
+                const pts = stats[skill] || 0;
+                return (
+                  <div key={skill}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '10px' }}>{SKILL_ICONS[skill]}</span>
+                        <span className="text-xs capitalize" style={{ color: '#c1c6d8' }}>{skill}</span>
+                      </div>
+                      <span className="text-xs font-bold" style={{ color: '#afc6ff' }}>{pts}</span>
                     </div>
-                    <span className="text-xs font-bold" style={{ color: '#afc6ff' }}>{pts}</span>
+                    <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(pts / 1000) * 100}%`, background: '#afc6ff', transition: 'width 0.7s' }} />
+                    </div>
                   </div>
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${(pts / 1000) * 100}%`, background: '#afc6ff', transition: 'width 0.7s' }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dream Capsule — fills remaining height to align base with Today's Tasks */}
+          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.06) 0%, transparent 70%)' }} />
+            <span className="material-symbols-outlined mb-3" style={{ color: '#414655', fontSize: '28px' }}>rocket_launch</span>
+            <h3 className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
+            <p className="text-xs" style={{ color: '#414655' }}>Coming soon</p>
           </div>
         </div>
       </div>

@@ -284,7 +284,7 @@ export default function JournalPage() {
       </div>
 
       {/* ---- Right: Editor / Viewer ---- */}
-      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full overflow-hidden relative z-10`}>
+      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full overflow-y-auto md:overflow-hidden relative z-10`}>
 
         {/* Mobile back button */}
         <div className="md:hidden flex items-center gap-2 px-4 py-3 flex-shrink-0 border-b"
@@ -355,10 +355,10 @@ export default function JournalPage() {
         ) : active ? (
           /* ---- READING VIEW ---- */
           <>
-            <div className="flex-1 flex flex-col overflow-hidden min-h-0 px-6 md:px-10 py-8 gap-4">
-              {/* Header */}
-              <div className="flex items-start justify-between flex-shrink-0 mb-0">
-                <div className="flex-1 pr-4">
+            <div className="px-6 md:px-10 py-8 flex flex-col gap-4 md:flex-1 md:overflow-hidden md:min-h-0">
+              {/* Header — column on mobile so title takes full width */}
+              <div className="flex-shrink-0 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                <div className="flex-1">
                   <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>
                     {new Date(active.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
                   </p>
@@ -399,13 +399,13 @@ export default function JournalPage() {
                 </div>
               </div>
 
-              {/* Content panel — sizes to text body; scrolls internally if larger than available space */}
-              <div className="glass-panel rounded-2xl border-l-4 custom-scrollbar relative"
-                style={{ borderLeftColor: '#afc6ff', overflowY: 'auto', flexGrow: 0, flexShrink: 1, flexBasis: 'auto', minHeight: 0 }}>
+              {/* Content panel — natural height on mobile, internal scroll on desktop */}
+              <div className="glass-panel rounded-2xl border-l-4 relative md:overflow-y-auto md:custom-scrollbar"
+                style={{ borderLeftColor: '#afc6ff', overflowX: 'hidden', flexGrow: 0, flexShrink: 1, flexBasis: 'auto', minHeight: 0 }}>
                 <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)' }} />
                 <div className="px-5 py-5 relative">
                   {active.content && active.content !== '<p></p>' ? (
-                    <div className="rich-editor-content" style={{ color: '#c1c6d8' }}
+                    <div className="rich-editor-content" style={{ color: '#c1c6d8', wordBreak: 'break-word', overflowWrap: 'break-word' }}
                       dangerouslySetInnerHTML={{ __html: active.content }} />
                   ) : (
                     <p style={{ color: '#414655', fontStyle: 'italic' }}>No content written...</p>
@@ -414,7 +414,7 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="flex-shrink-0 px-6 md:px-10 py-4 flex items-center justify-between border-t"
+            <div className="px-6 md:px-10 py-4 flex items-center justify-between border-t flex-shrink-0"
               style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.6)' }}>
               <div className="flex gap-6">
                 <div><p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Words</p>
