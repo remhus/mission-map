@@ -117,7 +117,7 @@ function GridCell({
           'rgba(255,255,255,0.03)';
       }}>
       {displayContent ? (
-        <span style={{ width: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', wordBreak: 'break-word', overflowWrap: 'break-word', padding: '1px' }}>
+        <span style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', wordBreak: 'normal', overflowWrap: 'break-word', boxSizing: 'border-box' }}>
           {displayContent}
         </span>
       ) : isOC ? (
@@ -350,8 +350,8 @@ export default function DashboardPage() {
 
       {/* Stats bento */}
       <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch">
-        {/* Today's Tasks — fixed height (4-task equivalent) */}
-        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col" style={{ minHeight: 340 }}>
+        {/* Today's Tasks — fixed height on desktop only */}
+        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col md:min-h-[340px]">
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
             <Link href="/tasks" className="text-xs font-bold transition-colors" style={{ color: '#afc6ff' }}
