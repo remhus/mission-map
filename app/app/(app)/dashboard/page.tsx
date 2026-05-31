@@ -188,8 +188,37 @@ function GridView({
   );
 }
 
+const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#afc6ff',strength:'#ff6b6b',bravery:'#c3f400',wealth:'#4ecdc4',discipline:'#e9b3ff',wisdom:'#f97316',influence:'#fd79a8' };
+
+function TomorrowSection({ tasks }: { tasks: Task[] }) {
+  if (tasks.length === 0) return null;
+  return (
+    <div className="hidden md:block mt-1 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#414655' }}>Tomorrow</p>
+      <div className="flex flex-col gap-2">
+        {tasks.map(task => {
+          const color = SKILL_COLORS[task.skill] || '#afc6ff';
+          return (
+            <div key={task.id} className="flex items-center gap-3 px-3 py-2 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.02)', borderLeft: `3px solid ${color}40` }}>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate" style={{ color: '#6b7280' }}>{task.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: '#414655' }}>
+                  <span style={{ color: color + '80' }}>{task.skill}</span>
+                  {' · '}{task.duration_minutes}m
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+  const [tomorrowTasks, setTomorrowTasks] = useState<Task[]>([]);
   const [trophyCount, setTrophyCount] = useState(0);
   const [cells, setCells] = useState<Cell[][]>(
     Array.from({ length: 9 }, (_, r) =>
@@ -227,6 +256,18 @@ export default function DashboardPage() {
       return 0;
     });
     setUpcomingTasks(todayTasks.slice(0, 5));
+
+    const tomorrowDow = (todayDow + 1) % 7;
+    const tomorrowList: Task[] = (tasksData.tasks || []).filter((t: Task) =>
+      t.day_of_week === tomorrowDow && !t.every_day
+    ).sort((a: Task, b: Task) => {
+      if (a.time_of_day && b.time_of_day) return a.time_of_day.localeCompare(b.time_of_day);
+      if (a.time_of_day) return -1;
+      if (b.time_of_day) return 1;
+      return 0;
+    });
+    setTomorrowTasks(tomorrowList.slice(0, 2));
+
     const achData = await achRes.json();
     setTrophyCount((achData.achievements || []).filter((a: { is_locked: boolean }) => !a.is_locked).length);
     const newCells = Array.from({ length: 9 }, (_, r) =>
@@ -364,11 +405,11 @@ export default function DashboardPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
               <span className="material-symbols-outlined mb-2" style={{ color: '#414655', fontSize: '32px' }}>task_alt</span>
               <p className="text-sm" style={{ color: '#8c90a1' }}>All done for today</p>
+              <TomorrowSection tasks={tomorrowTasks} />
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
               {upcomingTasks.map(task => {
-                const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#afc6ff',strength:'#ff6b6b',bravery:'#c3f400',wealth:'#4ecdc4',discipline:'#e9b3ff',wisdom:'#f97316',influence:'#fd79a8' };
                 const color = SKILL_COLORS[task.skill] || '#afc6ff';
                 return (
                   <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
@@ -384,10 +425,7 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
-              {/* Desktop-only filler label when fewer than 4 tasks remain */}
-              <p className="hidden md:block text-xs text-center mt-auto pt-3" style={{ color: '#414655' }}>
-                No other tasks due today
-              </p>
+              <TomorrowSection tasks={tomorrowTasks} />
             </div>
           )}
         </div>
