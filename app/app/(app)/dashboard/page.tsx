@@ -74,7 +74,7 @@ function GridCell({
     (role === 'task' && !isCG && !isOuterTaskUnlocked(r, c, cells));
   const editable = !isOC && !locked;
 
-  const fs = fullscreen ? 'clamp(6px, 1.1vmin, 12px)' : half ? 'clamp(4px, 0.85vmin, 9px)' : 'clamp(5px, 0.85vw, 10px)';
+  const fs = fullscreen ? 'clamp(5px, 0.85vmin, 10px)' : half ? 'clamp(4px, 0.85vmin, 9px)' : 'clamp(5px, 0.85vw, 10px)';
   const br = fullscreen ? '3px' : 'clamp(2px, 0.5vw, 6px)';
 
   let style: React.CSSProperties = {
@@ -384,6 +384,10 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+              {/* Desktop-only filler label when fewer than 4 tasks remain */}
+              <p className="hidden md:block text-xs text-center mt-auto pt-3" style={{ color: '#414655' }}>
+                No other tasks due today
+              </p>
             </div>
           )}
         </div>

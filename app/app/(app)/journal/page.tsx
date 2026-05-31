@@ -119,12 +119,12 @@ export default function JournalPage() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-160px)] md:h-[calc(100vh-80px)] overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="flex md:h-[calc(100vh-80px)] md:overflow-hidden" style={{ background: '#0A0A0F' }}>
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)', filter: 'blur(120px)' }} />
       <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.03)', filter: 'blur(100px)' }} />
 
       {/* ---- Left: Archive sidebar ---- */}
-      <div className={`${mobileView === 'detail' ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-shrink-0 flex-col h-full border-r relative z-10`}
+      <div className={`${mobileView === 'detail' ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-shrink-0 flex-col md:h-full border-r relative z-10`}
         style={{ background: 'rgba(27,27,32,0.5)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.05)' }}>
 
         <div className="px-3 pt-4 pb-2 flex-shrink-0">
@@ -228,7 +228,7 @@ export default function JournalPage() {
         </div>
 
         {/* Entry list */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-3 pb-6 space-y-1.5 pt-2">
+        <div className="md:flex-1 md:overflow-y-auto md:custom-scrollbar px-3 pb-6 space-y-1.5 pt-2">
           {loading ? (
             <div className="flex justify-center py-8">
               <span className="material-symbols-outlined animate-spin" style={{ color: '#afc6ff' }}>progress_activity</span>
@@ -284,7 +284,7 @@ export default function JournalPage() {
       </div>
 
       {/* ---- Right: Editor / Viewer ---- */}
-      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full overflow-y-auto md:overflow-hidden relative z-10`}>
+      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col md:h-full md:overflow-hidden relative z-10`}>
 
         {/* Mobile back button */}
         <div className="md:hidden flex items-center gap-2 px-4 py-3 flex-shrink-0 border-b"
