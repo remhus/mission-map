@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const imageUrl = (rows[0] as { image_url: string }).image_url;
-  const match = imageUrl.match(/^data:([^;]+);base64,(.+)$/s);
+  const match = imageUrl.match(/^data:([^;]+);base64,([\s\S]+)$/);
   if (!match) return NextResponse.json({ error: 'Invalid image data' }, { status: 500 });
 
   const mimeType = match[1];
