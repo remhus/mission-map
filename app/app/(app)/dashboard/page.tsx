@@ -117,7 +117,7 @@ function GridCell({
           'rgba(255,255,255,0.03)';
       }}>
       {displayContent ? (
-        <span style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', wordBreak: 'normal', overflowWrap: 'break-word', boxSizing: 'border-box' }}>
+        <span style={{ width: '100%', maxWidth: '100%', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', wordBreak: 'normal', overflowWrap: 'normal', boxSizing: 'border-box' }}>
           {displayContent}
         </span>
       ) : isOC ? (
