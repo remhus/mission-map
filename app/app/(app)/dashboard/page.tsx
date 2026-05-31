@@ -193,7 +193,7 @@ const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#a
 function TomorrowSection({ tasks }: { tasks: Task[] }) {
   if (tasks.length === 0) return null;
   return (
-    <div className="hidden md:block mt-1 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+    <div className="hidden md:block mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
       <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#414655' }}>Tomorrow</p>
       <div className="flex flex-col gap-2">
         {tasks.map(task => {
@@ -258,15 +258,17 @@ export default function DashboardPage() {
     setUpcomingTasks(todayTasks.slice(0, 5));
 
     const tomorrowDow = (todayDow + 1) % 7;
-    const tomorrowList: Task[] = (tasksData.tasks || []).filter((t: Task) =>
-      t.day_of_week === tomorrowDow && !t.every_day
-    ).sort((a: Task, b: Task) => {
+    const byTime = (a: Task, b: Task) => {
       if (a.time_of_day && b.time_of_day) return a.time_of_day.localeCompare(b.time_of_day);
       if (a.time_of_day) return -1;
       if (b.time_of_day) return 1;
       return 0;
-    });
-    setTomorrowTasks(tomorrowList.slice(0, 2));
+    };
+    const allTasks: Task[] = tasksData.tasks || [];
+    const daySpecific = allTasks.filter((t: Task) => t.day_of_week === tomorrowDow && !t.every_day).sort(byTime);
+    const everyDay = allTasks.filter((t: Task) => t.every_day).sort(byTime);
+    const tomorrowList = [...daySpecific, ...everyDay].slice(0, 2);
+    setTomorrowTasks(tomorrowList);
 
     const achData = await achRes.json();
     setTrophyCount((achData.achievements || []).filter((a: { is_locked: boolean }) => !a.is_locked).length);
@@ -425,7 +427,7 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
-              <TomorrowSection tasks={tomorrowTasks} />
+              {upcomingTasks.length <= 2 && <TomorrowSection tasks={tomorrowTasks} />}
             </div>
           )}
         </div>
