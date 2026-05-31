@@ -401,7 +401,7 @@ export default function JournalPage() {
 
               {/* Content panel — natural height on mobile, internal scroll on desktop */}
               <div className="glass-panel rounded-2xl border-l-4 relative shrink-0 md:shrink md:overflow-y-auto md:custom-scrollbar md:min-h-0"
-                style={{ borderLeftColor: '#afc6ff', overflowX: 'hidden', flexGrow: 0, flexBasis: 'auto' }}>
+                style={{ borderLeftColor: '#afc6ff', flexGrow: 0, flexBasis: 'auto' }}>
                 <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)' }} />
                 <div className="px-5 py-5 relative">
                   {active.content && active.content !== '<p></p>' ? (
