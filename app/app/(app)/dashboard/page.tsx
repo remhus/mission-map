@@ -449,7 +449,7 @@ export default function DashboardPage() {
                       <span className="text-xs font-bold" style={{ color: '#afc6ff' }}>{pts}</span>
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(pts / 1000) * 100}%`, background: '#afc6ff', transition: 'width 0.7s' }} />
+                      <div className="h-full rounded-full" style={{ width: `${(pts / 6000) * 100}%`, background: '#afc6ff', transition: 'width 0.7s' }} />
                     </div>
                   </div>
                 );
