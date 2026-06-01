@@ -292,7 +292,7 @@ export default function AchievementsPage() {
                   )}
                 </div>
 
-                <h3 className="font-bold text-base mb-2" style={{ color: isLocked ? '#9ca3af' : '#e4e1e9', minHeight: '3rem' }}>
+                <h3 className="font-bold text-base mb-2" style={{ color: isLocked ? '#9ca3af' : '#e4e1e9', minHeight: '3rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {ach.title}
                 </h3>
 
@@ -306,7 +306,7 @@ export default function AchievementsPage() {
                   <div style={{ minHeight: '2.75rem' }}>
                     {ach.description ? (
                       <p className="text-sm leading-relaxed"
-                        style={{ color: isLocked ? '#6b7280' : '#8c90a1' }}>
+                        style={{ color: isLocked ? '#6b7280' : '#8c90a1', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {ach.description}
                       </p>
                     ) : null}

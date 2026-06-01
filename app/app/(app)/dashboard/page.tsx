@@ -494,10 +494,9 @@ export default function DashboardPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
               <span className="material-symbols-outlined mb-2" style={{ color: '#414655', fontSize: '32px' }}>task_alt</span>
               <p className="text-sm" style={{ color: '#8c90a1' }}>All done for today</p>
-              <TomorrowSection tasks={tomorrowTasks} />
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5 flex-1">
+            <div className="flex flex-col gap-2.5">
               {upcomingTasks.map(task => {
                 const color = SKILL_COLORS[task.skill] || '#afc6ff';
                 return (
@@ -514,8 +513,14 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
-              {upcomingTasks.length <= 2 && <TomorrowSection tasks={tomorrowTasks} />}
             </div>
+          )}
+          {/* Tomorrow preview — shown only when few tasks remain today, non-daily first */}
+          {upcomingTasks.length > 0 && upcomingTasks.length <= 2 && tomorrowTasks.length > 0 && (
+            <TomorrowSection tasks={tomorrowTasks.slice(0, upcomingTasks.length === 1 ? 2 : 1)} />
+          )}
+          {upcomingTasks.length === 0 && tomorrowTasks.length > 0 && (
+            <TomorrowSection tasks={tomorrowTasks} />
           )}
           <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-center flex-shrink-0 transition-opacity" style={{ color: '#afc6ff' }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.6'}
