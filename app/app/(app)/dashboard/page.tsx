@@ -605,7 +605,7 @@ export default function DashboardPage() {
               <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
                 <span className="material-symbols-outlined" style={{ color: '#414655', fontSize: '24px' }}>rocket_launch</span>
                 <p className="text-xs" style={{ color: '#414655' }}>
-                  Write to your future self. Seal it. Let time do the rest.
+                  Write to your future self. Seal it. Then witness your evolution.
                 </p>
                 <button onClick={openCapsuleModal}
                   className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
