@@ -581,7 +581,12 @@ export default function DashboardPage() {
             {capsuleIsSealed ? (
               /* SEALED — show countdown */
               <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
-                <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                  <p className="text-xs" style={{ color: '#414655' }}>
+                    Locked until {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                </div>
                 {(() => {
                   const cd = getCountdown(capsule!.locked_until!, nowTick);
                   if (!cd) return null;
@@ -593,21 +598,18 @@ export default function DashboardPage() {
                     <div className="flex items-start gap-1">
                       {units.map(({ v, l }, i) => (
                         <div key={l} className="flex items-start gap-1">
-                          <div className="flex flex-col items-center" style={{ minWidth: '2rem' }}>
-                            <span className="text-lg font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+                          <div className="flex flex-col items-center" style={{ minWidth: '2.25rem' }}>
+                            <span className="text-xl font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
                               {String(v).padStart(2, '0')}
                             </span>
                             <span className="text-[8px] font-bold tracking-widest mt-1" style={{ color: '#414655' }}>{l}</span>
                           </div>
-                          {i < 5 && <span className="text-sm font-bold leading-none mt-0.5" style={{ color: '#414655' }}>:</span>}
+                          {i < 5 && <span className="font-bold leading-none mt-0.5" style={{ color: '#414655', fontSize: '15px' }}>:</span>}
                         </div>
                       ))}
                     </div>
                   );
                 })()}
-                <p className="text-xs" style={{ color: '#414655' }}>
-                  Opens {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
               </div>
             ) : capsuleIsUnlocked ? (
               /* UNLOCKED — ready to open */
