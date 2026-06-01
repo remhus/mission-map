@@ -7,6 +7,7 @@ type Achievement = {
   id: number; title: string; description: string;
   trophy_tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   is_locked: boolean; unlocked_at: string;
+  vision_board_image_id?: number | null;
 };
 
 type SortMode = 'default' | 'not-earned' | 'grade-desc' | 'earn-date';
@@ -248,8 +249,8 @@ export default function AchievementsPage() {
               <div key={ach.id}
                 className={`relative rounded-3xl p-8 flex flex-col items-center text-center group cursor-pointer transition-all duration-300 hover:scale-[1.02] ${isLocked ? '' : `trophy-${ach.trophy_tier}`}`}
                 style={isLocked
-                  ? { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }
-                  : { boxShadow: t.glow }}>
+                  ? { minHeight: '390px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }
+                  : { minHeight: '390px', boxShadow: t.glow }}>
 
                 {/* Grade icon — top left for locked */}
                 {isLocked && (
@@ -290,7 +291,7 @@ export default function AchievementsPage() {
                   )}
                 </div>
 
-                <h3 className="font-bold text-base mb-2" style={{ color: isLocked ? '#9ca3af' : '#e4e1e9' }}>
+                <h3 className="font-bold text-base mb-2" style={{ color: isLocked ? '#9ca3af' : '#e4e1e9', minHeight: '3rem' }}>
                   {ach.title}
                 </h3>
 
@@ -301,12 +302,14 @@ export default function AchievementsPage() {
 
                 <div className="mt-auto pt-4 border-t w-full"
                   style={{ borderColor: isLocked ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.1)' }}>
-                  {ach.description ? (
-                    <p className="text-sm leading-relaxed"
-                      style={{ color: isLocked ? '#6b7280' : '#8c90a1' }}>
-                      {ach.description}
-                    </p>
-                  ) : null}
+                  <div style={{ minHeight: '2.75rem' }}>
+                    {ach.description ? (
+                      <p className="text-sm leading-relaxed"
+                        style={{ color: isLocked ? '#6b7280' : '#8c90a1' }}>
+                        {ach.description}
+                      </p>
+                    ) : null}
+                  </div>
                   {!isLocked && (
                     <p className="text-sm font-bold mt-1" style={{ color: t.color }}>
                       Earned {new Date(ach.unlocked_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
@@ -427,7 +430,7 @@ export default function AchievementsPage() {
 
               <div>
                 <label className="text-xs font-bold tracking-widest uppercase mb-2 block" style={{ color: '#c1c6d8' }}>Trophy Tier</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className={`grid grid-cols-4 gap-2${editItem?.vision_board_image_id ? ' opacity-50 pointer-events-none' : ''}`}>
                   {(['bronze','silver','gold','platinum'] as const).map(tier => {
                     const t = TROPHY[tier];
                     const sel = form.trophy_tier === tier;
@@ -455,6 +458,12 @@ export default function AchievementsPage() {
                     );
                   })}
                 </div>
+                {editItem?.vision_board_image_id && (
+                  <p className="text-xs mt-2 flex items-center gap-1" style={{ color: '#8c90a1' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px', verticalAlign: 'middle' }}>lock</span>
+                    Grade locked — vision board trophies are always platinum
+                  </p>
+                )}
               </div>
 
               {editItem && (

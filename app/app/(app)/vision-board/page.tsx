@@ -115,17 +115,26 @@ export default function VisionBoardPage() {
   async function saveTrophyAndAdvance() {
     setSavingTrophy(true);
     const current = uploadQueue[trophyStep];
+    const finalTitle = trophyTitle.trim() || current.defaultTitle;
+    // Create the trophy
     await fetch('/api/achievements', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: trophyTitle.trim() || current.defaultTitle,
+        title: finalTitle,
         description: trophyDesc.trim(),
         trophy_tier: 'platinum',
         is_locked: true,
         vision_board_image_id: current.id,
       }),
     });
+    // Always sync the title back to the vision board image
+    await fetch('/api/vision-board', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: current.id, title: finalTitle }),
+    });
+    setImages(prev => prev.map(img => img.id === current.id ? { ...img, title: finalTitle } : img));
     setSavingTrophy(false);
     const next = trophyStep + 1;
     if (next < uploadQueue.length) {
@@ -136,6 +145,11 @@ export default function VisionBoardPage() {
       setUploadQueue([]);
       setTrophyStep(0);
     }
+  }
+
+  function cancelTrophyCreation() {
+    setUploadQueue([]);
+    setTrophyStep(0);
   }
 
   async function deleteImageDirectly(id: number) {
@@ -404,12 +418,19 @@ export default function VisionBoardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="font-black text-base" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
-                  Platinum Trophy Created
+                  Name Your Vision
                 </h3>
                 <p className="text-xs" style={{ color: '#8c90a1' }}>
-                  Image {trophyStep + 1} of {uploadQueue.length} — give it a title
+                  Image {trophyStep + 1} of {uploadQueue.length} · Creates a locked platinum trophy
                 </p>
               </div>
+              <button onClick={cancelTrophyCreation}
+                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#8c90a1' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#e4e1e9'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+              </button>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -426,7 +447,7 @@ export default function VisionBoardPage() {
               <div>
                 <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Short Description</label>
                 <textarea value={trophyDesc} onChange={e => setTrophyDesc(e.target.value)}
-                  rows={2} placeholder="What does this represent to you?"
+                  rows={2} placeholder="Describe this achievement or goal..."
                   className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
                   onFocus={e => e.target.style.borderColor = 'rgba(175,198,255,0.4)'}
