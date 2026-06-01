@@ -18,6 +18,16 @@ export async function initDB() {
       )
     `;
 
+    // Always ensure rate_limits exists — created outside the version gate
+    // so it is never skipped by an early-exit on a stale schema version
+    await sql`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        key TEXT PRIMARY KEY,
+        count INTEGER NOT NULL DEFAULT 1,
+        window_start TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+
     // Early exit: if schema is already at current version, skip all DDL
     const versionCheck = await sql`SELECT version FROM _schema_version WHERE version = ${SCHEMA_VERSION}`;
     if (versionCheck.length > 0) { initialized = true; return; }
