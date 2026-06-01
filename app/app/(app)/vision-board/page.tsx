@@ -385,7 +385,7 @@ export default function VisionBoardPage() {
               <button onClick={() => initiateDelete(lightboxImg.id)} disabled={checkingDelete}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold"
                 style={{ background: 'rgba(147,0,10,0.5)', color: '#ffb4ab', border: '1px solid rgba(255,180,171,0.2)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>delete</span> Remove
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
               </button>
             </div>
 
