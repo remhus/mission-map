@@ -584,13 +584,13 @@ export default function DashboardPage() {
               </div>
             ) : (
               /* EMPTY */
-              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
+              <div className="flex-1 flex flex-col justify-center relative gap-3">
                 <span className="material-symbols-outlined mb-1" style={{ color: '#414655', fontSize: '28px' }}>rocket_launch</span>
-                <p className="text-xs leading-relaxed max-w-[220px]" style={{ color: '#414655' }}>
+                <p className="text-sm leading-relaxed" style={{ color: '#414655' }}>
                   Write a letter to your future self. Seal it for 1, 2, 3, 5, or 10 years — then let time do the rest.
                 </p>
                 <button onClick={openCapsuleModal}
-                  className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                  className="self-start px-5 py-2 rounded-xl text-xs font-bold transition-all"
                   style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
                   Begin Dream Capsule
                 </button>
