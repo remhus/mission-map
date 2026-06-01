@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
 
     const [user] = await sql`SELECT id, email, username, password_hash FROM users WHERE email = ${email}`;
     // Always run bcrypt regardless of whether user exists — prevents timing-based user enumeration
-    const hashToCompare = user?.password_hash ?? '$2a$12$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
-    const valid = await bcrypt.compare(password, hashToCompare);
+    // Dummy hash is a valid bcrypt format so bcryptjs never throws on a missing account
+    const hashToCompare = user?.password_hash ?? '$2a$12$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+    let valid = false;
+    try { valid = await bcrypt.compare(password, hashToCompare); } catch { valid = false; }
     if (!user || !valid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24,
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     });
     return response;
