@@ -323,7 +323,7 @@ export default function AchievementsPage() {
                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#6b7280' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#9ca3af'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#6b7280'; }}>
-                      Incomplete
+                      Claim Trophy
                     </button>
                   )}
                 </div>
