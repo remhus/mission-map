@@ -261,16 +261,19 @@ export default function DashboardPage() {
   const [editValue, setEditValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Record<string, number>>({});
+  const [userEmail, setUserEmail] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
   const [halfSize, setHalfSize] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('grid-half') === 'true'
   );
 
   const fetchData = useCallback(async () => {
-    const [gridRes, statsRes, tasksRes, achRes] = await Promise.all([fetch('/api/grid'), fetch('/api/stats'), fetch('/api/tasks'), fetch('/api/achievements')]);
+    const [gridRes, statsRes, tasksRes, achRes, meRes] = await Promise.all([fetch('/api/grid'), fetch('/api/stats'), fetch('/api/tasks'), fetch('/api/achievements'), fetch('/api/auth/me')]);
     const gridData = await gridRes.json();
     const statsData = await statsRes.json();
     const tasksData = await tasksRes.json();
+    const meData = await meRes.json();
+    if (meData.user?.email) setUserEmail(meData.user.email);
 
     // Upcoming = today's + every_day tasks not yet completed today, sorted by time_of_day
     const todayDow = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -566,7 +569,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.05) 0%, transparent 70%)' }} />
             <div className="flex items-center justify-between mb-1 relative flex-shrink-0">
               <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
-              {capsule && (
+              {capsule && userEmail === 'remcarter19@gmail.com' && (
                 <button onClick={resetCapsule}
                   className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
                   style={{ color: '#414655' }}
