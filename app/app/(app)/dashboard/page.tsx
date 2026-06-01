@@ -378,6 +378,17 @@ export default function DashboardPage() {
     setCapsule(d.capsule ?? null);
   }
 
+  async function resetCapsule() {
+    if (capsule?.id) {
+      await fetch('/api/dream-capsule', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: capsule.id }) });
+    }
+    setCapsule(null);
+    setCapsuleId(null);
+    setCapsuleContent('');
+    setCapsuleStep('write');
+    setShowCapsule(false);
+  }
+
   async function sealCapsule() {
     if (!capsuleYears) return;
     setSealingCapsule(true);
@@ -475,9 +486,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats bento */}
-      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch">
-        {/* Today's Tasks — fixed height on desktop only */}
-        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col md:min-h-[340px]">
+      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch md:h-[380px]">
+        {/* Today's Tasks */}
+        <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col min-h-0 overflow-hidden">
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
             <Link href="/tasks" className="text-xs font-bold transition-colors" style={{ color: '#afc6ff' }}
@@ -516,7 +527,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right column: Skill XP + Dream Capsule */}
-        <div className="md:w-1/2 flex flex-col gap-4">
+        <div className="md:w-1/2 flex flex-col gap-4 md:h-full">
           <div className="glass-card p-6 rounded-3xl flex-shrink-0">
             <h3 className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#8c90a1' }}>Skill XP</h3>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -541,21 +552,30 @@ export default function DashboardPage() {
           </div>
 
           {/* Dream Capsule */}
-          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col relative overflow-hidden">
+          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col relative overflow-hidden min-h-0 group">
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.05) 0%, transparent 70%)' }} />
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-1 relative" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
+            <div className="flex items-center justify-between mb-1 relative flex-shrink-0">
+              <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
+              {capsule && (
+                <button onClick={resetCapsule}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                  style={{ color: '#414655' }}
+                  title="Reset capsule"
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#414655'}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>restart_alt</span>
+                </button>
+              )}
+            </div>
 
             {capsuleIsSealed ? (
               /* SEALED — show countdown */
               <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
-                <span className="material-symbols-outlined mb-1" style={{ color: '#afc6ff', fontSize: '28px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>lock</span>
                 <p className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
                   {formatCountdown(capsule!.locked_until!, nowTick)}
                 </p>
-                <p className="text-xs leading-relaxed max-w-[200px]" style={{ color: '#414655' }}>
-                  Make every moment count. Your future self is watching.
-                </p>
-                <p className="text-xs mt-1" style={{ color: '#414655' }}>
+                <p className="text-xs" style={{ color: '#414655' }}>
                   Opens {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
@@ -584,13 +604,13 @@ export default function DashboardPage() {
               </div>
             ) : (
               /* EMPTY */
-              <div className="flex-1 flex flex-col justify-center relative gap-3">
-                <span className="material-symbols-outlined mb-1" style={{ color: '#414655', fontSize: '28px' }}>rocket_launch</span>
-                <p className="text-sm leading-relaxed" style={{ color: '#414655' }}>
-                  Write a letter to your future self. Seal it for 1, 2, 3, 5, or 10 years — then let time do the rest.
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
+                <span className="material-symbols-outlined" style={{ color: '#414655', fontSize: '24px' }}>rocket_launch</span>
+                <p className="text-xs" style={{ color: '#414655' }}>
+                  Write to your future self. Seal it. Let time do the rest.
                 </p>
                 <button onClick={openCapsuleModal}
-                  className="self-start px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                  className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
                   style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
                   Begin Dream Capsule
                 </button>

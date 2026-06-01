@@ -147,7 +147,17 @@ export default function VisionBoardPage() {
     }
   }
 
-  function cancelTrophyCreation() {
+  async function cancelTrophyCreation() {
+    // Delete all images from current step onward — they were uploaded but abandoned
+    const toDelete = uploadQueue.slice(trophyStep);
+    for (const item of toDelete) {
+      await fetch('/api/vision-board', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id }),
+      });
+    }
+    setImages(prev => prev.filter(img => !toDelete.some(d => d.id === img.id)));
     setUploadQueue([]);
     setTrophyStep(0);
   }
@@ -431,6 +441,14 @@ export default function VisionBoardPage() {
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
               </button>
+            </div>
+
+            {/* Image preview */}
+            <div className="w-full rounded-xl overflow-hidden mb-4" style={{ height: '110px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/api/vision-board/image?id=${uploadQueue[trophyStep]?.id}`} alt="Preview"
+                className="w-full h-full object-cover"
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
             </div>
 
             <div className="flex flex-col gap-3">

@@ -37,6 +37,20 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ capsule });
 }
 
+export async function DELETE(req: NextRequest) {
+  await initDB();
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { id } = await req.json().catch(() => ({}));
+  if (id) {
+    await sql`DELETE FROM dream_capsules WHERE id = ${id} AND user_id = ${user.userId}`;
+  } else {
+    await sql`DELETE FROM dream_capsules WHERE user_id = ${user.userId}`;
+  }
+  return NextResponse.json({ success: true });
+}
+
 export async function PUT(req: NextRequest) {
   await initDB();
   const user = await getUser();
