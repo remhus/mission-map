@@ -71,6 +71,7 @@ export default function AchievementsPage() {
   const [sortMode, setSortMode] = useState<SortMode>('default');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showAllAch, setShowAllAch] = useState(false);
+  const [showAllDesktop, setShowAllDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
@@ -242,7 +243,7 @@ export default function AchievementsPage() {
       ) : (
         <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(isMobile && !showAllAch ? sorted.slice(0, 3) : sorted).map(ach => {
+          {(isMobile ? (showAllAch ? sorted : sorted.slice(0, 3)) : (showAllDesktop ? sorted : sorted.slice(0, 8))).map(ach => {
             const t = TROPHY[ach.trophy_tier];
             const isLocked = ach.is_locked;
             return (
@@ -331,7 +332,7 @@ export default function AchievementsPage() {
           })}
         </div>
 
-        {/* Show more button — mobile only */}
+        {/* Show more — mobile */}
         {isMobile && !showAllAch && sorted.length > 3 && (
           <div className="flex justify-center mt-4 sm:hidden">
             <button onClick={() => setShowAllAch(true)}
@@ -339,6 +340,20 @@ export default function AchievementsPage() {
               style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_more</span>
               Show {sorted.length - 3} more
+            </button>
+          </div>
+        )}
+
+        {/* Show more / less — desktop (2 rows = 8 trophies) */}
+        {!isMobile && sorted.length > 8 && (
+          <div className="hidden sm:flex justify-center mt-6">
+            <button onClick={() => setShowAllDesktop(v => !v)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.18)', color: '#afc6ff' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showAllDesktop ? 'expand_less' : 'expand_more'}</span>
+              {showAllDesktop ? 'Show less' : `Show ${sorted.length - 8} more`}
             </button>
           </div>
         )}
