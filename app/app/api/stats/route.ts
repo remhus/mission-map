@@ -16,9 +16,9 @@ export async function GET() {
   const statsMap: Record<string, number> = {};
   allSkills.forEach(s => statsMap[s] = 0);
 
-  // points column stores total minutes earned. Display as-is (1 XP = 1 minute). Cap at 6000.
+  // points column stores total minutes. 1 XP = 1 hour (60 min). Cap at 1000 XP (1000 hrs).
   (rows as { skill: string; points: number }[]).forEach(r => {
-    statsMap[r.skill] = Math.min(6000, r.points);
+    statsMap[r.skill] = Math.min(1000, Math.floor(r.points / 60));
   });
 
   return NextResponse.json({ stats: statsMap });

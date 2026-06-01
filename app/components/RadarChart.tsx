@@ -18,7 +18,7 @@ export default function RadarChart({ stats }: { stats: Record<string, number> })
   const cy = size / 2;
   const r = size * 0.36;
   const n = SKILLS.length;
-  const maxVal = 6000;
+  const maxVal = 1000;
 
   function getAngle(i: number) { return (i * 2 * Math.PI) / n - Math.PI / 2; }
 
