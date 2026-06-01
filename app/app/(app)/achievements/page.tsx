@@ -320,10 +320,10 @@ export default function AchievementsPage() {
                     <button
                       onClick={e => { e.stopPropagation(); markAchieved(ach); }}
                       className="mt-3 w-full py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all"
-                      style={{ background: 'rgba(195,244,0,0.1)', border: '1px solid rgba(195,244,0,0.25)', color: '#c3f400' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(195,244,0,0.2)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(195,244,0,0.1)'; }}>
-                      Complete
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#6b7280' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#9ca3af'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#6b7280'; }}>
+                      Incomplete
                     </button>
                   )}
                 </div>
