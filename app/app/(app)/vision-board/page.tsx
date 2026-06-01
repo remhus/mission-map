@@ -122,7 +122,7 @@ export default function VisionBoardPage() {
         title: trophyTitle.trim() || current.defaultTitle,
         description: trophyDesc.trim(),
         trophy_tier: 'platinum',
-        is_locked: false,
+        is_locked: true,
         vision_board_image_id: current.id,
       }),
     });
