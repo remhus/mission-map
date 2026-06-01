@@ -657,16 +657,16 @@ export default function DashboardPage() {
                 Dream Capsule
               </h2>
               <p className="text-base leading-relaxed mb-3" style={{ color: '#c1c6d8' }}>
-                The idea is simple: your hero shouldn&apos;t be a fictional character or a distant celebrity. Your hero should be the version of yourself you want to become in the future.
+                Your hero shouldn&apos;t be a fictional character or a distant celebrity. Your hero should be the version of yourself you want to become in the future.
               </p>
               <p className="text-base leading-relaxed mb-3" style={{ color: '#c1c6d8' }}>
-                What do you say to that person?
+                What would you say to that person?
               </p>
               <p className="text-base leading-relaxed mb-3" style={{ color: '#c1c6d8' }}>
                 Write a letter to your future self. When you&apos;re done, seal it. Choose how long to lock it away: a single year, five years, or a full decade.
               </p>
               <p className="text-base leading-relaxed mb-10" style={{ color: '#8c90a1' }}>
-                On that exact date, the vault unlocks. You can read the words and see exactly how far you&apos;ve come.
+                On that exact date, the vault will unlock. Allowing you to see exactly how far you&apos;ve come.
               </p>
               <div className="flex gap-3">
                 <button onClick={() => setShowCapsule(false)}
