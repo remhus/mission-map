@@ -237,7 +237,7 @@ export default function DashboardPage() {
   const [tomorrowTasks, setTomorrowTasks] = useState<Task[]>([]);
   const [capsule, setCapsule] = useState<DreamCapsule | null | undefined>(undefined);
   const [showCapsule, setShowCapsule] = useState(false);
-  const [capsuleStep, setCapsuleStep] = useState<'write' | 'timeframe' | 'confirm' | 'read'>('write');
+  const [capsuleStep, setCapsuleStep] = useState<'intro' | 'write' | 'timeframe' | 'confirm' | 'read'>('intro');
   const [capsuleContent, setCapsuleContent] = useState('');
   const [capsuleId, setCapsuleId] = useState<number | null>(null);
   const [capsuleYears, setCapsuleYears] = useState<number | null>(null);
@@ -358,7 +358,7 @@ export default function DashboardPage() {
     } else if (capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) <= new Date()) {
       setCapsuleContent(capsule.content || ''); setCapsuleStep('read');
     } else {
-      setCapsuleId(null); setCapsuleContent(''); setCapsuleStep('write');
+      setCapsuleId(null); setCapsuleContent(''); setCapsuleStep('intro');
     }
     setShowCapsule(true);
   }
@@ -644,7 +644,36 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-[60] flex flex-col animate-fade-in"
           style={{ background: 'rgba(10,10,15,0.97)', backdropFilter: 'blur(12px)' }}>
 
-          {capsuleStep === 'read' ? (
+          {capsuleStep === 'intro' ? (
+            /* INTRO — explain what a Dream Capsule is */
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto">
+              <span className="material-symbols-outlined mb-6" style={{ color: '#afc6ff', fontSize: '48px' }}>rocket_launch</span>
+              <h2 className="text-3xl font-black mb-4 tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+                Dream Capsule
+              </h2>
+              <p className="text-base leading-relaxed mb-3" style={{ color: '#c1c6d8' }}>
+                Write a letter to your future self — your goals, your mindset, the version of you that exists right now.
+              </p>
+              <p className="text-base leading-relaxed mb-3" style={{ color: '#c1c6d8' }}>
+                When you&apos;re done, seal it. Choose how long to lock it away — a year, five years, a decade.
+              </p>
+              <p className="text-base leading-relaxed mb-10" style={{ color: '#8c90a1' }}>
+                On that date it unlocks. You&apos;ll read the words of who you were, and see exactly how far you&apos;ve come.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowCapsule(false)}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>
+                  Cancel
+                </button>
+                <button onClick={() => setCapsuleStep('write')}
+                  className="px-8 py-2.5 rounded-xl font-bold text-sm transition-all"
+                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 20px rgba(175,198,255,0.3)' }}>
+                  Begin →
+                </button>
+              </div>
+            </div>
+          ) : capsuleStep === 'read' ? (
             /* READ VIEW — unlocked capsule */
             <>
               <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
