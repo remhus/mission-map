@@ -31,6 +31,19 @@ export async function initDB() {
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT NOT NULL DEFAULT ''`;
     await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS every_day BOOLEAN DEFAULT FALSE`;
     await sql`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS is_favourite BOOLEAN DEFAULT FALSE`;
+    await sql`ALTER TABLE achievements ADD COLUMN IF NOT EXISTS vision_board_image_id INTEGER`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS dream_capsules (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        content TEXT DEFAULT '',
+        is_sealed BOOLEAN DEFAULT FALSE,
+        sealed_at TIMESTAMPTZ,
+        locked_until TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
     await sql`
       CREATE TABLE IF NOT EXISTS task_completions (
         id SERIAL PRIMARY KEY,

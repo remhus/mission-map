@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const CapsuleEditor = dynamic(() => import('@/components/RichEditor'), { ssr: false });
 
 type Cell = { row_index: number; col_index: number; content: string; cell_type: string };
 type Task = { id: number; title: string; skill: string; duration_minutes: number; time_of_day: string | null; day_of_week: number; every_day: boolean; is_completed: boolean; completed_at: string | null };
@@ -188,6 +191,19 @@ function GridView({
   );
 }
 
+type DreamCapsule = { id: number; content: string | null; is_sealed: boolean; sealed_at: string | null; locked_until: string | null; created_at: string };
+
+function formatCountdown(lockedUntil: string, now: number): string {
+  const diff = new Date(lockedUntil).getTime() - now;
+  if (diff <= 0) return 'Ready to open';
+  const days = Math.floor(diff / 86400000);
+  const yrs = Math.floor(days / 365);
+  const mos = Math.floor((days % 365) / 30);
+  const d = days % 30;
+  return [yrs > 0 && `${yrs}y`, mos > 0 && `${mos}mo`, (d > 0 || (!yrs && !mos)) && `${d}d`]
+    .filter(Boolean).join(' ');
+}
+
 const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#afc6ff',strength:'#ff6b6b',bravery:'#c3f400',wealth:'#4ecdc4',discipline:'#e9b3ff',wisdom:'#f97316',influence:'#fd79a8' };
 
 function TomorrowSection({ tasks }: { tasks: Task[] }) {
@@ -219,6 +235,15 @@ function TomorrowSection({ tasks }: { tasks: Task[] }) {
 export default function DashboardPage() {
   const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [tomorrowTasks, setTomorrowTasks] = useState<Task[]>([]);
+  const [capsule, setCapsule] = useState<DreamCapsule | null | undefined>(undefined);
+  const [showCapsule, setShowCapsule] = useState(false);
+  const [capsuleStep, setCapsuleStep] = useState<'write' | 'timeframe' | 'confirm' | 'read'>('write');
+  const [capsuleContent, setCapsuleContent] = useState('');
+  const [capsuleId, setCapsuleId] = useState<number | null>(null);
+  const [capsuleYears, setCapsuleYears] = useState<number | null>(null);
+  const [sealingCapsule, setSealingCapsule] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
   const [trophyCount, setTrophyCount] = useState(0);
   const [cells, setCells] = useState<Cell[][]>(
     Array.from({ length: 9 }, (_, r) =>
@@ -287,6 +312,18 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Fetch capsule separately so it doesn't block main data
+  useEffect(() => {
+    fetch('/api/dream-capsule').then(r => r.json()).then(d => setCapsule(d.capsule ?? null));
+  }, []);
+
+  // Countdown tick
+  useEffect(() => {
+    if (!capsule?.is_sealed || !capsule.locked_until) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [capsule?.is_sealed, capsule?.locked_until]);
+
   function openEdit(r: number, c: number) {
     setEditing({ r, c });
     setEditValue(cells[r][c].content);
@@ -314,6 +351,52 @@ export default function DashboardPage() {
   const integrityPct = Math.round((filledCells / 81) * 100);
 
   const editRole = editing ? getCellRole(editing.r, editing.c) : null;
+
+  async function openCapsuleModal() {
+    if (capsule && !capsule.is_sealed) {
+      setCapsuleId(capsule.id); setCapsuleContent(capsule.content || ''); setCapsuleStep('write');
+    } else if (capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) <= new Date()) {
+      setCapsuleContent(capsule.content || ''); setCapsuleStep('read');
+    } else {
+      setCapsuleId(null); setCapsuleContent(''); setCapsuleStep('write');
+    }
+    setShowCapsule(true);
+  }
+
+  async function saveCapsuleDraft() {
+    setSavingDraft(true);
+    if (capsuleId) {
+      await fetch('/api/dream-capsule', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: capsuleId, content: capsuleContent }) });
+    } else {
+      const res = await fetch('/api/dream-capsule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: capsuleContent }) });
+      const d = await res.json(); setCapsuleId(d.capsule?.id ?? null);
+      setCapsule(d.capsule);
+    }
+    setSavingDraft(false);
+    setShowCapsule(false);
+    const d = await fetch('/api/dream-capsule').then(r => r.json());
+    setCapsule(d.capsule ?? null);
+  }
+
+  async function sealCapsule() {
+    if (!capsuleYears) return;
+    setSealingCapsule(true);
+    let id = capsuleId;
+    if (!id) {
+      const res = await fetch('/api/dream-capsule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: capsuleContent }) });
+      const d = await res.json(); id = d.capsule?.id;
+    }
+    if (id) {
+      await fetch('/api/dream-capsule', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, content: capsuleContent, seal: true, years: capsuleYears }) });
+    }
+    setSealingCapsule(false);
+    setShowCapsule(false);
+    const d = await fetch('/api/dream-capsule').then(r => r.json());
+    setCapsule(d.capsule ?? null);
+  }
+
+  const capsuleIsSealed = capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) > new Date();
+  const capsuleIsUnlocked = capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) <= new Date();
 
   if (loading) {
     return (
@@ -457,12 +540,62 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Dream Capsule — fills remaining height to align base with Today's Tasks */}
-          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.06) 0%, transparent 70%)' }} />
-            <span className="material-symbols-outlined mb-3" style={{ color: '#414655', fontSize: '28px' }}>rocket_launch</span>
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
-            <p className="text-xs" style={{ color: '#414655' }}>Coming soon</p>
+          {/* Dream Capsule */}
+          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.05) 0%, transparent 70%)' }} />
+            <h3 className="text-xs font-bold tracking-widest uppercase mb-1 relative" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
+
+            {capsuleIsSealed ? (
+              /* SEALED — show countdown */
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
+                <span className="material-symbols-outlined mb-1" style={{ color: '#afc6ff', fontSize: '28px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                <p className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+                  {formatCountdown(capsule!.locked_until!, nowTick)}
+                </p>
+                <p className="text-xs leading-relaxed max-w-[200px]" style={{ color: '#414655' }}>
+                  Make every moment count. Your future self is watching.
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#414655' }}>
+                  Opens {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+            ) : capsuleIsUnlocked ? (
+              /* UNLOCKED — ready to open */
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
+                <span className="material-symbols-outlined" style={{ color: '#ffd700', fontSize: '28px', fontVariationSettings: "'FILL' 1" }}>lock_open</span>
+                <p className="text-sm font-bold" style={{ color: '#e4e1e9' }}>Your capsule is ready</p>
+                <p className="text-xs" style={{ color: '#8c90a1' }}>Sealed on {new Date(capsule!.sealed_at!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <button onClick={openCapsuleModal}
+                  className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700' }}>
+                  Open Capsule ✨
+                </button>
+              </div>
+            ) : capsule && !capsule.is_sealed ? (
+              /* DRAFT */
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
+                <span className="material-symbols-outlined" style={{ color: '#8c90a1', fontSize: '24px' }}>edit_note</span>
+                <p className="text-xs" style={{ color: '#8c90a1' }}>Draft saved</p>
+                <button onClick={openCapsuleModal}
+                  className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.25)', color: '#afc6ff' }}>
+                  Continue Writing
+                </button>
+              </div>
+            ) : (
+              /* EMPTY */
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
+                <span className="material-symbols-outlined mb-1" style={{ color: '#414655', fontSize: '28px' }}>rocket_launch</span>
+                <p className="text-xs leading-relaxed max-w-[220px]" style={{ color: '#414655' }}>
+                  Write a letter to your future self. Seal it for 1, 2, 3, 5, or 10 years — then let time do the rest.
+                </p>
+                <button onClick={openCapsuleModal}
+                  className="px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
+                  Begin Dream Capsule
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -485,6 +618,135 @@ export default function DashboardPage() {
               <GridView cells={cells} onEdit={openEdit} fullscreen />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ---- Dream Capsule Modal ---- */}
+      {showCapsule && (
+        <div className="fixed inset-0 z-[60] flex flex-col animate-fade-in"
+          style={{ background: 'rgba(10,10,15,0.97)', backdropFilter: 'blur(12px)' }}>
+
+          {capsuleStep === 'read' ? (
+            /* READ VIEW — unlocked capsule */
+            <>
+              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                <div>
+                  <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-jakarta)', color: '#ffd700' }}>Your Dream Capsule</h2>
+                  <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>
+                    Sealed on {capsule?.sealed_at ? new Date(capsule.sealed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                  </p>
+                </div>
+                <button onClick={() => setShowCapsule(false)} className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#8c90a1' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-16 py-8 max-w-3xl w-full mx-auto">
+                {capsuleContent ? (
+                  <div className="rich-editor-content" dangerouslySetInnerHTML={{ __html: capsuleContent }} />
+                ) : (
+                  <p style={{ color: '#414655', fontStyle: 'italic' }}>The capsule is empty.</p>
+                )}
+              </div>
+              <div className="flex-shrink-0 px-6 py-4 border-t flex justify-end" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                <button onClick={() => { setShowCapsule(false); setCapsule(null); setCapsuleId(null); setCapsuleContent(''); setCapsuleStep('write'); }}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.25)', color: '#afc6ff' }}>
+                  Write New Capsule
+                </button>
+              </div>
+            </>
+          ) : capsuleStep === 'write' ? (
+            /* WRITE STEP */
+            <>
+              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                <div>
+                  <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-jakarta)', color: '#afc6ff' }}>Dream Capsule</h2>
+                  <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>A letter to your future self — sealed in time</p>
+                </div>
+                <button onClick={saveCapsuleDraft} disabled={savingDraft}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
+                  {savingDraft ? 'Saving...' : 'Save Draft'}
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 md:px-16 py-6 max-w-3xl w-full mx-auto">
+                <div className="glass-panel rounded-2xl border-l-4 overflow-hidden relative" style={{ borderLeftColor: '#afc6ff' }}>
+                  <CapsuleEditor content={capsuleContent} onChange={setCapsuleContent} />
+                </div>
+              </div>
+              <div className="flex-shrink-0 px-6 py-4 border-t flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.8)' }}>
+                <button onClick={() => setShowCapsule(false)}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
+                <button onClick={() => { setCapsuleYears(null); setCapsuleStep('timeframe'); }}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
+                  Continue →
+                </button>
+              </div>
+            </>
+          ) : capsuleStep === 'timeframe' ? (
+            /* TIMEFRAME STEP */
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <span className="material-symbols-outlined mb-4" style={{ color: '#afc6ff', fontSize: '40px' }}>schedule</span>
+              <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>When should this open?</h2>
+              <p className="text-sm mb-8 max-w-sm" style={{ color: '#8c90a1' }}>
+                Once sealed, you won&apos;t be able to read or edit it until this time passes.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 mb-10">
+                {[1, 2, 3, 5, 10].map(y => (
+                  <button key={y} onClick={() => setCapsuleYears(y)}
+                    className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center font-black transition-all"
+                    style={capsuleYears === y
+                      ? { background: 'rgba(175,198,255,0.18)', border: '2px solid #afc6ff', color: '#afc6ff', boxShadow: '0 0 20px rgba(175,198,255,0.2)' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '2px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
+                    <span className="text-2xl">{y}</span>
+                    <span className="text-xs font-bold tracking-wider">{y === 1 ? 'YEAR' : 'YEARS'}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setCapsuleStep('write')}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>← Back</button>
+                <button disabled={!capsuleYears} onClick={() => setCapsuleStep('confirm')}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
+                  style={{ background: capsuleYears ? '#afc6ff' : 'rgba(175,198,255,0.3)', color: '#002d6d', cursor: capsuleYears ? 'pointer' : 'not-allowed' }}>
+                  Seal Capsule 🔒
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* CONFIRM STEP */
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <span className="material-symbols-outlined mb-4" style={{ color: '#ffb4ab', fontSize: '40px' }}>warning</span>
+              <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>Are you sure?</h2>
+              {capsuleYears && (
+                <>
+                  <p className="text-base mb-2" style={{ color: '#c1c6d8' }}>
+                    Your capsule will be sealed until{' '}
+                    <span style={{ color: '#afc6ff', fontWeight: 700 }}>
+                      {(() => { const d = new Date(); d.setFullYear(d.getFullYear() + capsuleYears); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); })()}
+                    </span>
+                  </p>
+                  <p className="text-sm mb-8 max-w-sm" style={{ color: '#8c90a1' }}>
+                    You won&apos;t be able to read or edit it until then. Your future self will thank you.
+                  </p>
+                </>
+              )}
+              <div className="flex gap-3">
+                <button onClick={() => setCapsuleStep('timeframe')}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>← Back</button>
+                <button onClick={sealCapsule} disabled={sealingCapsule}
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ background: 'rgba(175,198,255,0.15)', border: '1px solid rgba(175,198,255,0.4)', color: '#afc6ff', boxShadow: '0 0 15px rgba(175,198,255,0.15)' }}>
+                  {sealingCapsule ? 'Sealing...' : 'Yes, Seal it 🔒'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
