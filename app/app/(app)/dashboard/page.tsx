@@ -583,7 +583,7 @@ export default function DashboardPage() {
 
             {capsuleIsSealed ? (
               /* SEALED — show countdown */
-              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-4 md:gap-2">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>lock</span>
                   <p className="text-xs" style={{ color: '#414655' }}>
