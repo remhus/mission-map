@@ -193,15 +193,22 @@ function GridView({
 
 type DreamCapsule = { id: number; content: string | null; is_sealed: boolean; sealed_at: string | null; locked_until: string | null; created_at: string };
 
-function formatCountdown(lockedUntil: string, now: number): string {
-  const diff = new Date(lockedUntil).getTime() - now;
-  if (diff <= 0) return 'Ready to open';
-  const days = Math.floor(diff / 86400000);
-  const yrs = Math.floor(days / 365);
-  const mos = Math.floor((days % 365) / 30);
-  const d = days % 30;
-  return [yrs > 0 && `${yrs}y`, mos > 0 && `${mos}mo`, (d > 0 || (!yrs && !mos)) && `${d}d`]
-    .filter(Boolean).join(' ');
+function getCountdown(lockedUntil: string, now: number): { years: number; months: number; days: number; hours: number; minutes: number; seconds: number } | null {
+  const target = new Date(lockedUntil);
+  const current = new Date(now);
+  if (target <= current) return null;
+  let years = target.getFullYear() - current.getFullYear();
+  let months = target.getMonth() - current.getMonth();
+  let days = target.getDate() - current.getDate();
+  let hours = target.getHours() - current.getHours();
+  let minutes = target.getMinutes() - current.getMinutes();
+  let seconds = target.getSeconds() - current.getSeconds();
+  if (seconds < 0) { seconds += 60; minutes--; }
+  if (minutes < 0) { minutes += 60; hours--; }
+  if (hours < 0) { hours += 24; days--; }
+  if (days < 0) { days += new Date(target.getFullYear(), target.getMonth(), 0).getDate(); months--; }
+  if (months < 0) { months += 12; years--; }
+  return { years, months, days, hours, minutes, seconds };
 }
 
 const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#afc6ff',strength:'#ff6b6b',bravery:'#c3f400',wealth:'#4ecdc4',discipline:'#e9b3ff',wisdom:'#f97316',influence:'#fd79a8' };
@@ -573,11 +580,31 @@ export default function DashboardPage() {
 
             {capsuleIsSealed ? (
               /* SEALED — show countdown */
-              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-2">
+              <div className="flex-1 flex flex-col items-center justify-center text-center relative gap-3">
                 <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>lock</span>
-                <p className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
-                  {formatCountdown(capsule!.locked_until!, nowTick)}
-                </p>
+                {(() => {
+                  const cd = getCountdown(capsule!.locked_until!, nowTick);
+                  if (!cd) return null;
+                  const units = [
+                    { v: cd.years, l: 'YRS' }, { v: cd.months, l: 'MOS' }, { v: cd.days, l: 'DAYS' },
+                    { v: cd.hours, l: 'HRS' }, { v: cd.minutes, l: 'MINS' }, { v: cd.seconds, l: 'SECS' },
+                  ];
+                  return (
+                    <div className="flex items-start gap-1">
+                      {units.map(({ v, l }, i) => (
+                        <div key={l} className="flex items-start gap-1">
+                          <div className="flex flex-col items-center" style={{ minWidth: '2rem' }}>
+                            <span className="text-lg font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+                              {String(v).padStart(2, '0')}
+                            </span>
+                            <span className="text-[8px] font-bold tracking-widest mt-1" style={{ color: '#414655' }}>{l}</span>
+                          </div>
+                          {i < 5 && <span className="text-sm font-bold leading-none mt-0.5" style={{ color: '#414655' }}>:</span>}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <p className="text-xs" style={{ color: '#414655' }}>
                   Opens {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
