@@ -188,25 +188,6 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
         <EditorContent editor={editor} />
       </div>
 
-      <style>{`
-        .rich-editor-content { color: #c1c6d8; font-size: 15px; line-height: 1.75; max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
-        .rich-editor-content h1 { color: #e4e1e9; font-size: 2rem; font-weight: 800; margin: 1rem 0 0.5rem; line-height: 1.2; font-family: var(--font-jakarta); }
-        .rich-editor-content h2 { color: #e4e1e9; font-size: 1.5rem; font-weight: 700; margin: 0.9rem 0 0.4rem; line-height: 1.3; font-family: var(--font-jakarta); }
-        .rich-editor-content h3 { color: #e4e1e9; font-size: 1.2rem; font-weight: 600; margin: 0.8rem 0 0.3rem; line-height: 1.4; }
-        .rich-editor-content p { margin: 0; }
-        .rich-editor-content p + p { margin-top: 0.8rem; }
-        .rich-editor-content p:empty { min-height: 1.2em; }
-        .rich-editor-content p br { display: block; content: ''; }
-        .rich-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: rgba(193,198,216,0.3); pointer-events: none; float: left; height: 0; }
-        .rich-editor-content strong { color: #e4e1e9; font-weight: 700; }
-        .rich-editor-content em { color: #c1c6d8; font-style: italic; }
-        .rich-editor-content ul, .rich-editor-content ol { padding-left: 1.4rem; margin: 0.4rem 0; }
-        .rich-editor-content li { margin: 0.2rem 0; }
-        .rich-editor-content blockquote { border-left: 3px solid #afc6ff; margin: 0.8rem 0; padding: 0.4rem 1rem; color: #8c90a1; font-style: italic; background: rgba(175,198,255,0.04); border-radius: 0 8px 8px 0; }
-        .rich-editor-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; }
-        .rich-editor-content img { max-width: 100%; border-radius: 12px; margin: 0.8rem 0; border: 1px solid rgba(255,255,255,0.1); }
-        .rich-editor-content a { color: #afc6ff; text-decoration: underline; }
-      `}</style>
     </div>
   );
 }
