@@ -14,11 +14,24 @@ export async function GET() {
   return NextResponse.json({ tasks });
 }
 
+const VALID_SKILLS = new Set(['energy','intelligence','strength','bravery','wealth','discipline','wisdom','influence']);
+
 export async function POST(req: NextRequest) {
+  await initDB();
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { title, skill, duration_minutes, time_of_day, day_of_week, every_day } = await req.json();
+  if (!title || typeof title !== 'string' || title.trim().length === 0 || title.length > 200) {
+    return NextResponse.json({ error: 'Invalid title' }, { status: 400 });
+  }
+  if (!VALID_SKILLS.has(skill)) {
+    return NextResponse.json({ error: 'Invalid skill' }, { status: 400 });
+  }
+  const dur = Number(duration_minutes);
+  if (!Number.isInteger(dur) || dur < 1 || dur > 480) {
+    return NextResponse.json({ error: 'Invalid duration (1–480 minutes)' }, { status: 400 });
+  }
   const [task] = await sql`
     INSERT INTO tasks (user_id, title, skill, duration_minutes, time_of_day, day_of_week, every_day)
     VALUES (${user.userId}, ${title}, ${skill}, ${duration_minutes || 30}, ${time_of_day || null}, ${day_of_week ?? 0}, ${every_day || false})
@@ -28,10 +41,17 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  await initDB();
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id, title, skill, duration_minutes, time_of_day, day_of_week, every_day } = await req.json();
+  if (!title || typeof title !== 'string' || title.trim().length === 0 || title.length > 200) {
+    return NextResponse.json({ error: 'Invalid title' }, { status: 400 });
+  }
+  if (!VALID_SKILLS.has(skill)) {
+    return NextResponse.json({ error: 'Invalid skill' }, { status: 400 });
+  }
   await sql`
     UPDATE tasks
     SET title = ${title}, skill = ${skill}, duration_minutes = ${duration_minutes},
@@ -43,6 +63,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  await initDB();
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

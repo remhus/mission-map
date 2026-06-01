@@ -18,6 +18,11 @@ export async function initDB() {
       )
     `;
 
+    // Early exit: if schema is already at current version, skip all DDL
+    const versionCheck = await sql`SELECT version FROM _schema_version WHERE version = ${SCHEMA_VERSION}`;
+    if (versionCheck.length > 0) { initialized = true; return; }
+
+
     // Always run these column additions — safe with IF NOT EXISTS
     await sql`
       CREATE TABLE IF NOT EXISTS users (
@@ -57,9 +62,6 @@ export async function initDB() {
         UNIQUE(user_id, task_id, completed_date)
       )
     `;
-
-    const rows = await sql`SELECT version FROM _schema_version WHERE version = ${SCHEMA_VERSION}`;
-    if (rows.length > 0) { initialized = true; return; }
 
     // One-time v4 migration: convert skill_stats points from hours to minutes
     await sql`UPDATE skill_stats SET points = points * 60 WHERE points > 0 AND points < 1000`;
@@ -154,6 +156,14 @@ export async function initDB() {
         title TEXT DEFAULT '',
         sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        key TEXT PRIMARY KEY,
+        count INTEGER NOT NULL DEFAULT 1,
+        window_start TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
 

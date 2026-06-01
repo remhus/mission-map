@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import sql, { initDB } from '@/lib/db';
 import { createToken } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,13 +14,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    const [user] = await sql`SELECT id, email, username, password_hash FROM users WHERE email = ${email}`;
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const allowed = await checkRateLimit(`login:${ip}`, 5, 15 * 60);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
     }
 
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
+    const [user] = await sql`SELECT id, email, username, password_hash FROM users WHERE email = ${email}`;
+    // Always run bcrypt regardless of whether user exists — prevents timing-based user enumeration
+    const hashToCompare = user?.password_hash ?? '$2a$12$invalidhashplaceholderXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+    const valid = await bcrypt.compare(password, hashToCompare);
+    if (!user || !valid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -28,9 +33,10 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ user: { id: user.id, email: user.email, username: user.username } });
     response.cookies.set('apex-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24,
+      path: '/',
     });
     return response;
   } catch (error) {

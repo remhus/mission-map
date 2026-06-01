@@ -18,15 +18,21 @@ export async function GET(req: NextRequest) {
 
   const imageUrl = (rows[0] as { image_url: string }).image_url;
   const match = imageUrl.match(/^data:([^;]+);base64,([\s\S]+)$/);
-  if (!match) return NextResponse.json({ error: 'Invalid image data' }, { status: 500 });
+  if (!match) return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
 
+  const SAFE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
   const mimeType = match[1];
+  if (!SAFE_TYPES.has(mimeType)) {
+    return NextResponse.json({ error: 'Invalid image type' }, { status: 400 });
+  }
+
   const buffer = Buffer.from(match[2], 'base64');
 
   return new NextResponse(buffer, {
     headers: {
       'Content-Type': mimeType,
       'Cache-Control': 'private, max-age=86400',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import sql from '@/lib/db';
 import { createToken } from '@/lib/auth';
 import { initDB } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +15,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'All fields required' }, { status: 400 });
     }
 
+    if (password.length < 10) {
+      return NextResponse.json({ error: 'Password must be at least 10 characters' }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return NextResponse.json({ error: 'Password must contain at least one uppercase letter and one number' }, { status: 400 });
+    }
+
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const allowed = await checkRateLimit(`signup:${ip}`, 3, 60 * 60);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
+    }
+
     const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
     if (existing.length > 0) {
-      return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      return NextResponse.json({ error: 'Registration failed' }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -31,9 +45,10 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ user: { id: user.id, email: user.email, username: user.username } });
     response.cookies.set('apex-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24,
+      path: '/',
     });
     return response;
   } catch (error) {

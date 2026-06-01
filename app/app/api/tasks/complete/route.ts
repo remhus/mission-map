@@ -1,9 +1,10 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
-import sql from '@/lib/db';
+import sql, { initDB } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
+  await initDB();
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

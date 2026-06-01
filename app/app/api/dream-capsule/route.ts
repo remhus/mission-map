@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
 import sql, { initDB } from '@/lib/db';
+import { sanitizeRichHtml } from '@/lib/sanitize';
 
 export async function GET() {
   await initDB();
@@ -29,9 +30,10 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { content } = await req.json();
+  const safeContent = sanitizeRichHtml(content || '');
   const [capsule] = await sql`
     INSERT INTO dream_capsules (user_id, content, is_sealed)
-    VALUES (${user.userId}, ${content || ''}, false)
+    VALUES (${user.userId}, ${safeContent}, false)
     RETURNING *
   `;
   return NextResponse.json({ capsule });
@@ -57,19 +59,20 @@ export async function PUT(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id, content, seal, years } = await req.json();
+  const safeUpdateContent = sanitizeRichHtml(content || '');
 
   if (seal && years) {
     const lockedUntil = new Date();
     lockedUntil.setFullYear(lockedUntil.getFullYear() + years);
     await sql`
       UPDATE dream_capsules
-      SET content = ${content || ''}, is_sealed = true, sealed_at = NOW(), locked_until = ${lockedUntil.toISOString()}, updated_at = NOW()
+      SET content = ${safeUpdateContent}, is_sealed = true, sealed_at = NOW(), locked_until = ${lockedUntil.toISOString()}, updated_at = NOW()
       WHERE id = ${id} AND user_id = ${user.userId} AND is_sealed = false
     `;
   } else {
     await sql`
       UPDATE dream_capsules
-      SET content = ${content || ''}, updated_at = NOW()
+      SET content = ${safeUpdateContent}, updated_at = NOW()
       WHERE id = ${id} AND user_id = ${user.userId} AND is_sealed = false
     `;
   }

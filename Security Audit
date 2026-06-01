@@ -1,0 +1,89 @@
+# MISSION MAP — SECURITY AUDIT (OPEN ITEMS)
+
+**Last updated:** June 2026
+**Status:** Critical → Medium findings remediated. Items below remain open.
+
+---
+
+## OPEN FINDINGS
+
+---
+
+### FINDING 11 — No Password Reset Mechanism
+
+**Severity: MEDIUM**
+
+There is no "forgot password" flow. Users who lose access cannot recover their account.
+
+**Risk:** High churn, support burden, data fragmentation (users re-register). No recovery path after credential theft.
+
+**Recommended Fix:** Implement a standard email-based password reset — time-limited single-use token stored in a DB table, delivered via a transactional email provider (Resend, SendGrid, Postmark). Requires selecting and configuring an email service.
+
+---
+
+### FINDING 13 — External CDN for Icons (No SRI)
+
+**Severity: LOW**
+
+**File:** `app/app/layout.tsx`
+
+Material Symbols icons loaded from Google's CDN at runtime with no Subresource Integrity hash.
+
+**Risk:** CDN compromise delivers arbitrary CSS to all users. Google receives IP and browser fingerprint of every visitor.
+
+**Recommended Fix:** Self-host the Material Symbols variable font and CSS, or add an `integrity` SRI hash to the `<link>` tag.
+
+---
+
+## COMPLIANCE — REMAINING GAPS
+
+These require product/legal decisions, not just code:
+
+| Item | Action Required |
+|---|---|
+| **Privacy Policy** | Draft and publish. Required for UK/EU public launch. |
+| **Cookie Consent** | Add consent banner before setting `apex-token` cookie on first visit. |
+| **Account Deletion (Right to Erasure)** | Build a "Delete my account" endpoint and UI that purges all user rows. |
+| **Data Export (Right of Portability)** | Build a `GET /api/user/export` endpoint returning all user data as JSON. |
+| **Data Retention Policy** | Define and document how long inactive accounts are kept. |
+| **DPAs with Neon & Netlify** | Sign Data Processing Agreements with both vendors. |
+
+---
+
+## SCALABILITY — REMAINING GAPS
+
+| Item | Priority |
+|---|---|
+| **Image storage in PostgreSQL** | Migrate vision board images from base64-in-DB to object storage (Netlify Blobs or Cloudflare R2). Becomes a hard blocker beyond ~100 users. |
+| **Error monitoring** | Integrate Sentry (free tier). Currently flying blind in production. |
+
+---
+
+## FUTURE ENTERPRISE HARDENING
+
+- Multi-factor authentication (TOTP)
+- PostgreSQL Row-Level Security (RLS) as database-layer defence-in-depth
+- JWT revocation store (blocklist table for forced session termination)
+- Immutable audit log of authentication events and data mutations
+- Automated dependency scanning (GitHub Dependabot + `npm audit` in CI)
+- Content Security Policy nonces for strict inline-script blocking
+- External penetration test before enterprise sales
+- SOC 2 Type II / ISO 27001 preparation
+
+---
+
+## REMEDIATED (removed from active tracking)
+
+| # | Finding | Fixed |
+|---|---|---|
+| 01 | JWT fallback secret `'fallback-secret'` | ✅ Crashes on missing JWT_SECRET |
+| 02 | No rate limiting on auth endpoints | ✅ DB-backed rate limiter (5/15min login, 3/hr signup) |
+| 03 | Login timing attack / user enumeration | ✅ Always runs bcrypt; generic error message |
+| 04 | Client-controlled MIME type → Stored XSS | ✅ JPEG/PNG/WebP allowlist on upload and serve |
+| 05 | No HTTP security headers | ✅ HSTS, X-Frame-Options, nosniff, Referrer-Policy added |
+| 06 | Raw HTML stored and rendered (XSS) | ✅ sanitize-html applied on all journal/capsule writes |
+| 07 | No input validation on API routes | ✅ Length, type, enum checks on tasks, journal, achievements, grid |
+| 08 | Insecure cookie config | ✅ secure:true, sameSite:strict, 24h lifetime |
+| 09 | Schema init on every serverless cold start | ✅ Early-exit version check; initDB added to missing handlers |
+| 10 | No password strength requirements | ✅ Min 10 chars, uppercase + number required |
+| 12 | Unused jsonwebtoken dependency | ✅ Removed from package.json |
