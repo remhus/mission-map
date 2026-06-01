@@ -357,8 +357,11 @@ export default function AchievementsPage() {
               const total = Math.max(count, 5);
               return (
                 <div key={tier}>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-xs font-bold tracking-widest uppercase" style={{ color: t.color }}>{t.label} Mastery</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px', color: t.iconColor, fontVariationSettings: "'FILL' 1" }}>{t.icon}</span>
+                      <span className="text-xs font-bold tracking-widest uppercase" style={{ color: t.color }}>{t.label} Mastery</span>
+                    </div>
                     <span className="font-bold text-sm" style={{ color: t.color }}>{count}</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
