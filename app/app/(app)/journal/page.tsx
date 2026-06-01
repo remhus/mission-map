@@ -11,7 +11,7 @@ type JournalEntry = {
 };
 
 const MOODS = [
-  { value: 'elite',     emoji: '🔥', label: 'Elite',      color: '#ffd700' },
+  { value: 'elite',     emoji: '🔥', label: 'Fired Up',   color: '#ffd700' },
   { value: 'focused',   emoji: '⚡', label: 'Focused',    color: '#afc6ff' },
   { value: 'resilient', emoji: '💪', label: 'Resilient',  color: '#c3f400' },
   { value: 'neutral',   emoji: '😐', label: 'Neutral',    color: '#8c90a1' },

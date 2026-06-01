@@ -23,14 +23,14 @@ export async function POST(req: NextRequest) {
   const minsEarned = task.duration_minutes || 30;
 
   if (is_completed) {
-    // Record in history for the specific date (idempotent — unique constraint prevents duplicates)
-    await sql`
+    // Only award XP if this is a genuinely new completion for this date
+    const [inserted] = await sql`
       INSERT INTO task_completions (user_id, task_id, task_title, skill, duration_minutes, completed_date)
       VALUES (${user.userId}, ${task.id}, ${task.title}, ${task.skill}, ${minsEarned}, ${completionDate}::date)
       ON CONFLICT (user_id, task_id, completed_date) DO NOTHING
+      RETURNING user_id
     `;
-    // Award XP
-    if (task.skill) {
+    if (task.skill && inserted) {
       await sql`
         INSERT INTO skill_stats (user_id, skill, points)
         VALUES (${user.userId}, ${task.skill}, ${minsEarned})
@@ -39,13 +39,13 @@ export async function POST(req: NextRequest) {
       `;
     }
   } else {
-    // Remove the completion record for the specific date
-    await sql`
+    // Only deduct XP if a completion record was actually removed
+    const [deleted] = await sql`
       DELETE FROM task_completions
       WHERE user_id = ${user.userId} AND task_id = ${task.id} AND completed_date = ${completionDate}::date
+      RETURNING user_id
     `;
-    // Deduct XP if it was earned today
-    if (task.skill && task.is_completed) {
+    if (task.skill && deleted) {
       await sql`
         UPDATE skill_stats SET points = GREATEST(0, points - ${minsEarned})
         WHERE user_id = ${user.userId} AND skill = ${task.skill}

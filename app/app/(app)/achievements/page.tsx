@@ -13,7 +13,7 @@ type Achievement = {
 type SortMode = 'default' | 'not-earned' | 'grade-desc' | 'earn-date';
 
 const TROPHY: Record<string, { color: string; glow: string; icon: string; label: string; iconColor: string }> = {
-  platinum: { color: '#e5e7eb', glow: '0 0 30px rgba(229,231,235,0.35)', icon: 'workspace_premium', iconColor: '#ffffff',   label: 'Platinum' },
+  platinum: { color: '#e5e7eb', glow: '0 0 30px rgba(229,231,235,0.35)', icon: 'diamond',           iconColor: '#ffffff',   label: 'Platinum' },
   gold:     { color: '#ffd700', glow: '0 0 30px rgba(255,215,0,0.35)',    icon: 'military_tech',     iconColor: '#facc15',   label: 'Gold'     },
   silver:   { color: '#cbd5e1', glow: '0 0 20px rgba(200,200,200,0.2)',   icon: 'workspace_premium', iconColor: '#94a3b8',   label: 'Silver'   },
   bronze:   { color: '#cd7f32', glow: '0 0 20px rgba(205,127,50,0.2)',    icon: 'military_tech',     iconColor: '#b45309',   label: 'Bronze'   },

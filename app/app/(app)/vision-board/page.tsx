@@ -467,7 +467,7 @@ export default function VisionBoardPage() {
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.3)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#e5e7eb', fontVariationSettings: "'FILL' 1" }}>diamond</span>
               </div>
               <div className="flex-1">
                 <h3 className="font-black text-base" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
