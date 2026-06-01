@@ -32,7 +32,16 @@ export async function PUT(req: NextRequest) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, title } = await req.json();
+  const body = await req.json();
+
+  if (body.orders) {
+    for (const { id, sort_order } of body.orders as { id: number; sort_order: number }[]) {
+      await sql`UPDATE vision_board_images SET sort_order = ${sort_order} WHERE id = ${id} AND user_id = ${user.userId}`;
+    }
+    return NextResponse.json({ success: true });
+  }
+
+  const { id, title } = body;
   await sql`UPDATE vision_board_images SET title = ${title} WHERE id = ${id} AND user_id = ${user.userId}`;
   return NextResponse.json({ success: true });
 }

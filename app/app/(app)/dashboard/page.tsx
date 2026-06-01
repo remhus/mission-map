@@ -489,14 +489,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch md:h-[380px]">
         {/* Today's Tasks */}
         <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between mb-4 flex-shrink-0">
-            <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
-            <Link href="/tasks" className="text-xs font-bold transition-colors" style={{ color: '#afc6ff' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.7'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
-              View all →
-            </Link>
-          </div>
+          <h3 className="text-xs font-bold tracking-widest uppercase mb-4 flex-shrink-0" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
           {upcomingTasks.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
               <span className="material-symbols-outlined mb-2" style={{ color: '#414655', fontSize: '32px' }}>task_alt</span>
@@ -504,7 +497,7 @@ export default function DashboardPage() {
               <TomorrowSection tasks={tomorrowTasks} />
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2.5 flex-1">
               {upcomingTasks.map(task => {
                 const color = SKILL_COLORS[task.skill] || '#afc6ff';
                 return (
@@ -524,6 +517,11 @@ export default function DashboardPage() {
               {upcomingTasks.length <= 2 && <TomorrowSection tasks={tomorrowTasks} />}
             </div>
           )}
+          <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-end flex-shrink-0 transition-opacity" style={{ color: '#afc6ff' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.6'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+            View all →
+          </Link>
         </div>
 
         {/* Right column: Skill XP + Dream Capsule */}

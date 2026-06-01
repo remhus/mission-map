@@ -51,6 +51,10 @@ export default function VisionBoardPage() {
   const [trophyDesc, setTrophyDesc] = useState('');
   const [savingTrophy, setSavingTrophy] = useState(false);
 
+  // Drag-to-reorder
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<{ imageId: number; trophy: { id: number; title: string } | null } | null>(null);
   const [checkingDelete, setCheckingDelete] = useState(false);
@@ -65,6 +69,19 @@ export default function VisionBoardPage() {
     });
     setImages(prev => prev.map(img => img.id === id ? { ...img, title: titleDraft } : img));
     setEditingTitle(null);
+  }
+
+  async function handleReorder(fromIdx: number, toIdx: number) {
+    if (fromIdx === toIdx) return;
+    const reordered = [...images];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    setImages(reordered);
+    await fetch('/api/vision-board', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orders: reordered.map((img, i) => ({ id: img.id, sort_order: i })) }),
+    });
   }
 
   const fetchImages = useCallback(async () => {
@@ -267,15 +284,41 @@ export default function VisionBoardPage() {
             const spanClass = SPAN_PATTERNS[idx % SPAN_PATTERNS.length];
             return (
               <div key={img.id}
-                className={`vision-card relative group rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ${spanClass}`}
-                style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+                className={`vision-card relative group rounded-2xl overflow-hidden transition-all duration-300 ${spanClass}`}
+                draggable
+                style={{
+                  border: dragOverIdx === idx && dragIdx !== idx ? '2px solid rgba(175,198,255,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                  opacity: dragIdx === idx ? 0.35 : 1,
+                  cursor: dragIdx !== null ? 'grabbing' : 'pointer',
+                  boxShadow: dragOverIdx === idx && dragIdx !== idx ? '0 0 24px rgba(175,198,255,0.35)' : undefined,
+                }}
                 onClick={() => setLightbox(idx)}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(175,198,255,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(175,198,255,0.4)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}>
+                onMouseEnter={e => {
+                  if (dragIdx !== null) return;
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(175,198,255,0.3)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(175,198,255,0.4)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = '';
+                  (e.currentTarget as HTMLElement).style.transform = '';
+                  (e.currentTarget as HTMLElement).style.borderColor = '';
+                }}
+                onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDragIdx(idx); }}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverIdx(idx); }}
+                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverIdx(d => d === idx ? null : d); }}
+                onDrop={e => { e.preventDefault(); if (dragIdx !== null) handleReorder(dragIdx, idx); setDragIdx(null); setDragOverIdx(null); }}
+                onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/api/vision-board/image?id=${img.id}`} alt={img.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   loading="lazy" onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+
+                {/* Drag handle — desktop only */}
+                <div className="absolute top-3 left-3 w-7 h-7 rounded-lg hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"
+                  style={{ background: 'rgba(0,0,0,0.65)', color: '#c1c6d8' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>drag_indicator</span>
+                </div>
 
                 <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{ background: 'linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.2) 50%, transparent 100%)' }}>
