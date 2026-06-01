@@ -431,7 +431,7 @@ export default function VisionBoardPage() {
                   Name Your Vision
                 </h3>
                 <p className="text-xs" style={{ color: '#8c90a1' }}>
-                  Image {trophyStep + 1} of {uploadQueue.length} · Creates a locked platinum trophy
+                  Image {trophyStep + 1} of {uploadQueue.length} · Creates a platinum trophy
                 </p>
               </div>
               <button onClick={cancelTrophyCreation}
