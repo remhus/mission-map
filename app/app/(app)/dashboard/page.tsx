@@ -602,7 +602,7 @@ export default function DashboardPage() {
                       {units.map(({ v, l }, i) => (
                         <div key={l} className="flex items-start gap-0.5">
                           <div className="flex flex-col items-center w-10">
-                            <span className="text-3xl font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+                            <span className="text-xl md:text-3xl font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
                               {String(v).padStart(2, '0')}
                             </span>
                             <span className="text-[9px] font-bold tracking-widest mt-1" style={{ color: '#414655' }}>{l}</span>
