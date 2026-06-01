@@ -526,8 +526,30 @@ export default function DashboardPage() {
 
         {/* Right column: Skill XP + Dream Capsule */}
         <div className="md:w-1/2 flex flex-col gap-4 md:h-full">
-          <div className="glass-card p-6 rounded-3xl flex-shrink-0">
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: '#8c90a1' }}>Skill XP</h3>
+          <div className="glass-card p-6 rounded-3xl flex-shrink-0 group/xp">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Skill XP</h3>
+              <div className="flex items-center gap-1 opacity-0 group-hover/xp:opacity-100 transition-opacity">
+                <button
+                  title="Recalculate from history"
+                  onClick={async () => { await fetch('/api/stats', { method: 'POST' }); fetchData(); }}
+                  className="w-5 h-5 rounded flex items-center justify-center"
+                  style={{ color: '#414655' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#afc6ff'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#414655'}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>sync</span>
+                </button>
+                <button
+                  title="Reset all XP to zero"
+                  onClick={async () => { await fetch('/api/stats', { method: 'DELETE' }); fetchData(); }}
+                  className="w-5 h-5 rounded flex items-center justify-center"
+                  style={{ color: '#414655' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#414655'}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>restart_alt</span>
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               {allSkills.map(skill => {
                 const pts = stats[skill] || 0;

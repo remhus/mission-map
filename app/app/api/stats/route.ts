@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json({ stats: statsMap });
 }
 
-// POST /api/stats/recalculate — rebuild skill_stats from task_completions history (fixes double-counted XP)
+// POST /api/stats — rebuild skill_stats from task_completions history (fixes double-counted XP)
 export async function POST(_req: NextRequest) {
   await initDB();
   const user = await getUser();
@@ -38,6 +38,16 @@ export async function POST(_req: NextRequest) {
     WHERE user_id = ${user.userId}
     GROUP BY user_id, skill
   `;
+  return NextResponse.json({ success: true });
+}
+
+// DELETE /api/stats — zero out all XP
+export async function DELETE(_req: NextRequest) {
+  await initDB();
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  await sql`DELETE FROM skill_stats WHERE user_id = ${user.userId}`;
   return NextResponse.json({ success: true });
 }
 
