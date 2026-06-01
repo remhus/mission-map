@@ -517,7 +517,7 @@ export default function DashboardPage() {
               {upcomingTasks.length <= 2 && <TomorrowSection tasks={tomorrowTasks} />}
             </div>
           )}
-          <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-end flex-shrink-0 transition-opacity" style={{ color: '#afc6ff' }}
+          <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-center flex-shrink-0 transition-opacity" style={{ color: '#afc6ff' }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.6'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
             View all →
