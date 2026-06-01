@@ -8,48 +8,6 @@ type Task = {
   is_completed: boolean; completed_at: string | null;
 };
 
-type Completion = {
-  id: number; task_id: number; task_title: string; skill: string;
-  duration_minutes: number; completed_date: string; created_at: string;
-};
-
-type WeekGroup = {
-  weekLabel: string;
-  weekStart: string;
-  completions: Completion[];
-  totalMins: number;
-};
-
-function getWeekStart(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00');
-  const dow = d.getDay(); // 0=Sun
-  const diff = dow === 0 ? -6 : 1 - dow; // Monday start
-  const mon = new Date(d);
-  mon.setDate(d.getDate() + diff);
-  return mon.toISOString().slice(0, 10);
-}
-
-function formatWeekLabel(weekStart: string): string {
-  const s = new Date(weekStart + 'T12:00:00');
-  const e = new Date(s);
-  e.setDate(s.getDate() + 6);
-  const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  return `${fmt(s)} – ${fmt(e)}`;
-}
-
-function groupByWeek(completions: Completion[]): WeekGroup[] {
-  const map = new Map<string, WeekGroup>();
-  for (const c of completions) {
-    const ws = getWeekStart(c.completed_date);
-    if (!map.has(ws)) {
-      map.set(ws, { weekLabel: formatWeekLabel(ws), weekStart: ws, completions: [], totalMins: 0 });
-    }
-    const g = map.get(ws)!;
-    g.completions.push(c);
-    g.totalMins += c.duration_minutes || 0;
-  }
-  return Array.from(map.values()).sort((a, b) => b.weekStart.localeCompare(a.weekStart));
-}
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const SKILLS = ['energy','intelligence','strength','bravery','wealth','discipline','wisdom','influence'];
@@ -118,10 +76,7 @@ export default function TasksPage() {
     title: '', skill: 'energy', duration_minutes: 30,
     time_of_day: '', day_of_week: 0, every_day: false,
   });
-  const [showHistory, setShowHistory] = useState(false);
-  const [history, setHistory] = useState<Completion[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     const res = await fetch('/api/tasks');
@@ -132,19 +87,6 @@ export default function TasksPage() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-  async function openHistory() {
-    setShowHistory(true);
-    setHistoryLoading(true);
-    const res = await fetch('/api/tasks/history');
-    const data = await res.json();
-    setHistory(data.completions || []);
-    // Auto-expand the most recent week
-    if (data.completions?.length > 0) {
-      const ws = getWeekStart(data.completions[0].completed_date);
-      setExpandedWeeks(new Set([ws]));
-    }
-    setHistoryLoading(false);
-  }
 
   function openAdd() {
     setEditTask(null);
@@ -203,12 +145,12 @@ export default function TasksPage() {
           </h1>
           <p className="text-sm mt-0.5" style={{ color: '#8c90a1' }}>Weekly routine · repeats every 7 days</p>
         </div>
-        <button onClick={openHistory}
+        <button onClick={() => setShowSchedule(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
           style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
-          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>history</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>calendar_view_week</span>
           <span className="hidden sm:inline tracking-widest uppercase">View All</span>
         </button>
       </div>
@@ -357,123 +299,100 @@ export default function TasksPage() {
         <span className="material-symbols-outlined" style={{ fontSize: '28px', fontVariationSettings: "'wght' 600" }}>add</span>
       </button>
 
-      {/* History Modal */}
-      {showHistory && (
-        <div className="fixed inset-0 z-50 flex flex-col animate-fade-in"
-          style={{ background: 'rgba(10,10,15,0.97)', backdropFilter: 'blur(12px)' }}>
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 flex-shrink-0 border-b"
-            style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-            <div>
-              <h2 className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>Task History</h2>
-              <p className="text-sm mt-0.5" style={{ color: '#8c90a1' }}>Every task you've completed on this app</p>
+      {/* Weekly Schedule Modal */}
+      {showSchedule && (() => {
+        const everyDay = tasks.filter(t => t.every_day).sort((a, b) => (a.time_of_day || '').localeCompare(b.time_of_day || ''));
+        const byDay = DAYS.map((label, i) => ({
+          label,
+          tasks: tasks.filter(t => !t.every_day && t.day_of_week === i).sort((a, b) => (a.time_of_day || '').localeCompare(b.time_of_day || '')),
+        }));
+        const totalMins = tasks.reduce((s, t) => s + t.duration_minutes, 0);
+
+        return (
+          <div className="fixed inset-0 z-50 flex flex-col animate-fade-in"
+            style={{ background: 'rgba(10,10,15,0.97)', backdropFilter: 'blur(12px)' }}>
+
+            <div className="flex items-center justify-between px-6 py-5 flex-shrink-0 border-b"
+              style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              <div>
+                <h2 className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>Weekly Schedule</h2>
+                <p className="text-sm mt-0.5" style={{ color: '#8c90a1' }}>
+                  {tasks.length} task{tasks.length !== 1 ? 's' : ''} · {Math.round(totalMins / 60 * 10) / 10}h per week
+                </p>
+              </div>
+              <button onClick={() => setShowSchedule(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+              </button>
             </div>
-            <button onClick={() => setShowHistory(false)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
-            </button>
-          </div>
 
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 py-6 max-w-3xl mx-auto w-full">
-            {historyLoading ? (
-              <div className="flex justify-center py-20">
-                <span className="material-symbols-outlined animate-spin text-3xl" style={{ color: '#afc6ff' }}>progress_activity</span>
-              </div>
-            ) : history.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <span className="material-symbols-outlined text-6xl mb-4" style={{ color: '#414655' }}>history</span>
-                <p className="font-semibold text-lg" style={{ color: '#8c90a1' }}>No history yet</p>
-                <p className="text-sm mt-1" style={{ color: '#414655' }}>Complete your first task to start tracking</p>
-              </div>
-            ) : (() => {
-              const weeks = groupByWeek(history);
-              const totalAllTime = history.reduce((s, c) => s + (c.duration_minutes || 0), 0);
-              return (
-                <>
-                  {/* All-time summary */}
-                  <div className="grid grid-cols-3 gap-3 mb-8">
-                    {[
-                      { label: 'Total Completions', value: history.length, icon: 'task_alt', color: '#c3f400' },
-                      { label: 'Weeks Active', value: weeks.length, icon: 'date_range', color: '#afc6ff' },
-                      { label: 'Hours Trained', value: `${Math.round(totalAllTime / 60 * 10) / 10}h`, icon: 'timer', color: '#ffd700' },
-                    ].map(stat => (
-                      <div key={stat.label} className="glass-card rounded-2xl p-4 text-center">
-                        <span className="material-symbols-outlined mb-1 block" style={{ color: stat.color, fontSize: '20px' }}>{stat.icon}</span>
-                        <p className="text-xl font-black" style={{ fontFamily: 'var(--font-jakarta)', color: stat.color }}>{stat.value}</p>
-                        <p className="text-xs font-bold tracking-wide mt-0.5" style={{ color: '#8c90a1' }}>{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Week groups */}
-                  <div className="flex flex-col gap-3">
-                    {weeks.map(week => {
-                      const isExpanded = expandedWeeks.has(week.weekStart);
-                      const xpEarned = Math.floor(week.totalMins / 60);
-                      return (
-                        <div key={week.weekStart} className="rounded-2xl overflow-hidden"
-                          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          {/* Week header — click to expand */}
-                          <button
-                            onClick={() => setExpandedWeeks(prev => {
-                              const next = new Set(prev);
-                              if (next.has(week.weekStart)) next.delete(week.weekStart);
-                              else next.add(week.weekStart);
-                              return next;
-                            })}
-                            className="w-full flex items-center justify-between px-5 py-4 transition-colors"
-                            style={{ cursor: 'pointer' }}
-                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'}
-                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                            <div className="flex items-center gap-3 text-left">
-                              <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '18px' }}>date_range</span>
-                              <div>
-                                <p className="font-bold text-sm" style={{ color: '#e4e1e9' }}>{week.weekLabel}</p>
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 py-6 max-w-3xl mx-auto w-full">
+              {tasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <span className="material-symbols-outlined text-6xl mb-4" style={{ color: '#414655' }}>calendar_view_week</span>
+                  <p className="font-semibold text-lg" style={{ color: '#8c90a1' }}>No tasks yet</p>
+                  <p className="text-sm mt-1" style={{ color: '#414655' }}>Add tasks to build your routine</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  {/* Every Day */}
+                  {everyDay.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: '#afc6ff' }}>Every Day</p>
+                      <div className="flex flex-col gap-2">
+                        {everyDay.map(task => {
+                          const meta = SKILL_META[task.skill] || SKILL_META.energy;
+                          return (
+                            <div key={task.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderLeft: `3px solid ${meta.color}` }}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate" style={{ color: '#e4e1e9' }}>{task.title}</p>
                                 <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>
-                                  {week.completions.length} task{week.completions.length !== 1 ? 's' : ''} · {xpEarned} XP earned
+                                  <span style={{ color: meta.color }}>{task.skill}</span>
+                                  {' · '}{task.duration_minutes}m
+                                  {task.time_of_day && <span> · {task.time_of_day}</span>}
                                 </p>
                               </div>
                             </div>
-                            <span className="material-symbols-outlined transition-transform" style={{ color: '#8c90a1', fontSize: '20px', transform: isExpanded ? 'rotate(180deg)' : 'none' }}>expand_more</span>
-                          </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                          {/* Task list */}
-                          {isExpanded && (
-                            <div className="px-4 pb-4 flex flex-col gap-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                              {week.completions.map(c => {
-                                const meta = SKILL_META[c.skill] || SKILL_META.energy;
-                                const dateLabel = new Date(c.completed_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-                                return (
-                                  <div key={c.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl mt-2"
-                                    style={{ background: 'rgba(255,255,255,0.02)', borderLeft: `3px solid ${meta.color}` }}>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-semibold truncate" style={{ color: '#e4e1e9' }}>{c.task_title}</p>
-                                      <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>
-                                        <span style={{ color: meta.color }}>{c.skill}</span>
-                                        {' · '}{c.duration_minutes}m
-                                        {' · '}{dateLabel}
-                                      </p>
-                                    </div>
-                                    <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '16px', color: meta.color, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                                  </div>
-                                );
-                              })}
+                  {/* Day-specific */}
+                  {byDay.filter(d => d.tasks.length > 0).map(({ label, tasks: dayTasks }) => (
+                    <div key={label}>
+                      <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: '#8c90a1' }}>{label}</p>
+                      <div className="flex flex-col gap-2">
+                        {dayTasks.map(task => {
+                          const meta = SKILL_META[task.skill] || SKILL_META.energy;
+                          return (
+                            <div key={task.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderLeft: `3px solid ${meta.color}` }}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate" style={{ color: '#e4e1e9' }}>{task.title}</p>
+                                <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>
+                                  <span style={{ color: meta.color }}>{task.skill}</span>
+                                  {' · '}{task.duration_minutes}m
+                                  {task.time_of_day && <span> · {task.time_of_day}</span>}
+                                </p>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Modal — click backdrop to close */}
       {showModal && (
