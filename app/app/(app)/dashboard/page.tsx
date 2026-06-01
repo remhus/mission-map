@@ -565,7 +565,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Dream Capsule */}
-          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col relative overflow-hidden min-h-0 group">
+          <div className="glass-card p-6 rounded-3xl flex-1 flex flex-col relative overflow-hidden min-h-0 group min-h-[220px] md:min-h-0">
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(175,198,255,0.05) 0%, transparent 70%)' }} />
             <div className="flex items-center justify-between mb-1 relative flex-shrink-0">
               <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
