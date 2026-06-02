@@ -64,7 +64,8 @@ export async function PUT(req: NextRequest) {
   const { id, title, description, trophy_tier, is_locked } = body;
   await sql`
     UPDATE achievements
-    SET title = ${title}, description = ${description}, trophy_tier = ${trophy_tier}, is_locked = ${is_locked}
+    SET title = ${title}, description = ${description}, trophy_tier = ${trophy_tier}, is_locked = ${is_locked},
+        unlocked_at = CASE WHEN ${is_locked} = false AND is_locked = true THEN NOW() ELSE unlocked_at END
     WHERE id = ${id} AND user_id = ${user.userId}
   `;
   return NextResponse.json({ success: true });
