@@ -290,7 +290,7 @@ export default function DashboardPage() {
       if (b.time_of_day) return 1;
       return 0;
     });
-    setUpcomingTasks(todayTasks.slice(0, 5));
+    setUpcomingTasks(todayTasks.slice(0, 4));
 
     const tomorrowDow = (todayDow + 1) % 7;
     const byTime = (a: Task, b: Task) => {
