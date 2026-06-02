@@ -24,22 +24,11 @@ const TIER_RANK: Record<string, number> = { bronze: 0, silver: 1, gold: 2, plati
 function sortAchievements(list: Achievement[], mode: SortMode): Achievement[] {
   const copy = [...list];
   if (mode === 'default') {
-    // Bronze first → platinum, oldest first within tier, completed at end
-    // Exception: most recently claimed trophy surfaces to position #1
-    const locked = copy.filter(a => a.is_locked).sort((a, b) => {
-      const td = TIER_RANK[a.trophy_tier] - TIER_RANK[b.trophy_tier];
-      if (td !== 0) return td;
-      return new Date(a.unlocked_at).getTime() - new Date(b.unlocked_at).getTime();
-    });
-    const unlocked = copy.filter(a => !a.is_locked).sort((a, b) =>
-      new Date(a.unlocked_at).getTime() - new Date(b.unlocked_at).getTime()
-    );
-    if (unlocked.length === 0) return locked;
-    const [newest, ...rest] = [...unlocked].sort((a, b) =>
-      new Date(b.unlocked_at).getTime() - new Date(a.unlocked_at).getTime()
-    );
-    const remaining = unlocked.filter(a => a.id !== newest.id);
-    return [newest, ...locked, ...remaining];
+    // Claimed: bronze → platinum. Then unclaimed: bronze → platinum.
+    const byTier = (a: Achievement, b: Achievement) => TIER_RANK[a.trophy_tier] - TIER_RANK[b.trophy_tier];
+    const unlocked = copy.filter(a => !a.is_locked).sort(byTier);
+    const locked = copy.filter(a => a.is_locked).sort(byTier);
+    return [...unlocked, ...locked];
   }
   if (mode === 'not-earned') {
     return copy.filter(a => a.is_locked).sort((a, b) => {
