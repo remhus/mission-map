@@ -75,20 +75,19 @@ function isToday(dateStr: string | null) {
   return d.toDateString() === now.toDateString();
 }
 
-// For every_day tasks: show as complete only if completed on the specific day being viewed.
-// This allows retroactive logging for past days.
-function isEffectivelyComplete(task: Task, activeDay: number): boolean {
+// For every_day tasks: check task_completions per-date records (source of truth).
+// For day-specific tasks: use the tasks.is_completed flag directly.
+function isEffectivelyComplete(task: Task, activeDay: number, completions: Map<string, Set<number>>): boolean {
   if (task.every_day) {
-    if (!task.is_completed || !task.completed_at) return false;
     const targetDate = getISODateForDay(activeDay);
-    const completedDate = task.completed_at.split('T')[0];
-    return completedDate === targetDate;
+    return completions.get(targetDate)?.has(task.id) ?? false;
   }
   return task.is_completed;
 }
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [completions, setCompletions] = useState<Map<string, Set<number>>>(new Map());
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState(getTodayIndex());
   const [showModal, setShowModal] = useState(false);
@@ -106,6 +105,12 @@ export default function TasksPage() {
     const res = await fetch('/api/tasks');
     const data = await res.json();
     setTasks(data.tasks || []);
+    const map = new Map<string, Set<number>>();
+    for (const c of (data.weekCompletions || [])) {
+      if (!map.has(c.completed_date)) map.set(c.completed_date, new Set());
+      map.get(c.completed_date)!.add(c.task_id);
+    }
+    setCompletions(map);
     setLoading(false);
   }, []);
 
@@ -147,7 +152,7 @@ export default function TasksPage() {
   }
 
   async function toggleTask(task: Task) {
-    const currentlyDone = isEffectivelyComplete(task, activeDay);
+    const currentlyDone = isEffectivelyComplete(task, activeDay, completions);
     const newCompleted = !currentlyDone;
     const targetDate = getISODateForDay(activeDay);
     await fetch('/api/tasks/complete', {
@@ -155,11 +160,21 @@ export default function TasksPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
     });
-    const completedAt = newCompleted ? `${targetDate}T12:00:00.000Z` : null;
-    setTasks(prev => prev.map(t => t.id === task.id
-      ? { ...t, is_completed: newCompleted, completed_at: completedAt }
-      : t
-    ));
+    if (task.every_day) {
+      setCompletions(prev => {
+        const next = new Map(prev);
+        const s = new Set(next.get(targetDate) ?? []);
+        if (newCompleted) s.add(task.id); else s.delete(task.id);
+        next.set(targetDate, s);
+        return next;
+      });
+    } else {
+      const completedAt = newCompleted ? `${targetDate}T12:00:00.000Z` : null;
+      setTasks(prev => prev.map(t => t.id === task.id
+        ? { ...t, is_completed: newCompleted, completed_at: completedAt }
+        : t
+      ));
+    }
   }
 
   async function deleteTask(id: number) {
@@ -168,7 +183,7 @@ export default function TasksPage() {
   }
 
   const dayTasks = tasks.filter(t => t.every_day || t.day_of_week === activeDay);
-  const completedCount = dayTasks.filter(t => isEffectivelyComplete(t, activeDay)).length;
+  const completedCount = dayTasks.filter(t => isEffectivelyComplete(t, activeDay, completions)).length;
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto">
@@ -257,7 +272,7 @@ export default function TasksPage() {
         <div className="flex flex-col gap-4">
           {dayTasks.map(task => {
             const meta = SKILL_META[task.skill] || SKILL_META.energy;
-            const done = isEffectivelyComplete(task, activeDay);
+            const done = isEffectivelyComplete(task, activeDay, completions);
             return (
               <div key={task.id}
                 className="glass-card rounded-2xl p-5 flex gap-4 group transition-all"

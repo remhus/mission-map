@@ -8,10 +8,11 @@ export async function GET() {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const tasks = await sql`
-    SELECT * FROM tasks WHERE user_id = ${user.userId} ORDER BY every_day DESC, day_of_week, time_of_day NULLS LAST
-  `;
-  return NextResponse.json({ tasks });
+  const [tasks, weekCompletions] = await Promise.all([
+    sql`SELECT * FROM tasks WHERE user_id = ${user.userId} ORDER BY every_day DESC, day_of_week, time_of_day NULLS LAST`,
+    sql`SELECT task_id, completed_date::text AS completed_date FROM task_completions WHERE user_id = ${user.userId} AND completed_date >= CURRENT_DATE - INTERVAL '8 days'`,
+  ]);
+  return NextResponse.json({ tasks, weekCompletions });
 }
 
 const VALID_SKILLS = new Set(['energy','intelligence','strength','bravery','wealth','discipline','wisdom','influence']);
