@@ -282,13 +282,19 @@ export default function DashboardPage() {
       if (t.every_day) return t.is_completed && t.completed_at?.split('T')[0] === todayStr;
       return t.is_completed;
     };
-    const todayTasks: Task[] = (tasksData.tasks || []).filter((t: Task) =>
-      !isDoneToday(t) && (t.every_day || t.day_of_week === todayDow)
-    ).sort((a: Task, b: Task) => {
+    const byTime = (a: Task, b: Task) => {
       if (a.time_of_day && b.time_of_day) return a.time_of_day.localeCompare(b.time_of_day);
       if (a.time_of_day) return -1;
       if (b.time_of_day) return 1;
       return 0;
+    };
+    const todayTasks: Task[] = (tasksData.tasks || []).filter((t: Task) =>
+      !isDoneToday(t) && (t.every_day || t.day_of_week === todayDow)
+    ).sort((a: Task, b: Task) => {
+      // Non-daily tasks first, then daily — time_of_day as tiebreaker within each group
+      if (!a.every_day && b.every_day) return -1;
+      if (a.every_day && !b.every_day) return 1;
+      return byTime(a, b);
     });
     setUpcomingTasks(todayTasks.slice(0, 4));
 
