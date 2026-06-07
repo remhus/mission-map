@@ -75,14 +75,11 @@ function isToday(dateStr: string | null) {
   return d.toDateString() === now.toDateString();
 }
 
-// For every_day tasks: check task_completions per-date records (source of truth).
-// For day-specific tasks: use the tasks.is_completed flag directly.
+// task_completions is the source of truth for all task types.
+// tasks.is_completed is never reset between weeks, so we ignore it here.
 function isEffectivelyComplete(task: Task, activeDay: number, completions: Map<string, Set<number>>): boolean {
-  if (task.every_day) {
-    const targetDate = getISODateForDay(activeDay);
-    return completions.get(targetDate)?.has(task.id) ?? false;
-  }
-  return task.is_completed;
+  const targetDate = getISODateForDay(activeDay);
+  return completions.get(targetDate)?.has(task.id) ?? false;
 }
 
 export default function TasksPage() {
@@ -160,21 +157,13 @@ export default function TasksPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
     });
-    if (task.every_day) {
-      setCompletions(prev => {
-        const next = new Map(prev);
-        const s = new Set(next.get(targetDate) ?? []);
-        if (newCompleted) s.add(task.id); else s.delete(task.id);
-        next.set(targetDate, s);
-        return next;
-      });
-    } else {
-      const completedAt = newCompleted ? `${targetDate}T12:00:00.000Z` : null;
-      setTasks(prev => prev.map(t => t.id === task.id
-        ? { ...t, is_completed: newCompleted, completed_at: completedAt }
-        : t
-      ));
-    }
+    setCompletions(prev => {
+      const next = new Map(prev);
+      const s = new Set(next.get(targetDate) ?? []);
+      if (newCompleted) s.add(task.id); else s.delete(task.id);
+      next.set(targetDate, s);
+      return next;
+    });
   }
 
   async function deleteTask(id: number) {

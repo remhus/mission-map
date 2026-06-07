@@ -213,6 +213,36 @@ function getCountdown(lockedUntil: string, now: number): { years: number; months
 
 const SKILL_COLORS: Record<string, string> = { energy:'#ffd700',intelligence:'#afc6ff',strength:'#ff6b6b',bravery:'#c3f400',wealth:'#4ecdc4',discipline:'#e9b3ff',wisdom:'#f97316',influence:'#fd79a8' };
 
+// Isolated ticker — only this component re-renders every second, not DashboardPage
+function CapsuleCountdown({ lockedUntil }: { lockedUntil: string }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const cd = getCountdown(lockedUntil, now);
+  if (!cd) return null;
+  const units = [
+    { v: cd.years, l: 'YRS' }, { v: cd.months, l: 'MOS' }, { v: cd.days, l: 'DAYS' },
+    { v: cd.hours, l: 'HRS' }, { v: cd.minutes, l: 'MINS' }, { v: cd.seconds, l: 'SECS' },
+  ];
+  return (
+    <div className="flex items-start justify-center gap-0.5">
+      {units.map(({ v, l }, i) => (
+        <div key={l} className="flex items-start gap-0.5">
+          <div className="flex flex-col items-center w-10">
+            <span className="text-xl md:text-3xl font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
+              {String(v).padStart(2, '0')}
+            </span>
+            <span className="text-[9px] font-bold tracking-widest mt-1" style={{ color: '#414655' }}>{l}</span>
+          </div>
+          {i < 5 && <span className="text-xl font-black leading-none" style={{ color: '#414655', paddingTop: '3px' }}>:</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TomorrowSection({ tasks }: { tasks: Task[] }) {
   if (tasks.length === 0) return null;
   return (
@@ -250,7 +280,6 @@ export default function DashboardPage() {
   const [capsuleYears, setCapsuleYears] = useState<number | null>(null);
   const [sealingCapsule, setSealingCapsule] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
-  const [nowTick, setNowTick] = useState(Date.now());
   const [trophyCount, setTrophyCount] = useState(0);
   const [cells, setCells] = useState<Cell[][]>(
     Array.from({ length: 9 }, (_, r) =>
@@ -278,10 +307,9 @@ export default function DashboardPage() {
     // Upcoming = today's + every_day tasks not yet completed today, sorted by time_of_day
     const todayDow = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
     const todayStr = new Date().toISOString().split('T')[0];
-    const isDoneToday = (t: Task) => {
-      if (t.every_day) return t.is_completed && t.completed_at?.split('T')[0] === todayStr;
-      return t.is_completed;
-    };
+    // completed_at is always set to the completion date, so this correctly
+    // excludes tasks completed last week whose is_completed was never reset.
+    const isDoneToday = (t: Task) => t.is_completed && t.completed_at?.split('T')[0] === todayStr;
     const todayTasks: Task[] = (tasksData.tasks || []).filter((t: Task) =>
       !isDoneToday(t) && (t.every_day || t.day_of_week === todayDow)
     ).sort((a: Task, b: Task) => {
@@ -329,13 +357,6 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch('/api/dream-capsule').then(r => r.json()).then(d => setCapsule(d.capsule ?? null));
   }, []);
-
-  // Countdown tick
-  useEffect(() => {
-    if (!capsule?.is_sealed || !capsule.locked_until) return;
-    const t = setInterval(() => setNowTick(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [capsule?.is_sealed, capsule?.locked_until]);
 
   function openEdit(r: number, c: number) {
     setEditing({ r, c });
@@ -593,29 +614,7 @@ export default function DashboardPage() {
                     Locked until {new Date(capsule!.locked_until!).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
-                {(() => {
-                  const cd = getCountdown(capsule!.locked_until!, nowTick);
-                  if (!cd) return null;
-                  const units = [
-                    { v: cd.years, l: 'YRS' }, { v: cd.months, l: 'MOS' }, { v: cd.days, l: 'DAYS' },
-                    { v: cd.hours, l: 'HRS' }, { v: cd.minutes, l: 'MINS' }, { v: cd.seconds, l: 'SECS' },
-                  ];
-                  return (
-                    <div className="flex items-start justify-center gap-0.5">
-                      {units.map(({ v, l }, i) => (
-                        <div key={l} className="flex items-start gap-0.5">
-                          <div className="flex flex-col items-center w-10">
-                            <span className="text-xl md:text-3xl font-black tabular-nums leading-none" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
-                              {String(v).padStart(2, '0')}
-                            </span>
-                            <span className="text-[9px] font-bold tracking-widest mt-1" style={{ color: '#414655' }}>{l}</span>
-                          </div>
-                          {i < 5 && <span className="text-xl font-black leading-none" style={{ color: '#414655', paddingTop: '3px' }}>:</span>}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                <CapsuleCountdown lockedUntil={capsule!.locked_until!} />
               </div>
             ) : capsuleIsUnlocked ? (
               /* UNLOCKED — ready to open */

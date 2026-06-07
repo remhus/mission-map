@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 export async function initDB() {
   if (initialized) return;
@@ -176,6 +176,16 @@ export async function initDB() {
         window_start TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
+
+    // Indexes — safe to re-run, never break existing queries
+    await sql`CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_task_completions_user_date ON task_completions(user_id, completed_date DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_skill_stats_user_id ON skill_stats(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON achievements(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_journal_entries_user_id ON journal_entries(user_id, created_at DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_vision_board_images_user_id ON vision_board_images(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_dream_capsules_user_id ON dream_capsules(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_grid_cells_user_id ON grid_cells(user_id)`;
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;
     initialized = true;
