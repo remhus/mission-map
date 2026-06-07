@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 type Task = {
   id: number; title: string; skill: string; duration_minutes: number;
   time_of_day: string | null; day_of_week: number; every_day: boolean;
-  is_completed: boolean; completed_at: string | null;
+  is_completed: boolean; completed_at: string | null; created_at: string;
 };
 
 type Completion = {
@@ -13,20 +13,42 @@ type Completion = {
   duration_minutes: number; completed_date: string; created_at: string;
 };
 
-type DayGroup = { date: string; label: string; completions: Completion[]; totalMins: number };
+type DayGroup = { date: string; label: string; completions: Completion[]; missedTasks: Task[]; totalMins: number };
 
-function groupByDay(completions: Completion[]): DayGroup[] {
+function getDayOfWeek(dateStr: string): number {
+  const jsDay = new Date(dateStr + 'T12:00:00').getDay();
+  return jsDay === 0 ? 6 : jsDay - 1; // convert JS (0=Sun) → app (0=Mon)
+}
+
+function groupByDay(completions: Completion[], tasks: Task[]): DayGroup[] {
+  const completedByDate = new Map<string, Set<number>>();
+  for (const c of completions) {
+    if (!completedByDate.has(c.completed_date)) completedByDate.set(c.completed_date, new Set());
+    completedByDate.get(c.completed_date)!.add(c.task_id);
+  }
+
   const map = new Map<string, DayGroup>();
   for (const c of completions) {
     if (!map.has(c.completed_date)) {
       const d = new Date(c.completed_date + 'T12:00:00');
       const label = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      map.set(c.completed_date, { date: c.completed_date, label, completions: [], totalMins: 0 });
+      map.set(c.completed_date, { date: c.completed_date, label, completions: [], missedTasks: [], totalMins: 0 });
     }
     const g = map.get(c.completed_date)!;
     g.completions.push(c);
     g.totalMins += c.duration_minutes || 0;
   }
+
+  for (const [date, group] of map) {
+    const dow = getDayOfWeek(date);
+    const completedIds = completedByDate.get(date) ?? new Set<number>();
+    group.missedTasks = tasks.filter(t => {
+      if (completedIds.has(t.id)) return false;
+      if (!t.every_day && t.day_of_week !== dow) return false;
+      return new Date(t.created_at) <= new Date(date + 'T23:59:59');
+    });
+  }
+
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
 
@@ -371,7 +393,7 @@ export default function TasksPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {groupByDay(history).map(group => {
+                {groupByDay(history, tasks).map(group => {
                   const isExpanded = expandedDays.has(group.date);
                   const toggleDay = () => setExpandedDays(prev => {
                     const next = new Set(prev);
@@ -390,7 +412,11 @@ export default function TasksPage() {
                           <div>
                             <p className="font-bold text-sm" style={{ color: '#e4e1e9' }}>{group.label}</p>
                             <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>
-                              {group.completions.length} task{group.completions.length !== 1 ? 's' : ''} · {Math.round(group.totalMins / 60 * 10) / 10}h
+                              <span style={{ color: '#c3f400' }}>{group.completions.length} done</span>
+                              {group.missedTasks.length > 0 && (
+                                <span style={{ color: '#414655' }}> · {group.missedTasks.length} missed</span>
+                              )}
+                              <span style={{ color: '#8c90a1' }}> · {Math.round(group.totalMins / 60 * 10) / 10}h</span>
                             </p>
                           </div>
                         </div>
@@ -417,6 +443,25 @@ export default function TasksPage() {
                                 <span className="material-symbols-outlined flex-shrink-0"
                                   style={{ fontSize: '16px', color: meta.color, fontVariationSettings: "'FILL' 1" }}>
                                   check_circle
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {group.missedTasks.map(t => {
+                            const meta = SKILL_META[t.skill] || SKILL_META.energy;
+                            return (
+                              <div key={`missed-${t.id}`} className="flex items-center gap-3 px-3 py-2.5 rounded-xl mt-2"
+                                style={{ background: 'rgba(255,255,255,0.01)', borderLeft: `3px solid ${meta.color}30`, opacity: 0.45 }}>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold truncate" style={{ color: '#8c90a1', textDecoration: 'line-through' }}>{t.title}</p>
+                                  <p className="text-xs mt-0.5">
+                                    <span style={{ color: meta.color + '80' }}>{t.skill}</span>
+                                    <span style={{ color: '#414655' }}> · {t.duration_minutes}m</span>
+                                  </p>
+                                </div>
+                                <span className="material-symbols-outlined flex-shrink-0"
+                                  style={{ fontSize: '16px', color: '#414655' }}>
+                                  cancel
                                 </span>
                               </div>
                             );
