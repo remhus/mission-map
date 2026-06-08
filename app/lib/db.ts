@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 export async function initDB() {
   if (initialized) return;
@@ -82,8 +82,8 @@ export async function initDB() {
       await sql`UPDATE skill_stats SET points = points * 60 WHERE points > 0 AND points < 1000`;
     }
 
-    // v5 fix: undo the accidental re-run of the v4 ×60 migration caused by bumping SCHEMA_VERSION 4→5
-    if (prevVersion === 4) {
+    // v6 fix: undo the accidental ×60 from v4 migration re-running during the v4→v5 schema bump
+    if (prevVersion === 5) {
       await sql`UPDATE skill_stats SET points = GREATEST(0, points / 60) WHERE points > 0`;
     }
 
