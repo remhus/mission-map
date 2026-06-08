@@ -28,6 +28,10 @@ export async function initDB() {
       )
     `;
 
+    // Read previously installed version (0 = fresh install)
+    const prevRows = await sql`SELECT COALESCE(MAX(version), 0) AS v FROM _schema_version`;
+    const prevVersion = Number((prevRows[0] as { v: number }).v);
+
     // Early exit: if schema is already at current version, skip all DDL
     const versionCheck = await sql`SELECT version FROM _schema_version WHERE version = ${SCHEMA_VERSION}`;
     if (versionCheck.length > 0) { initialized = true; return; }
@@ -73,8 +77,15 @@ export async function initDB() {
       )
     `;
 
-    // One-time v4 migration: convert skill_stats points from hours to minutes
-    await sql`UPDATE skill_stats SET points = points * 60 WHERE points > 0 AND points < 1000`;
+    // v4 migration: hours → minutes (only when upgrading from before v4)
+    if (prevVersion < 4) {
+      await sql`UPDATE skill_stats SET points = points * 60 WHERE points > 0 AND points < 1000`;
+    }
+
+    // v5 fix: undo the accidental re-run of the v4 ×60 migration caused by bumping SCHEMA_VERSION 4→5
+    if (prevVersion === 4) {
+      await sql`UPDATE skill_stats SET points = GREATEST(0, points / 60) WHERE points > 0`;
+    }
 
     // Check if grid_cells needs rebuilding (wrong user_id type)
     const gcCheck = await sql`
