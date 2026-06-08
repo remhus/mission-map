@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 export async function initDB() {
   if (initialized) return;
@@ -82,9 +82,15 @@ export async function initDB() {
       await sql`UPDATE skill_stats SET points = points * 60 WHERE points > 0 AND points < 1000`;
     }
 
-    // v6 fix: undo the accidental ×60 from v4 migration re-running during the v4→v5 schema bump
-    if (prevVersion === 5) {
-      await sql`UPDATE skill_stats SET points = GREATEST(0, points / 60) WHERE points > 0`;
+    // v7 fix: rebuild skill_stats from task_completions to resolve XP corruption from prior migrations
+    if (prevVersion >= 5) {
+      await sql`DELETE FROM skill_stats`;
+      await sql`
+        INSERT INTO skill_stats (user_id, skill, points)
+        SELECT user_id, skill, LEAST(60000, SUM(duration_minutes))
+        FROM task_completions
+        GROUP BY user_id, skill
+      `;
     }
 
     // Check if grid_cells needs rebuilding (wrong user_id type)
