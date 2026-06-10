@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 export async function initDB() {
   if (initialized) return;
@@ -81,7 +81,8 @@ export async function initDB() {
     }
 
     // v7 fix: rebuild skill_stats from task_completions to resolve XP corruption from prior migrations
-    if (prevVersion >= 5) {
+    // Only runs when upgrading from v5/v6 (the corrupted versions); idempotent but skip on v7→v8+
+    if (prevVersion >= 5 && prevVersion <= 6) {
       await sql`DELETE FROM skill_stats`;
       await sql`
         INSERT INTO skill_stats (user_id, skill, points)
@@ -185,6 +186,20 @@ export async function initDB() {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS books (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        ol_key TEXT DEFAULT '',
+        title TEXT NOT NULL,
+        author TEXT DEFAULT '',
+        cover_id TEXT DEFAULT '',
+        isbn TEXT DEFAULT '',
+        star_rating INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
+
+    await sql`
       CREATE TABLE IF NOT EXISTS rate_limits (
         key TEXT PRIMARY KEY,
         count INTEGER NOT NULL DEFAULT 1,
@@ -201,6 +216,7 @@ export async function initDB() {
     await sql`CREATE INDEX IF NOT EXISTS idx_vision_board_images_user_id ON vision_board_images(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_dream_capsules_user_id ON dream_capsules(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_grid_cells_user_id ON grid_cells(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id)`;
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;
     initialized = true;
