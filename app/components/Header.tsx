@@ -64,8 +64,8 @@ export default function Header({ username }: { username: string }) {
               <div className="absolute right-0 top-[calc(100%+8px)] w-52 rounded-2xl overflow-hidden animate-fade-in"
                 style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
                 {/* User info */}
-                <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-                  <div className="flex items-center gap-3">
+                <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0"
                       style={{ background: '#548dff', color: '#fff' }}>
                       {username.charAt(0).toUpperCase()}
@@ -75,18 +75,18 @@ export default function Header({ username }: { username: string }) {
                       <p className="text-xs" style={{ color: '#8c90a1' }}>Mission Active</p>
                     </div>
                   </div>
+                  <Link href="/book-club" onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-semibold transition-all"
+                    style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.15)', color: '#afc6ff' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>menu_book</span>
+                    Book Club
+                  </Link>
                 </div>
 
                 {/* Menu items */}
                 <div className="py-1.5">
-                  <Link href="/book-club" onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
-                    style={{ color: '#c1c6d8' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>menu_book</span>
-                    Book Club
-                  </Link>
                   <Link href="/settings" onClick={() => setProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
                     style={{ color: '#c1c6d8' }}
