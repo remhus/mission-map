@@ -354,6 +354,10 @@ export default function JournalPage() {
               </div>
             </div>
           </>
+        ) : loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <span className="material-symbols-outlined animate-spin text-3xl" style={{ color: '#afc6ff' }}>progress_activity</span>
+          </div>
         ) : active ? (
           /* ---- READING VIEW ---- */
           <>
