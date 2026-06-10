@@ -80,14 +80,19 @@ function getDateForDay(dayIndex: number) {
   return d.getDate();
 }
 
-// Returns YYYY-MM-DD for the calendar date of a given day-tab index
+// Returns YYYY-MM-DD for the calendar date of a given day-tab index.
+// Uses LOCAL date components (not toISOString which is UTC) so completions
+// saved at e.g. 12:30 AM BST don't get attributed to the previous UTC day.
 function getISODateForDay(dayIndex: number): string {
   const today = new Date();
   const todayDow = today.getDay() === 0 ? 6 : today.getDay() - 1;
   const diff = dayIndex - todayDow;
   const d = new Date(today);
   d.setDate(today.getDate() + diff);
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function isToday(dateStr: string | null) {
@@ -174,11 +179,8 @@ export default function TasksPage() {
     const currentlyDone = isEffectivelyComplete(task, activeDay, completions);
     const newCompleted = !currentlyDone;
     const targetDate = getISODateForDay(activeDay);
-    await fetch('/api/tasks/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
-    });
+
+    // Optimistic update — immediate UI response
     setCompletions(prev => {
       const next = new Map(prev);
       const s = new Set(next.get(targetDate) ?? []);
@@ -186,6 +188,24 @@ export default function TasksPage() {
       next.set(targetDate, s);
       return next;
     });
+
+    try {
+      const res = await fetch('/api/tasks/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
+      });
+      if (!res.ok) throw new Error('failed');
+    } catch {
+      // Revert on network/server failure
+      setCompletions(prev => {
+        const next = new Map(prev);
+        const s = new Set(next.get(targetDate) ?? []);
+        if (newCompleted) s.delete(task.id); else s.add(task.id);
+        next.set(targetDate, s);
+        return next;
+      });
+    }
   }
 
   async function deleteTask(id: number) {
