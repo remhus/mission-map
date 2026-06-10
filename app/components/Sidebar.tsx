@@ -15,10 +15,9 @@ interface SidebarProps {
   username: string;
   collapsed: boolean;
   onToggle: () => void;
-  ready: boolean;
 }
 
-export default function Sidebar({ username, collapsed, onToggle, ready }: SidebarProps) {
+export default function Sidebar({ username, collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -31,9 +30,8 @@ export default function Sidebar({ username, collapsed, onToggle, ready }: Sideba
 
   return (
     <aside
-      className="fixed left-0 top-0 h-full hidden md:flex flex-col z-40 pt-20"
+      className="fixed left-0 top-0 h-full hidden md:flex flex-col z-40 pt-20 transition-all duration-300"
       style={{
-        transition: ready ? 'width 300ms' : 'none',
         width: w,
         background: 'rgba(14,14,19,0.9)',
         backdropFilter: 'blur(24px)',
