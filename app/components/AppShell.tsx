@@ -6,11 +6,12 @@ import Sidebar from './Sidebar';
 
 export default function AppShell({ username, children }: { username: string; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  // Persist preference
   useEffect(() => {
     const stored = localStorage.getItem('sidebar-collapsed');
     if (stored === 'true') setCollapsed(true);
+    setReady(true);
   }, []);
 
   function toggle() {
@@ -25,10 +26,10 @@ export default function AppShell({ username, children }: { username: string; chi
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#0A0A0F' }}>
       <Header username={username} />
-      <Sidebar username={username} collapsed={collapsed} onToggle={toggle} />
+      <Sidebar username={username} collapsed={collapsed} onToggle={toggle} ready={ready} />
       <main
-        className="hidden md:block pt-20 pb-20 md:pb-0 min-h-screen transition-all duration-300 overflow-x-hidden"
-        style={{ marginLeft: sidebarWidth }}>
+        className="hidden md:block pt-20 pb-20 md:pb-0 min-h-screen overflow-x-hidden"
+        style={{ marginLeft: sidebarWidth, transition: ready ? 'margin-left 300ms' : 'none' }}>
         {children}
       </main>
       {/* Mobile: no sidebar offset */}
