@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -8,6 +8,12 @@ const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-ja
 export const metadata: Metadata = {
   title: "Mission Map",
   description: "Map your missions. Build your legacy.",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
