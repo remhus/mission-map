@@ -189,15 +189,19 @@ export default function TasksPage() {
       return next;
     });
 
-    try {
-      const res = await fetch('/api/tasks/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate }),
-      });
-      if (!res.ok) throw new Error('failed');
-    } catch {
-      // Revert on network/server failure
+    const body = JSON.stringify({ id: task.id, is_completed: newCompleted, target_date: targetDate });
+    let ok = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch('/api/tasks/complete', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body,
+        });
+        if (res.ok) { ok = true; break; }
+      } catch { /* network error, will retry */ }
+      if (attempt < 2) await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+    }
+    if (!ok) {
+      // All retries failed — revert optimistic update
       setCompletions(prev => {
         const next = new Map(prev);
         const s = new Set(next.get(targetDate) ?? []);

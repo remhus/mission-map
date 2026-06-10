@@ -10,16 +10,22 @@ const SCHEMA_VERSION = 7;
 export async function initDB() {
   if (initialized) return;
   try {
-    // Version tracking table
+    // Fast path: single query to read installed version.
+    // On a migrated DB this is the only DB round-trip before early-exit.
+    // Catch handles truly fresh DBs where _schema_version doesn't exist yet.
+    const prevRows = await sql`SELECT COALESCE(MAX(version), 0) AS v FROM _schema_version`
+      .catch(() => [{ v: 0 }] as { v: number }[]);
+    const prevVersion = Number((prevRows[0] as { v: number }).v);
+
+    if (prevVersion >= SCHEMA_VERSION) { initialized = true; return; }
+
+    // Schema needs migration — ensure core infrastructure tables exist first
     await sql`
       CREATE TABLE IF NOT EXISTS _schema_version (
         version INTEGER PRIMARY KEY,
         applied_at TIMESTAMPTZ DEFAULT NOW()
       )
     `;
-
-    // Always ensure rate_limits exists — created outside the version gate
-    // so it is never skipped by an early-exit on a stale schema version
     await sql`
       CREATE TABLE IF NOT EXISTS rate_limits (
         key TEXT PRIMARY KEY,
@@ -27,14 +33,6 @@ export async function initDB() {
         window_start TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
-
-    // Read previously installed version (0 = fresh install)
-    const prevRows = await sql`SELECT COALESCE(MAX(version), 0) AS v FROM _schema_version`;
-    const prevVersion = Number((prevRows[0] as { v: number }).v);
-
-    // Early exit: if schema is already at current version, skip all DDL
-    const versionCheck = await sql`SELECT version FROM _schema_version WHERE version = ${SCHEMA_VERSION}`;
-    if (versionCheck.length > 0) { initialized = true; return; }
 
 
     // Always run these column additions — safe with IF NOT EXISTS

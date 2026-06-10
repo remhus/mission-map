@@ -84,13 +84,15 @@ export default function JournalPage() {
     } else {
       await fetch('/api/journal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     }
-    setSaving(false);
-    setIsEditing(false);
     const res = await fetch('/api/journal');
     const data = await res.json();
     const list: JournalEntry[] = data.entries || [];
+    // Batch all state updates together so the empty state never flashes
+    // between isEditing→false and active being populated with the new entry
     setEntries(list);
     setActive(list[0] || null);
+    setSaving(false);
+    setIsEditing(false);
   }
 
   async function deleteEntry(id: number) {
