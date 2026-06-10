@@ -79,6 +79,14 @@ export default function Header({ username }: { username: string }) {
 
                 {/* Menu items */}
                 <div className="py-1.5">
+                  <Link href="/book-club" onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
+                    style={{ color: '#c1c6d8' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>menu_book</span>
+                    Book Club
+                  </Link>
                   <Link href="/settings" onClick={() => setProfileOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
                     style={{ color: '#c1c6d8' }}

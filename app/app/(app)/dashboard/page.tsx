@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import BookClub from '@/components/BookClub';
-
 const CapsuleEditor = dynamic(() => import('@/components/RichEditor'), { ssr: false });
 
 type Cell = { row_index: number; col_index: number; content: string; cell_type: string };
@@ -657,9 +655,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Book Club */}
-      <BookClub />
 
       {/* Fullscreen overlay — click outside grid closes it */}
       {fullscreen && (
