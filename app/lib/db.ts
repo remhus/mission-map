@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 8;
+const SCHEMA_VERSION = 9;
 
 export async function initDB() {
   if (initialized) return;
@@ -217,6 +217,11 @@ export async function initDB() {
     await sql`CREATE INDEX IF NOT EXISTS idx_dream_capsules_user_id ON dream_capsules(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_grid_cells_user_id ON grid_cells(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id)`;
+
+    // v9: add status column to books (read | wishlist)
+    if (prevVersion < 9) {
+      await sql`ALTER TABLE books ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'read'`;
+    }
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;
     initialized = true;
