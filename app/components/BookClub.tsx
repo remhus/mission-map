@@ -34,6 +34,12 @@ function olSearchUrl(q: string) {
     : `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&fields=key,title,author_name,cover_i,isbn,first_publish_year&limit=8`;
 }
 
+function extractText(val: unknown): string | null {
+  if (typeof val === 'string') return val.trim() || null;
+  if (val && typeof val === 'object' && 'value' in val) return extractText((val as { value: unknown }).value);
+  return null;
+}
+
 // Fetches and renders a book description from Open Library Works API
 function BookDescription({ olKey }: { olKey: string }) {
   const [desc, setDesc] = useState<string | null>(null);
@@ -46,17 +52,18 @@ function BookDescription({ olKey }: { olKey: string }) {
     fetch(`https://openlibrary.org${olKey}.json`)
       .then(r => r.json())
       .then(d => {
-        const text = typeof d.description === 'string'
-          ? d.description
-          : (d.description?.value as string | undefined) ?? null;
-        setDesc(text?.trim() || null);
+        const text =
+          extractText(d.description) ||
+          extractText(d.first_sentence) ||
+          null;
+        setDesc(text);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [olKey]);
 
   if (loading) return (
-    <div className="flex flex-col gap-1.5 mt-1">
+    <div className="flex flex-col gap-1.5">
       {[100, 90, 60].map((w, i) => (
         <div key={i} className="h-3 rounded-full animate-pulse" style={{ width: `${w}%`, background: 'rgba(255,255,255,0.06)' }} />
       ))}
@@ -64,12 +71,12 @@ function BookDescription({ olKey }: { olKey: string }) {
   );
   if (!desc) return null;
 
-  const LIMIT = 220;
+  const LIMIT = 300;
   const long = desc.length > LIMIT;
 
   return (
     <div>
-      <p className="text-sm leading-relaxed" style={{ color: '#8c90a1' }}>
+      <p className="text-sm leading-relaxed" style={{ color: '#c1c6d8' }}>
         {!expanded && long ? desc.slice(0, LIMIT).trimEnd() + '…' : desc}
       </p>
       {long && (
@@ -137,6 +144,7 @@ function OLCoverBox({ doc, size = 'M' }: { doc: OLDoc; size?: 'S' | 'M' | 'L' })
 }
 
 function BuyLinks({ title, author }: { title: string; author: string }) {
+  const [open, setOpen] = useState(false);
   const q = encodeURIComponent(`${title} ${author}`).replace(/%20/g, '+');
   const links = [
     { label: 'Amazon', icon: 'shopping_cart', url: `https://www.amazon.co.uk/s?k=${q}` },
@@ -144,19 +152,33 @@ function BuyLinks({ title, author }: { title: string; author: string }) {
     { label: 'Bookshop.org', icon: 'store', url: `https://bookshop.org/search?keywords=${encodeURIComponent(title)}` },
   ];
   return (
-    <div className="flex flex-col gap-2 w-full">
-      <p className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: '#8c90a1' }}>Where to buy</p>
-      {links.map(l => (
-        <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#c1c6d8', textDecoration: 'none' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = '#c1c6d8'; }}>
-          <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px' }}>{l.icon}</span>
-          <span className="text-sm font-medium">{l.label}</span>
-          <span className="material-symbols-outlined ml-auto flex-shrink-0" style={{ fontSize: '16px', color: '#414655' }}>open_in_new</span>
-        </a>
-      ))}
+    <div className="w-full">
+      <button onClick={() => setOpen(v => !v)}
+        className="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8c90a1' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}>
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>shopping_bag</span>
+          <span className="text-sm font-semibold">Where to buy</span>
+        </div>
+        <span className="material-symbols-outlined" style={{ fontSize: '18px', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>expand_more</span>
+      </button>
+      {open && (
+        <div className="flex flex-col gap-2 mt-2">
+          {links.map(l => (
+            <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#c1c6d8', textDecoration: 'none' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.color = '#c1c6d8'; }}>
+              <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px' }}>{l.icon}</span>
+              <span className="text-sm font-medium">{l.label}</span>
+              <span className="material-symbols-outlined ml-auto flex-shrink-0" style={{ fontSize: '16px', color: '#414655' }}>open_in_new</span>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
