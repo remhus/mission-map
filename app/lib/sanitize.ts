@@ -11,13 +11,17 @@ const ALLOWED_TAGS = [
 ];
 
 const ALLOWED_ATTRIBUTES: sanitizeHtml.IOptions['allowedAttributes'] = {
-  img: ['src', 'alt'],
+  img: ['src', 'alt', 'style'],
   '*': ['style'],
 };
 
 const ALLOWED_STYLES: sanitizeHtml.IOptions['allowedStyles'] = {
   '*': {
     'text-align': [/^(left|center|right|justify)$/],
+  },
+  'img': {
+    'width': [/^\d+%$/, /^\d+px$/],
+    'max-width': [/^100%$/],
   },
 };
 
@@ -27,5 +31,9 @@ export function sanitizeRichHtml(dirty: string): string {
     allowedAttributes: ALLOWED_ATTRIBUTES,
     allowedStyles: ALLOWED_STYLES,
     disallowedTagsMode: 'discard',
+    // Allow base64 data URIs so embedded images survive sanitisation
+    allowedSchemesByTag: {
+      img: ['data', 'http', 'https'],
+    },
   });
 }

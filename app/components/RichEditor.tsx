@@ -6,7 +6,23 @@ import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+
+// Image extension with width attribute rendered as inline style
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        renderHTML: (attrs) => attrs.width
+          ? { style: `width: ${attrs.width}; max-width: 100%;` }
+          : {},
+        parseHTML: (el) => (el as HTMLElement).style.width || null,
+      },
+    };
+  },
+});
 
 interface RichEditorProps {
   content: string;
@@ -42,15 +58,23 @@ function Divider() {
   return <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)', margin: '0 4px', flexShrink: 0 }} />;
 }
 
+const SIZE_OPTIONS = [
+  { label: 'Small', value: '33%' },
+  { label: 'Medium', value: '66%' },
+  { label: 'Large', value: '100%' },
+] as const;
+
 export default function RichEditor({ content, onChange }: RichEditorProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const pendingSize = useRef<string>('100%');
+  const [showSizePicker, setShowSizePicker] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
-      Image.configure({ inline: false, allowBase64: true }),
+      ResizableImage.configure({ inline: false, allowBase64: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder: 'Start writing your entry…' }),
     ],
@@ -81,7 +105,17 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
     fd.append('file', file);
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
     const data = await res.json();
-    if (data.url && editor) editor.chain().focus().setImage({ src: data.url }).run();
+    if (data.url && editor) {
+      // width is from ResizableImage extension — cast needed as Tiptap types don't reflect extensions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      editor.chain().focus().setImage({ src: data.url, width: pendingSize.current } as any).run();
+    }
+  }
+
+  function pickSize(size: string) {
+    pendingSize.current = size;
+    setShowSizePicker(false);
+    fileRef.current?.click();
   }
 
   const headingLevel = editor.isActive('heading', { level: 1 }) ? 'H1'
@@ -165,7 +199,7 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
         <Divider />
 
         {/* Image upload */}
-        <ToolbarBtn active={false} onClick={() => fileRef.current?.click()} title="Insert image">
+        <ToolbarBtn active={showSizePicker} onClick={() => setShowSizePicker(v => !v)} title="Insert image">
           <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add_photo_alternate</span>
         </ToolbarBtn>
         <input ref={fileRef} type="file" accept="image/*" className="hidden"
@@ -182,6 +216,30 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
           </ToolbarBtn>
         </div>
       </div>
+
+      {/* Size picker panel */}
+      {showSizePicker && (
+        <div className="flex items-center gap-2 px-3 py-2"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(175,198,255,0.04)' }}>
+          <span className="text-xs font-semibold flex-shrink-0" style={{ color: '#8c90a1' }}>Image size:</span>
+          <div className="flex gap-1">
+            {SIZE_OPTIONS.map(opt => (
+              <button key={opt.label} type="button"
+                onMouseDown={e => { e.preventDefault(); pickSize(opt.value); }}
+                className="px-3 py-1 rounded-lg text-xs font-bold transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#c1c6d8' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(175,198,255,0.3)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#c1c6d8'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <button type="button" onMouseDown={e => { e.preventDefault(); setShowSizePicker(false); }}
+            className="ml-auto flex-shrink-0" style={{ color: '#414655' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+          </button>
+        </div>
+      )}
 
       {/* Editor area */}
       <div className="px-4 py-2">
