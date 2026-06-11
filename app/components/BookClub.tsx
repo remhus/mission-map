@@ -153,11 +153,9 @@ function BuyLinks({ title, author }: { title: string; author: string }) {
   ];
   return (
     <div className="w-full">
-      <button onClick={() => setOpen(v => !v)}
-        className="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8c90a1' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}>
+      <button onClick={() => setOpen(v => !v)} aria-expanded={open}
+        className="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-colors duration-150 bg-white/[0.04] hover:bg-white/[0.07]"
+        style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#8c90a1' }}>
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>shopping_bag</span>
           <span className="text-sm font-semibold">Where to buy</span>
@@ -168,10 +166,8 @@ function BuyLinks({ title, author }: { title: string; author: string }) {
         <div className="flex flex-col gap-2 mt-2">
           {links.map(l => (
             <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#c1c6d8', textDecoration: 'none' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.color = '#c1c6d8'; }}>
+              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-150 bg-white/[0.03] text-ink-2 hover:bg-[rgba(175,198,255,0.1)] hover:text-accent"
+              style={{ border: '1px solid rgba(255,255,255,0.07)', textDecoration: 'none' }}>
               <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px' }}>{l.icon}</span>
               <span className="text-sm font-medium">{l.label}</span>
               <span className="material-symbols-outlined ml-auto flex-shrink-0" style={{ fontSize: '16px', color: '#414655' }}>open_in_new</span>
@@ -438,26 +434,18 @@ export default function BookClub() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <button onClick={() => openDiscover('wishlist')}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)', color: '#ffd700' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,215,0,0.15)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,215,0,0.08)'; }}>
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors duration-150 bg-[rgba(255,215,0,0.08)] hover:bg-[rgba(255,215,0,0.15)]"
+              style={{ border: '1px solid rgba(255,215,0,0.2)', color: '#ffd700' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bookmark</span>
               Wishlist{wishlistBooks.length > 0 ? ` (${wishlistBooks.length})` : ''}
             </button>
             <button onClick={() => openDiscover('discover')}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'; }}>
+              className="btn-soft-accent flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>explore</span>
               Discover
             </button>
             <button onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#e4e1e9' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}>
+              className="btn-ghost flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
               Add Book
             </button>
@@ -486,10 +474,8 @@ export default function BookClub() {
               <button key={book.id}
                 onClick={() => { setSelectedBook(book); setEditRating(book.star_rating); }}
                 className="flex flex-col gap-2 text-left group">
-                <div className="w-full rounded-2xl overflow-hidden"
-                  style={{ ...bookCoverStyle, aspectRatio: '2/3', transition: 'transform 0.2s, box-shadow 0.2s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
+                <div className="vision-card w-full rounded-2xl overflow-hidden"
+                  style={{ ...bookCoverStyle, aspectRatio: '2/3' }}>
                   <CoverBox coverId={book.cover_id} title={book.title} />
                 </div>
                 <div className="min-w-0">
@@ -689,10 +675,8 @@ export default function BookClub() {
                           return (
                             <button key={doc.key}
                               onClick={() => openDiscoverDetail(doc)}
-                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all relative"
-                              style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
+                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors duration-150 relative bg-white/[0.02] hover:bg-white/[0.06]"
+                              style={{ border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
                               {status === 'read' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#afc6ff' }}>check_circle</span>}
                               {status === 'wishlist' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
                               <div className="w-full rounded-xl overflow-hidden" style={{ ...bookCoverStyle, aspectRatio: '2/3' }}>
@@ -727,10 +711,8 @@ export default function BookClub() {
                           return (
                             <button key={doc.key}
                               onClick={() => openDiscoverDetail(doc)}
-                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all relative"
-                              style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}
-                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
+                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-colors duration-150 relative bg-white/[0.02] hover:bg-white/[0.06]"
+                              style={{ border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}>
                               {status === 'read' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#afc6ff' }}>check_circle</span>}
                               {status === 'wishlist' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
                               <div className="w-full rounded-xl overflow-hidden" style={{ ...bookCoverStyle, aspectRatio: '2/3' }}>
@@ -759,10 +741,8 @@ export default function BookClub() {
                   ) : wishlistBooks.map(book => (
                     <button key={book.id}
                       onClick={() => { setWlSelected(book); setMarkReadRating(3); setWlReadView(false); }}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all"
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}>
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-colors duration-150 bg-white/[0.03] hover:bg-white/[0.06]"
+                      style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                       <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ ...bookCoverStyle, width: 40, height: 58 }}>
                         <CoverBox coverId={book.cover_id} title={book.title} size="S" />
                       </div>
