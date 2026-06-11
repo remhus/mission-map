@@ -34,6 +34,55 @@ function olSearchUrl(q: string) {
     : `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&fields=key,title,author_name,cover_i,isbn,first_publish_year&limit=8`;
 }
 
+// Fetches and renders a book description from Open Library Works API
+function BookDescription({ olKey }: { olKey: string }) {
+  const [desc, setDesc] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!olKey) { setLoading(false); return; }
+    setDesc(null); setExpanded(false); setLoading(true);
+    fetch(`https://openlibrary.org${olKey}.json`)
+      .then(r => r.json())
+      .then(d => {
+        const text = typeof d.description === 'string'
+          ? d.description
+          : (d.description?.value as string | undefined) ?? null;
+        setDesc(text?.trim() || null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [olKey]);
+
+  if (loading) return (
+    <div className="flex flex-col gap-1.5 mt-1">
+      {[100, 90, 60].map((w, i) => (
+        <div key={i} className="h-3 rounded-full animate-pulse" style={{ width: `${w}%`, background: 'rgba(255,255,255,0.06)' }} />
+      ))}
+    </div>
+  );
+  if (!desc) return null;
+
+  const LIMIT = 220;
+  const long = desc.length > LIMIT;
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed" style={{ color: '#8c90a1' }}>
+        {!expanded && long ? desc.slice(0, LIMIT).trimEnd() + '…' : desc}
+      </p>
+      {long && (
+        <button onClick={() => setExpanded(v => !v)}
+          className="text-xs font-bold mt-1.5"
+          style={{ color: '#afc6ff', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Stars({ value, onChange }: { value: number; onChange?: (n: number) => void }) {
   const [hover, setHover] = useState(0);
   return (
@@ -51,24 +100,38 @@ function Stars({ value, onChange }: { value: number; onChange?: (n: number) => v
   );
 }
 
-function CoverImg({ coverId, title, size = 'M' }: { coverId?: string; title: string; size?: 'S' | 'M' | 'L' }) {
+// Cover image with fade-in on load
+function FadeImg({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <img
+      src={src} alt={alt}
+      className={className}
+      style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.35s ease', width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      loading="eager"
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
+
+function CoverBox({ coverId, title, size = 'M', className = '' }: { coverId?: string; title: string; size?: 'S' | 'M' | 'L'; className?: string }) {
   const src = coverUrl(coverId, size);
   return src ? (
-    <img src={src} alt={title} className="w-full h-full object-cover" loading="lazy" />
+    <FadeImg src={src} alt={title} className={className} />
   ) : (
-    <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-      <span className="material-symbols-outlined" style={{ color: '#414655', fontSize: '28px' }}>menu_book</span>
+    <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+      <span className="material-symbols-outlined" style={{ color: '#2e3140', fontSize: '28px' }}>menu_book</span>
     </div>
   );
 }
 
-function OLCoverImg({ doc, size = 'M' }: { doc: OLDoc; size?: 'S' | 'M' | 'L' }) {
+function OLCoverBox({ doc, size = 'M' }: { doc: OLDoc; size?: 'S' | 'M' | 'L' }) {
   const src = coverUrl(doc.cover_i, size);
   return src ? (
-    <img src={src} alt={doc.title} className="w-full h-full object-cover" loading="lazy" />
+    <FadeImg src={src} alt={doc.title} />
   ) : (
-    <div className="w-full h-full flex items-center justify-center">
-      <span className="material-symbols-outlined" style={{ color: '#414655', fontSize: '28px' }}>menu_book</span>
+    <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+      <span className="material-symbols-outlined" style={{ color: '#2e3140', fontSize: '28px' }}>menu_book</span>
     </div>
   );
 }
@@ -98,36 +161,15 @@ function BuyLinks({ title, author }: { title: string; author: string }) {
   );
 }
 
-// Shared search results list used in both Add Book modal and Wishlist tab
-function SearchResultsList({
-  results, onSelect, checkStatus,
-}: {
-  results: OLDoc[];
-  onSelect: (doc: OLDoc) => void;
-  checkStatus: (doc: OLDoc) => 'read' | 'wishlist' | null;
-}) {
+// Skeleton card shown while initial book list loads
+function SkeletonCard() {
   return (
     <div className="flex flex-col gap-2">
-      {results.map(doc => {
-        const status = checkStatus(doc);
-        return (
-          <button key={doc.key}
-            onClick={() => !status && onSelect(doc)}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all w-full"
-            style={{ background: status ? 'rgba(175,198,255,0.04)' : 'rgba(255,255,255,0.04)', border: `1px solid ${status ? 'rgba(175,198,255,0.15)' : 'rgba(255,255,255,0.08)'}`, opacity: status ? 0.65 : 1, cursor: status ? 'default' : 'pointer' }}>
-            <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 44, height: 64, background: 'rgba(255,255,255,0.04)' }}>
-              <OLCoverImg doc={doc} size="S" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold leading-snug" style={{ color: '#e4e1e9' }}>{doc.title}</p>
-              {doc.author_name?.[0] && <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>{doc.author_name[0]}</p>}
-            </div>
-            {status === 'read' && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#afc6ff' }}>check_circle</span>}
-            {status === 'wishlist' && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
-            {!status && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>chevron_right</span>}
-          </button>
-        );
-      })}
+      <div className="w-full rounded-2xl animate-pulse" style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.06)' }} />
+      <div className="flex flex-col gap-1">
+        <div className="h-2.5 rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.05)', width: '85%' }} />
+        <div className="h-2 rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', width: '60%' }} />
+      </div>
     </div>
   );
 }
@@ -154,22 +196,26 @@ export default function BookClub() {
   const [showDiscover, setShowDiscover] = useState(false);
   const [discoverTab, setDiscoverTab] = useState<'discover' | 'wishlist'>('discover');
 
-  // Discover tab
+  // Discover tab — recommendations
   const [discoverBooks, setDiscoverBooks] = useState<OLDoc[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(false);
+  // Discover tab — search (moved from wishlist)
+  const [dQuery, setDQuery] = useState('');
+  const [dResults, setDResults] = useState<OLDoc[]>([]);
+  const [dSearching, setDSearching] = useState(false);
+  const dTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Discover detail + read flow
   const [discoverSelected, setDiscoverSelected] = useState<OLDoc | null>(null);
+  const [discoverReadView, setDiscoverReadView] = useState(false); // true = rate+confirm step
   const [discoverAddRating, setDiscoverAddRating] = useState(3);
   const [discoverAdding, setDiscoverAdding] = useState(false);
-
-  // Wishlist tab
-  const [wlQuery, setWlQuery] = useState('');
-  const [wlResults, setWlResults] = useState<OLDoc[]>([]);
-  const [wlSearching, setWlSearching] = useState(false);
   const [savingWl, setSavingWl] = useState<string | null>(null);
+
+  // Wishlist book detail
   const [wlSelected, setWlSelected] = useState<Book | null>(null);
   const [markReadRating, setMarkReadRating] = useState(3);
   const [markingRead, setMarkingRead] = useState(false);
-  const wlTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [wlReadView, setWlReadView] = useState(false);
 
   const fetchBooks = useCallback(async () => {
     const res = await fetch('/api/books');
@@ -182,7 +228,7 @@ export default function BookClub() {
 
   useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
-  // Add Book search debounce
+  // Add Book search
   useEffect(() => {
     if (addTimer.current) clearTimeout(addTimer.current);
     const q = addQuery.trim();
@@ -199,22 +245,22 @@ export default function BookClub() {
     return () => { if (addTimer.current) clearTimeout(addTimer.current); };
   }, [addQuery]);
 
-  // Wishlist search debounce
+  // Discover tab search
   useEffect(() => {
-    if (wlTimer.current) clearTimeout(wlTimer.current);
-    const q = wlQuery.trim();
-    if (!q) { setWlResults([]); return; }
-    wlTimer.current = setTimeout(async () => {
-      setWlSearching(true);
+    if (dTimer.current) clearTimeout(dTimer.current);
+    const q = dQuery.trim();
+    if (!q) { setDResults([]); return; }
+    dTimer.current = setTimeout(async () => {
+      setDSearching(true);
       try {
         const res = await fetch(olSearchUrl(q));
         const data = await res.json();
-        setWlResults((data.docs || []).filter((d: OLDoc) => d.title));
-      } catch { setWlResults([]); }
-      setWlSearching(false);
+        setDResults((data.docs || []).filter((d: OLDoc) => d.title));
+      } catch { setDResults([]); }
+      setDSearching(false);
     }, 400);
-    return () => { if (wlTimer.current) clearTimeout(wlTimer.current); };
-  }, [wlQuery]);
+    return () => { if (dTimer.current) clearTimeout(dTimer.current); };
+  }, [dQuery]);
 
   const readBooks = books.filter(b => b.status === 'read');
   const wishlistBooks = books.filter(b => b.status === 'wishlist');
@@ -257,18 +303,26 @@ export default function BookClub() {
     if ((await postBook(doc, 'read', rating)).ok) await fetchBooks();
     setDiscoverAdding(false);
     setDiscoverSelected(null);
+    setDiscoverReadView(false);
   }
 
   async function markAsRead(book: Book, rating: number) {
     setMarkingRead(true);
-    await fetch('/api/books', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: book.id, status: 'read', star_rating: rating }) });
+    await fetch('/api/books', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: book.id, status: 'read', star_rating: rating }),
+    });
     await fetchBooks();
     setMarkingRead(false);
     setWlSelected(null);
+    setWlReadView(false);
   }
 
   async function updateRating(id: number, rating: number) {
-    await fetch('/api/books', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, star_rating: rating }) });
+    await fetch('/api/books', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, star_rating: rating }),
+    });
     setBooks(prev => prev.map(b => b.id === id ? { ...b, star_rating: rating } : b));
     if (selectedBook?.id === id) setSelectedBook(prev => prev ? { ...prev, star_rating: rating } : prev);
   }
@@ -284,7 +338,9 @@ export default function BookClub() {
     setShowDiscover(true);
     setDiscoverTab(tab);
     setDiscoverSelected(null);
+    setDiscoverReadView(false);
     setWlSelected(null);
+    setWlReadView(false);
     if (tab === 'discover' && discoverBooks.length === 0) loadDiscoverBooks();
   }
 
@@ -297,8 +353,7 @@ export default function BookClub() {
       const topAuthors: string[] = [];
       for (const b of sorted) {
         if (b.author && !seenAuthors.has(b.author.toLowerCase()) && topAuthors.length < 3) {
-          seenAuthors.add(b.author.toLowerCase());
-          topAuthors.push(b.author);
+          seenAuthors.add(b.author.toLowerCase()); topAuthors.push(b.author);
         }
       }
       const allKeys = new Set(books.map(b => b.ol_key).filter(Boolean));
@@ -314,8 +369,7 @@ export default function BookClub() {
       for (const batch of results) {
         for (const doc of batch) {
           if (!doc.title || allKeys.has(doc.key) || allTitles.has(doc.title.toLowerCase()) || seen.has(doc.key)) continue;
-          seen.add(doc.key);
-          suggestions.push(doc);
+          seen.add(doc.key); suggestions.push(doc);
         }
       }
       for (let i = suggestions.length - 1; i > 0; i--) {
@@ -332,16 +386,24 @@ export default function BookClub() {
   }
 
   function closeDiscover() {
-    setShowDiscover(false); setDiscoverSelected(null); setWlSelected(null); setWlQuery(''); setWlResults([]);
+    setShowDiscover(false);
+    setDiscoverSelected(null); setDiscoverReadView(false);
+    setWlSelected(null); setWlReadView(false);
+    setDQuery(''); setDResults([]);
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <span className="material-symbols-outlined animate-spin text-4xl" style={{ color: '#afc6ff' }}>progress_activity</span>
-      </div>
-    );
+  function openDiscoverDetail(doc: OLDoc) {
+    setDiscoverSelected(doc);
+    setDiscoverReadView(false);
+    setDiscoverAddRating(3);
   }
+
+  // ── Render ──
+
+  const bookCoverStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
+  };
 
   return (
     <>
@@ -381,7 +443,11 @@ export default function BookClub() {
         </div>
 
         {/* Book grid */}
-        {readBooks.length === 0 ? (
+        {loading ? (
+          <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))' }}>
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : readBooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="material-symbols-outlined mb-4" style={{ color: '#2e3140', fontSize: '56px' }}>menu_book</span>
             <p className="text-lg font-bold mb-2" style={{ color: '#414655' }}>No books yet</p>
@@ -398,20 +464,18 @@ export default function BookClub() {
               <button key={book.id}
                 onClick={() => { setSelectedBook(book); setEditRating(book.star_rating); }}
                 className="flex flex-col gap-2 text-left group">
-                <div className="w-full rounded-2xl overflow-hidden relative"
-                  style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                <div className="w-full rounded-2xl overflow-hidden"
+                  style={{ ...bookCoverStyle, aspectRatio: '2/3', transition: 'transform 0.2s, box-shadow 0.2s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                  <CoverImg coverId={book.cover_id} title={book.title} size="M" />
+                  <CoverBox coverId={book.cover_id} title={book.title} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold leading-snug truncate" style={{ color: '#c1c6d8' }}>{book.title}</p>
                   {book.author && <p className="text-[11px] mt-0.5 truncate" style={{ color: '#414655' }}>{book.author}</p>}
                   {book.star_rating > 0 && (
                     <div className="flex gap-0.5 mt-1">
-                      {[1,2,3,4,5].map(n => (
-                        <span key={n} style={{ fontSize: '10px', color: n <= book.star_rating ? '#ffd700' : 'rgba(255,255,255,0.12)' }}>★</span>
-                      ))}
+                      {[1,2,3,4,5].map(n => <span key={n} style={{ fontSize: '10px', color: n <= book.star_rating ? '#ffd700' : 'rgba(255,255,255,0.12)' }}>★</span>)}
                     </div>
                   )}
                 </div>
@@ -426,12 +490,12 @@ export default function BookClub() {
         <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center p-4 animate-fade-in"
           style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
           onClick={() => setSelectedBook(null)}>
-          <div className="w-full max-w-sm rounded-t-3xl md:rounded-3xl p-6 flex flex-col gap-5 animate-slide-up"
+          <div className="w-full max-w-sm rounded-t-3xl md:rounded-3xl p-6 flex flex-col gap-4 animate-slide-up"
             style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 72, height: 108, background: 'rgba(255,255,255,0.04)' }}>
-                <CoverImg coverId={selectedBook.cover_id} title={selectedBook.title} />
+              <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 72, height: 108 }}>
+                <CoverBox coverId={selectedBook.cover_id} title={selectedBook.title} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{selectedBook.title}</h3>
@@ -441,6 +505,7 @@ export default function BookClub() {
                 </div>
               </div>
             </div>
+            {selectedBook.ol_key && <BookDescription olKey={selectedBook.ol_key} />}
             <BuyLinks title={selectedBook.title} author={selectedBook.author} />
             <div className="flex gap-3">
               <button onClick={() => setSelectedBook(null)}
@@ -486,9 +551,9 @@ export default function BookClub() {
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
                     Back to results
                   </button>
-                  <div className="flex gap-4 mb-5">
-                    <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 72, height: 108, background: 'rgba(255,255,255,0.04)' }}>
-                      <OLCoverImg doc={addPending} />
+                  <div className="flex gap-4 mb-4">
+                    <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 72, height: 108 }}>
+                      <OLCoverBox doc={addPending} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-sm leading-snug mb-1" style={{ color: '#e4e1e9' }}>{addPending.title}</h4>
@@ -496,6 +561,7 @@ export default function BookClub() {
                       {addPending.first_publish_year && <p className="text-xs mt-0.5" style={{ color: '#414655' }}>{addPending.first_publish_year}</p>}
                     </div>
                   </div>
+                  {addPending.key && <div className="mb-4"><BookDescription olKey={addPending.key} /></div>}
                   <div className="mb-5">
                     <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>Your rating</p>
                     <Stars value={addRating} onChange={setAddRating} />
@@ -507,9 +573,28 @@ export default function BookClub() {
                   </button>
                 </div>
               ) : addResults.length > 0 ? (
-                <SearchResultsList results={addResults}
-                  onSelect={doc => { setAddPending(doc); setAddRating(3); }}
-                  checkStatus={docStatus} />
+                <div className="flex flex-col gap-2">
+                  {addResults.map(doc => {
+                    const status = docStatus(doc);
+                    return (
+                      <button key={doc.key}
+                        onClick={() => { if (!status) { setAddPending(doc); setAddRating(3); } }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-left w-full transition-all"
+                        style={{ background: status ? 'rgba(175,198,255,0.04)' : 'rgba(255,255,255,0.04)', border: `1px solid ${status ? 'rgba(175,198,255,0.15)' : 'rgba(255,255,255,0.08)'}`, opacity: status ? 0.65 : 1, cursor: status ? 'default' : 'pointer' }}>
+                        <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ ...bookCoverStyle, width: 44, height: 64 }}>
+                          <OLCoverBox doc={doc} size="S" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold leading-snug" style={{ color: '#e4e1e9' }}>{doc.title}</p>
+                          {doc.author_name?.[0] && <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>{doc.author_name[0]}</p>}
+                        </div>
+                        {status === 'read' && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#afc6ff' }}>check_circle</span>}
+                        {status === 'wishlist' && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
+                        {!status && <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>chevron_right</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               ) : addQuery && !addSearching ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <span className="material-symbols-outlined mb-2" style={{ color: '#414655', fontSize: '32px' }}>search_off</span>
@@ -538,7 +623,7 @@ export default function BookClub() {
             <div className="px-6 pt-6 pb-0 flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-black text-lg" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
-                  {discoverTab === 'discover' ? 'Discover Books' : 'Wishlist'}
+                  {discoverTab === 'discover' ? 'Discover' : 'Wishlist'}
                 </h3>
                 <button onClick={closeDiscover} style={{ color: '#8c90a1' }}><span className="material-symbols-outlined">close</span></button>
               </div>
@@ -559,129 +644,113 @@ export default function BookClub() {
 
             <div className="flex-1 overflow-y-auto px-6 pb-6 min-h-0">
 
-              {/* DISCOVER TAB */}
+              {/* ── DISCOVER TAB ── */}
               {discoverTab === 'discover' && (
-                discoverLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <span className="material-symbols-outlined animate-spin mb-3" style={{ color: '#afc6ff', fontSize: '32px' }}>progress_activity</span>
-                    <p className="text-sm" style={{ color: '#8c90a1' }}>Finding books you&apos;ll love...</p>
-                  </div>
-                ) : discoverBooks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <span className="material-symbols-outlined mb-3" style={{ color: '#414655', fontSize: '36px' }}>explore</span>
-                    <p className="text-sm font-medium mb-1" style={{ color: '#8c90a1' }}>Nothing to show yet</p>
-                    <p className="text-xs" style={{ color: '#414655' }}>Add some books you&apos;ve read to get recommendations</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {discoverBooks.map(doc => {
-                      const status = docStatus(doc);
-                      return (
-                        <button key={doc.key}
-                          onClick={() => { setDiscoverSelected(doc); setDiscoverAddRating(3); }}
-                          className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all relative"
-                          style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
-                          {status === 'read' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#afc6ff' }}>check_circle</span>}
-                          {status === 'wishlist' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
-                          <div className="w-full rounded-xl overflow-hidden" style={{ aspectRatio: '2/3', background: 'rgba(255,255,255,0.04)' }}>
-                            <OLCoverImg doc={doc} />
-                          </div>
-                          <p className="text-[11px] leading-tight text-center w-full font-medium" style={{ color: '#c1c6d8', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.title}</p>
-                          {doc.author_name?.[0] && <p className="text-[10px] leading-tight text-center w-full" style={{ color: '#414655', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.author_name[0]}</p>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )
-              )}
-
-              {/* WISHLIST TAB */}
-              {discoverTab === 'wishlist' && (
                 <div className="flex flex-col gap-4">
+                  {/* Search */}
                   <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>search</span>
-                    <input type="text" value={wlQuery} onChange={e => setWlQuery(e.target.value)}
-                      placeholder="Search books to save..."
+                    <input type="text" value={dQuery} onChange={e => setDQuery(e.target.value)}
+                      placeholder="Search for a book..."
                       className="flex-1 bg-transparent outline-none text-sm" style={{ color: '#e4e1e9' }} />
-                    {wlSearching
+                    {dSearching
                       ? <span className="material-symbols-outlined animate-spin flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>progress_activity</span>
-                      : wlQuery ? <button onClick={() => setWlQuery('')} style={{ color: '#414655' }}><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span></button> : null}
+                      : dQuery ? <button onClick={() => setDQuery('')} style={{ color: '#414655' }}><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span></button> : null}
                   </div>
 
-                  {/* Wishlist search results */}
-                  {wlResults.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      {wlResults.map(doc => {
-                        const status = docStatus(doc);
-                        const saving = savingWl === doc.key;
-                        return (
-                          <div key={doc.key}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 40, height: 58, background: 'rgba(255,255,255,0.04)' }}>
-                              <OLCoverImg doc={doc} size="S" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold leading-snug" style={{ color: '#e4e1e9' }}>{doc.title}</p>
-                              {doc.author_name?.[0] && <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>{doc.author_name[0]}</p>}
-                            </div>
-                            {status === 'read' ? (
-                              <span className="flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(175,198,255,0.1)', color: '#afc6ff' }}>Read</span>
-                            ) : status === 'wishlist' ? (
-                              <span className="flex-shrink-0 text-xs font-bold px-2 py-1 rounded-lg" style={{ background: 'rgba(255,215,0,0.1)', color: '#ffd700' }}>Saved</span>
-                            ) : (
-                              <button onClick={() => saveToWishlist(doc)} disabled={saving}
-                                className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold"
-                                style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: '#ffd700' }}>
-                                {saving ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: '14px' }}>progress_activity</span> : <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>bookmark_add</span>}
-                                Save
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {wlQuery && !wlSearching && wlResults.length === 0 && (
-                    <p className="text-sm text-center py-4" style={{ color: '#414655' }}>No results for &quot;{wlQuery}&quot;</p>
-                  )}
-
-                  {/* Saved wishlist books */}
-                  {wishlistBooks.length > 0 && (
-                    <div>
-                      {!wlQuery && <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: '#414655' }}>Saved ({wishlistBooks.length})</p>}
-                      <div className="flex flex-col gap-2">
-                        {wishlistBooks.map(book => (
-                          <button key={book.id}
-                            onClick={() => { setWlSelected(book); setMarkReadRating(3); }}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all"
-                            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}>
-                            <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 40, height: 58, background: 'rgba(255,255,255,0.04)' }}>
-                              <CoverImg coverId={book.cover_id} title={book.title} size="S" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold leading-snug" style={{ color: '#e4e1e9' }}>{book.title}</p>
-                              {book.author && <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>{book.author}</p>}
-                            </div>
-                            <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>chevron_right</span>
-                          </button>
-                        ))}
+                  {/* Search results */}
+                  {dQuery ? (
+                    dResults.length > 0 ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {dResults.map(doc => {
+                          const status = docStatus(doc);
+                          return (
+                            <button key={doc.key}
+                              onClick={() => openDiscoverDetail(doc)}
+                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all relative"
+                              style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
+                              {status === 'read' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#afc6ff' }}>check_circle</span>}
+                              {status === 'wishlist' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
+                              <div className="w-full rounded-xl overflow-hidden" style={{ ...bookCoverStyle, aspectRatio: '2/3' }}>
+                                <OLCoverBox doc={doc} />
+                              </div>
+                              <p className="text-[11px] leading-tight text-center w-full font-medium" style={{ color: '#c1c6d8', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.title}</p>
+                              {doc.author_name?.[0] && <p className="text-[10px] leading-tight text-center w-full" style={{ color: '#414655', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.author_name[0]}</p>}
+                            </button>
+                          );
+                        })}
                       </div>
-                    </div>
+                    ) : !dSearching ? (
+                      <p className="text-sm text-center py-6" style={{ color: '#414655' }}>No results for &quot;{dQuery}&quot;</p>
+                    ) : null
+                  ) : (
+                    /* Recommendations */
+                    discoverLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <span className="material-symbols-outlined animate-spin mb-3" style={{ color: '#afc6ff', fontSize: '32px' }}>progress_activity</span>
+                        <p className="text-sm" style={{ color: '#8c90a1' }}>Finding books you&apos;ll love...</p>
+                      </div>
+                    ) : discoverBooks.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <span className="material-symbols-outlined mb-3" style={{ color: '#414655', fontSize: '36px' }}>explore</span>
+                        <p className="text-sm font-medium mb-1" style={{ color: '#8c90a1' }}>Nothing to show yet</p>
+                        <p className="text-xs" style={{ color: '#414655' }}>Add some books you&apos;ve read to get recommendations</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {discoverBooks.map(doc => {
+                          const status = docStatus(doc);
+                          return (
+                            <button key={doc.key}
+                              onClick={() => openDiscoverDetail(doc)}
+                              className="flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all relative"
+                              style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${status === 'read' ? 'rgba(175,198,255,0.3)' : status === 'wishlist' ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.06)'}` }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
+                              {status === 'read' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#afc6ff' }}>check_circle</span>}
+                              {status === 'wishlist' && <span className="absolute top-1 right-1 z-10 material-symbols-outlined" style={{ fontSize: '14px', color: '#ffd700', fontVariationSettings: "'FILL' 1" }}>bookmark</span>}
+                              <div className="w-full rounded-xl overflow-hidden" style={{ ...bookCoverStyle, aspectRatio: '2/3' }}>
+                                <OLCoverBox doc={doc} />
+                              </div>
+                              <p className="text-[11px] leading-tight text-center w-full font-medium" style={{ color: '#c1c6d8', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.title}</p>
+                              {doc.author_name?.[0] && <p className="text-[10px] leading-tight text-center w-full" style={{ color: '#414655', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{doc.author_name[0]}</p>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )
                   )}
+                </div>
+              )}
 
-                  {wishlistBooks.length === 0 && !wlQuery && (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <span className="material-symbols-outlined mb-2" style={{ color: '#414655', fontSize: '36px' }}>bookmark</span>
-                      <p className="text-sm" style={{ color: '#414655' }}>Your wishlist is empty</p>
-                      <p className="text-xs mt-1" style={{ color: '#2e3140' }}>Search above or save books from Discover</p>
+              {/* ── WISHLIST TAB ── */}
+              {discoverTab === 'wishlist' && (
+                <div className="flex flex-col gap-3">
+                  {wishlistBooks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <span className="material-symbols-outlined mb-3" style={{ color: '#414655', fontSize: '36px' }}>bookmark</span>
+                      <p className="text-sm font-medium mb-1" style={{ color: '#8c90a1' }}>Your wishlist is empty</p>
+                      <p className="text-xs" style={{ color: '#414655' }}>Search or browse in the Discover tab to save books</p>
                     </div>
-                  )}
+                  ) : wishlistBooks.map(book => (
+                    <button key={book.id}
+                      onClick={() => { setWlSelected(book); setMarkReadRating(3); setWlReadView(false); }}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left w-full transition-all"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}>
+                      <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ ...bookCoverStyle, width: 40, height: 58 }}>
+                        <CoverBox coverId={book.cover_id} title={book.title} size="S" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-snug" style={{ color: '#e4e1e9' }}>{book.title}</p>
+                        {book.author && <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>{book.author}</p>}
+                      </div>
+                      <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#414655' }}>chevron_right</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -693,56 +762,92 @@ export default function BookClub() {
       {discoverSelected && (
         <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center p-4 animate-fade-in"
           style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setDiscoverSelected(null)}>
+          onClick={() => { setDiscoverSelected(null); setDiscoverReadView(false); }}>
           <div className="w-full max-w-sm rounded-t-3xl md:rounded-3xl p-6 flex flex-col gap-4 animate-slide-up"
             style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 80, height: 120, background: 'rgba(255,255,255,0.04)' }}>
-                <OLCoverImg doc={discoverSelected} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{discoverSelected.title}</h3>
-                {discoverSelected.author_name?.[0] && <p className="text-sm" style={{ color: '#8c90a1' }}>{discoverSelected.author_name[0]}</p>}
-                {discoverSelected.first_publish_year && <p className="text-xs mt-0.5" style={{ color: '#414655' }}>First published {discoverSelected.first_publish_year}</p>}
-              </div>
-            </div>
-            <BuyLinks title={discoverSelected.title} author={discoverSelected.author_name?.[0] || ''} />
-            {docStatus(discoverSelected) === 'read' ? (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)' }}>
-                <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '18px' }}>check_circle</span>
-                <span className="text-sm font-semibold" style={{ color: '#afc6ff' }}>Already in your library</span>
-              </div>
+
+            {discoverReadView ? (
+              /* ── Rate & confirm view ── */
+              <>
+                <button onClick={() => setDiscoverReadView(false)}
+                  className="flex items-center gap-1 text-xs self-start" style={{ color: '#8c90a1' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                  Back
+                </button>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 72, height: 108 }}>
+                    <OLCoverBox doc={discoverSelected} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{discoverSelected.title}</h3>
+                    {discoverSelected.author_name?.[0] && <p className="text-sm" style={{ color: '#8c90a1' }}>{discoverSelected.author_name[0]}</p>}
+                    {discoverSelected.first_publish_year && <p className="text-xs mt-0.5" style={{ color: '#414655' }}>First published {discoverSelected.first_publish_year}</p>}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>Rate it</p>
+                  <Stars value={discoverAddRating} onChange={setDiscoverAddRating} />
+                </div>
+                <button onClick={() => addDiscoverAsRead(discoverSelected, discoverAddRating)} disabled={discoverAdding}
+                  className="w-full py-3 rounded-xl font-bold text-sm"
+                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
+                  {discoverAdding ? 'Adding...' : 'Add to Library'}
+                </button>
+                <button onClick={() => { setDiscoverSelected(null); setDiscoverReadView(false); }}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
+              </>
             ) : (
-              <div className="flex flex-col gap-3">
-                {docStatus(discoverSelected) === 'wishlist' ? (
-                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)' }}>
-                    <span className="material-symbols-outlined" style={{ color: '#ffd700', fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>bookmark</span>
-                    <span className="text-sm font-semibold" style={{ color: '#ffd700' }}>In your wishlist</span>
+              /* ── Detail view ── */
+              <>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 80, height: 120 }}>
+                    <OLCoverBox doc={discoverSelected} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{discoverSelected.title}</h3>
+                    {discoverSelected.author_name?.[0] && <p className="text-sm" style={{ color: '#8c90a1' }}>{discoverSelected.author_name[0]}</p>}
+                    {discoverSelected.first_publish_year && <p className="text-xs mt-0.5" style={{ color: '#414655' }}>First published {discoverSelected.first_publish_year}</p>}
+                  </div>
+                </div>
+
+                <BookDescription olKey={discoverSelected.key} />
+                <BuyLinks title={discoverSelected.title} author={discoverSelected.author_name?.[0] || ''} />
+
+                {docStatus(discoverSelected) === 'read' ? (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)' }}>
+                    <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '18px' }}>check_circle</span>
+                    <span className="text-sm font-semibold" style={{ color: '#afc6ff' }}>Already in your library</span>
                   </div>
                 ) : (
-                  <button onClick={() => { saveToWishlist(discoverSelected); setDiscoverSelected(null); }}
-                    disabled={savingWl === discoverSelected.key}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
-                    style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: '#ffd700' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bookmark_add</span>
-                    Save to Wishlist
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    {docStatus(discoverSelected) === 'wishlist' ? (
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                        <span className="material-symbols-outlined" style={{ color: '#ffd700', fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>bookmark</span>
+                        <span className="text-sm font-semibold" style={{ color: '#ffd700' }}>In your wishlist</span>
+                      </div>
+                    ) : (
+                      <button onClick={() => { saveToWishlist(discoverSelected); setDiscoverSelected(null); }}
+                        disabled={savingWl === discoverSelected.key}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
+                        style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: '#ffd700' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bookmark_add</span>
+                        Save to Wishlist
+                      </button>
+                    )}
+                    <button onClick={() => setDiscoverReadView(true)}
+                      className="w-full py-3 rounded-xl font-bold text-sm"
+                      style={{ background: 'rgba(175,198,255,0.12)', border: '1px solid rgba(175,198,255,0.3)', color: '#afc6ff' }}>
+                      I&apos;ve Read This
+                    </button>
+                  </div>
                 )}
-                <div>
-                  <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>I&apos;ve read it — rate it</p>
-                  <Stars value={discoverAddRating} onChange={setDiscoverAddRating} />
-                  <button onClick={() => addDiscoverAsRead(discoverSelected, discoverAddRating)} disabled={discoverAdding}
-                    className="w-full py-3 rounded-xl font-bold text-sm mt-3"
-                    style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
-                    {discoverAdding ? 'Adding...' : "I've Read This"}
-                  </button>
-                </div>
-              </div>
+                <button onClick={() => setDiscoverSelected(null)}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Close</button>
+              </>
             )}
-            <button onClick={() => setDiscoverSelected(null)}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Close</button>
           </div>
         </div>
       )}
@@ -751,44 +856,77 @@ export default function BookClub() {
       {wlSelected && (
         <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center p-4 animate-fade-in"
           style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setWlSelected(null)}>
+          onClick={() => { setWlSelected(null); setWlReadView(false); }}>
           <div className="w-full max-w-sm rounded-t-3xl md:rounded-3xl p-6 flex flex-col gap-4 animate-slide-up"
             style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 80, height: 120, background: 'rgba(255,255,255,0.04)' }}>
-                <CoverImg coverId={wlSelected.cover_id} title={wlSelected.title} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{wlSelected.title}</h3>
-                {wlSelected.author && <p className="text-sm" style={{ color: '#8c90a1' }}>{wlSelected.author}</p>}
-                <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg w-fit" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)' }}>
-                  <span className="material-symbols-outlined" style={{ color: '#ffd700', fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>bookmark</span>
-                  <span className="text-xs font-bold" style={{ color: '#ffd700' }}>Wishlist</span>
+
+            {wlReadView ? (
+              /* ── Mark as read / rate view ── */
+              <>
+                <button onClick={() => setWlReadView(false)}
+                  className="flex items-center gap-1 text-xs self-start" style={{ color: '#8c90a1' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                  Back
+                </button>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 72, height: 108 }}>
+                    <CoverBox coverId={wlSelected.cover_id} title={wlSelected.title} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{wlSelected.title}</h3>
+                    {wlSelected.author && <p className="text-sm" style={{ color: '#8c90a1' }}>{wlSelected.author}</p>}
+                  </div>
                 </div>
-              </div>
-            </div>
-            <BuyLinks title={wlSelected.title} author={wlSelected.author} />
-            <div>
-              <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>Mark as read — rate it</p>
-              <Stars value={markReadRating} onChange={setMarkReadRating} />
-              <button onClick={() => markAsRead(wlSelected, markReadRating)} disabled={markingRead}
-                className="w-full py-3 rounded-xl font-bold text-sm mt-3"
-                style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
-                {markingRead ? 'Moving...' : 'Mark as Read'}
-              </button>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setWlSelected(null)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Close</button>
-              <button onClick={() => deleteBook(wlSelected.id)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,180,171,0.08)', border: '1px solid rgba(255,180,171,0.2)', color: '#ffb4ab' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
-                Remove
-              </button>
-            </div>
+                <div>
+                  <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>Rate it</p>
+                  <Stars value={markReadRating} onChange={setMarkReadRating} />
+                </div>
+                <button onClick={() => markAsRead(wlSelected, markReadRating)} disabled={markingRead}
+                  className="w-full py-3 rounded-xl font-bold text-sm"
+                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
+                  {markingRead ? 'Moving...' : 'Add to Library'}
+                </button>
+                <button onClick={() => { setWlSelected(null); setWlReadView(false); }}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
+              </>
+            ) : (
+              /* ── Wishlist detail view ── */
+              <>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 rounded-xl overflow-hidden" style={{ ...bookCoverStyle, width: 80, height: 120 }}>
+                    <CoverBox coverId={wlSelected.cover_id} title={wlSelected.title} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-base leading-snug mb-1" style={{ color: '#e4e1e9', fontFamily: 'var(--font-jakarta)' }}>{wlSelected.title}</h3>
+                    {wlSelected.author && <p className="text-sm" style={{ color: '#8c90a1' }}>{wlSelected.author}</p>}
+                    <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg w-fit" style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.2)' }}>
+                      <span className="material-symbols-outlined" style={{ color: '#ffd700', fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>bookmark</span>
+                      <span className="text-xs font-bold" style={{ color: '#ffd700' }}>Wishlist</span>
+                    </div>
+                  </div>
+                </div>
+                {wlSelected.ol_key && <BookDescription olKey={wlSelected.ol_key} />}
+                <BuyLinks title={wlSelected.title} author={wlSelected.author} />
+                <button onClick={() => setWlReadView(true)}
+                  className="w-full py-3 rounded-xl font-bold text-sm"
+                  style={{ background: 'rgba(175,198,255,0.12)', border: '1px solid rgba(175,198,255,0.3)', color: '#afc6ff' }}>
+                  I&apos;ve Read This
+                </button>
+                <div className="flex gap-3">
+                  <button onClick={() => { setWlSelected(null); setWlReadView(false); }}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Close</button>
+                  <button onClick={() => deleteBook(wlSelected.id)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: 'rgba(255,180,171,0.08)', border: '1px solid rgba(255,180,171,0.2)', color: '#ffb4ab' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                    Remove
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
