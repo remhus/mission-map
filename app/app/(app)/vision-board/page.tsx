@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { useEscape } from '@/lib/useEscape';
+import { useZoomLock } from '@/lib/useZoomLock';
 
 type VisionImage = { id: number; title: string; sort_order: number };
 
@@ -215,6 +216,9 @@ export default function VisionBoardPage() {
   const lightboxImg = lightbox !== null ? images[lightbox] : null;
 
   useEscape(fullscreen, () => setFullscreen(false));
+
+  // Unlock pinch-to-zoom only in fullscreen grid or lightbox; lock everywhere else
+  useZoomLock(lightbox === null && !fullscreen);
 
   useEffect(() => {
     if (lightbox === null) return;
