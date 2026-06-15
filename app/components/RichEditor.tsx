@@ -83,7 +83,7 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
     editorProps: {
       attributes: {
         class: 'rich-editor-content',
-        style: 'outline:none; min-height:140px; padding: 12px 4px;',
+        style: 'outline:none; min-height:max(80px, calc(100vh - 504px)); padding: 12px 4px;',
       },
       // Preserve rich text formatting on paste
       transformPastedHTML: (html) => html,
@@ -95,7 +95,7 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
     return (
       <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="h-10" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }} />
-        <div style={{ minHeight: 260, padding: '12px 16px' }} />
+        <div style={{ minHeight: 'max(80px, calc(100vh - 504px))', padding: '12px 16px' }} />
       </div>
     );
   }

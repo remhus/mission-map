@@ -309,10 +309,10 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="px-6 md:px-10 py-4 flex flex-col gap-0">
+            <div className="px-6 md:px-10 py-4 flex flex-col gap-0 md:flex-1">
               {/* Main entry */}
               <div className="glass-panel rounded-2xl border-l-4 overflow-hidden relative"
-                style={{ borderLeftColor: '#afc6ff' }}>
+                style={{ borderLeftColor: '#afc6ff', minHeight: 'calc(100vh - 444px)' }}>
                 <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(175,198,255,0.05)' }} />
                 <RichEditor content={form.content} onChange={html => setForm(f => ({ ...f, content: html }))} />
               </div>
