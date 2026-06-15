@@ -318,7 +318,7 @@ export default function JournalPage() {
               </div>
 
               {/* Gratitude divider */}
-              <div className="flex items-center gap-3 my-5">
+              <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.2))' }} />
                 <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase px-1" style={{ color: '#ffd70066' }}>
                   <span style={{ fontSize: 14 }}>✦</span> Gratitude <span style={{ fontSize: 14 }}>✦</span>
@@ -338,7 +338,7 @@ export default function JournalPage() {
                   }}
                   placeholder="What are you grateful for today?"
                   className="w-full bg-transparent outline-none resize-none text-sm leading-relaxed"
-                  style={{ color: '#e4e1e9', padding: '16px 20px', minHeight: 120, overflow: 'hidden', fontFamily: 'inherit', display: 'block' }}
+                  style={{ color: '#e4e1e9', padding: '16px 20px', minHeight: 80, overflow: 'hidden', fontFamily: 'inherit', display: 'block' }}
                 />
               </div>
 

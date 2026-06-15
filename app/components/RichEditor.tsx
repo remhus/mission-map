@@ -83,7 +83,7 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
     editorProps: {
       attributes: {
         class: 'rich-editor-content',
-        style: 'outline:none; min-height:260px; padding: 12px 4px;',
+        style: 'outline:none; min-height:140px; padding: 12px 4px;',
       },
       // Preserve rich text formatting on paste
       transformPastedHTML: (html) => html,
