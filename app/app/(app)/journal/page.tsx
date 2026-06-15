@@ -327,7 +327,7 @@ export default function JournalPage() {
               </div>
 
               {/* Gratitude textarea */}
-              <div className="glass-panel rounded-2xl border-l-4 overflow-hidden"
+              <div className="glass-panel rounded-2xl border-l-4"
                 style={{ borderLeftColor: 'rgba(255,215,0,0.5)' }}>
                 <textarea
                   value={form.gratitude}
@@ -337,9 +337,8 @@ export default function JournalPage() {
                     e.target.style.height = e.target.scrollHeight + 'px';
                   }}
                   placeholder="What are you grateful for today?"
-                  rows={4}
                   className="w-full bg-transparent outline-none resize-none text-sm leading-relaxed"
-                  style={{ color: '#e4e1e9', padding: '16px 20px', minHeight: 100, fontFamily: 'inherit' }}
+                  style={{ color: '#e4e1e9', padding: '16px 20px', minHeight: 120, overflow: 'hidden', fontFamily: 'inherit', display: 'block' }}
                 />
               </div>
 
@@ -414,39 +413,42 @@ export default function JournalPage() {
                 </div>
               </div>
 
-              {/* Content panel — natural height on mobile, internal scroll on desktop */}
-              <div className="glass-panel rounded-2xl border-l-4 shrink-0 overflow-x-hidden"
-                style={{ borderLeftColor: '#afc6ff', flexGrow: 0, flexBasis: 'auto' }}>
-                <div className="px-5 py-5">
-                  {active.content && active.content !== '<p></p>' ? (
-                    <div className="rich-editor-content" style={{ color: '#c1c6d8', wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                      dangerouslySetInnerHTML={{ __html: active.content }} />
-                  ) : (
-                    <p style={{ color: '#414655', fontStyle: 'italic' }}>No content written...</p>
-                  )}
+              {/* Scrollable content area — both entry and gratitude scroll together */}
+              <div className="flex flex-col gap-4 md:flex-1 md:overflow-y-auto md:custom-scrollbar md:min-h-0">
+                {/* Content panel */}
+                <div className="glass-panel rounded-2xl border-l-4 overflow-x-hidden"
+                  style={{ borderLeftColor: '#afc6ff' }}>
+                  <div className="px-5 py-5">
+                    {active.content && active.content !== '<p></p>' ? (
+                      <div className="rich-editor-content" style={{ color: '#c1c6d8', wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                        dangerouslySetInnerHTML={{ __html: active.content }} />
+                    ) : (
+                      <p style={{ color: '#414655', fontStyle: 'italic' }}>No content written...</p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Gratitude section */}
-              {active.gratitude && (
-                <>
-                  <div className="flex items-center gap-3 my-2">
-                    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.2))' }} />
-                    <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase px-1" style={{ color: '#ffd70066' }}>
-                      <span style={{ fontSize: 14 }}>✦</span> Gratitude <span style={{ fontSize: 14 }}>✦</span>
-                    </span>
-                    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(255,215,0,0.2))' }} />
-                  </div>
-                  <div className="glass-panel rounded-2xl border-l-4 overflow-x-hidden"
-                    style={{ borderLeftColor: 'rgba(255,215,0,0.5)' }}>
-                    <div className="px-5 py-5">
-                      <p className="text-sm leading-relaxed" style={{ color: '#c1c6d8', whiteSpace: 'pre-wrap' }}>{active.gratitude}</p>
+                {/* Gratitude section */}
+                {active.gratitude && (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.2))' }} />
+                      <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase px-1" style={{ color: '#ffd70066' }}>
+                        <span style={{ fontSize: 14 }}>✦</span> Gratitude <span style={{ fontSize: 14 }}>✦</span>
+                      </span>
+                      <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(255,215,0,0.2))' }} />
                     </div>
-                  </div>
-                </>
-              )}
+                    <div className="glass-panel rounded-2xl border-l-4 overflow-x-hidden"
+                      style={{ borderLeftColor: 'rgba(255,215,0,0.5)' }}>
+                      <div className="px-5 py-5">
+                        <p className="text-sm leading-relaxed" style={{ color: '#c1c6d8', whiteSpace: 'pre-wrap' }}>{active.gratitude}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
 
-              <div className="h-2" />
+                <div className="h-2 flex-shrink-0" />
+              </div>
             </div>
 
             <div className="px-6 md:px-10 py-4 flex items-center justify-between border-t flex-shrink-0"
