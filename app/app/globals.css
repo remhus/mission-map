@@ -1,30 +1,84 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens — single source of truth for the Mission Map palette.
+   Tailwind v4 generates utilities from these (text-accent, bg-surface, …).
+--------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #0A0A0F;
+  --color-surface: #131318;
+  --color-surface-2: #1f1f25;
+
+  --color-accent: #afc6ff;
+  --color-accent-deep: #548dff;
+  --color-on-accent: #002d6d;
+
+  --color-ink: #e4e1e9;
+  --color-ink-2: #c1c6d8;
+  --color-muted: #8c90a1;
+  --color-faint: #414655;
+
+  --color-danger: #ffb4ab;
+  --color-gold: #ffd700;
+  --color-success: #c3f400;
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  background-color: #0A0A0F;
-  color: #e4e1e9;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-inter), 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
+/* Keyboard users get a visible focus ring; mouse users don't. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Every pressable element confirms the press. Elements that set their own
+   transform inline (e.g. lifted day tabs) opt out automatically. */
+button {
+  transition: transform 150ms var(--ease-out-strong);
+}
+button:not(:disabled) {
+  cursor: pointer;
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* Icons load invisibly instead of flashing ligature text */
+.material-symbols-outlined {
+  font-display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+--------------------------------------------------------------------------- */
 .glass-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 200ms ease-out, border-color 200ms ease-out, transform 200ms var(--ease-out-strong);
 }
 
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
 }
 
 .glass-panel {
@@ -34,6 +88,147 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* ---------------------------------------------------------------------------
+   Interactive recipes — replace per-element JS hover handlers
+--------------------------------------------------------------------------- */
+
+/* Solid accent CTA */
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: 0 0 18px rgba(175, 198, 255, 0.3);
+  transition: filter 150ms ease-out, box-shadow 150ms ease-out, transform 150ms var(--ease-out-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.07);
+    box-shadow: 0 0 26px rgba(175, 198, 255, 0.45);
+  }
+}
+.btn-primary:disabled {
+  background: rgba(175, 198, 255, 0.4);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Neutral translucent button */
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-muted);
+  transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out, transform 150ms var(--ease-out-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--color-ink);
+  }
+}
+
+/* Soft accent-tinted button */
+.btn-soft-accent {
+  background: rgba(175, 198, 255, 0.08);
+  border: 1px solid rgba(175, 198, 255, 0.2);
+  color: var(--color-accent);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 150ms var(--ease-out-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-soft-accent:hover:not(:disabled) {
+    background: rgba(175, 198, 255, 0.16);
+    border-color: rgba(175, 198, 255, 0.35);
+  }
+}
+
+/* Quiet cancel/secondary button */
+.btn-quiet {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-ink-2);
+  transition: background-color 150ms ease-out, transform 150ms var(--ease-out-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-quiet:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Icon-only buttons */
+.icon-btn {
+  color: var(--color-muted);
+  transition: color 150ms ease-out, background-color 150ms ease-out, transform 150ms var(--ease-out-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover { color: var(--color-ink); }
+  .icon-btn-accent:hover { color: var(--color-accent); }
+  .icon-btn-danger:hover { color: var(--color-danger); }
+}
+
+/* Dropdown / menu rows */
+.menu-item {
+  color: var(--color-ink-2);
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-item:hover { background: rgba(255, 255, 255, 0.06); }
+  .menu-item-danger:hover { background: rgba(255, 180, 171, 0.08); }
+}
+.menu-item-danger { color: var(--color-danger); }
+
+/* Sidebar / nav rows */
+.nav-item {
+  color: var(--color-muted);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:hover:not(.nav-item-active) {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-ink);
+  }
+  .nav-item-to-danger:hover:not(.nav-item-active) {
+    color: var(--color-danger);
+  }
+}
+.nav-item-active {
+  background: rgba(84, 141, 255, 0.18);
+  color: var(--color-accent);
+}
+
+/* Text inputs / textareas */
+.input-field {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-ink);
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.input-field::placeholder {
+  color: rgba(193, 198, 216, 0.35);
+}
+.input-field:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(175, 198, 255, 0.1);
+  outline: none;
+}
+
+/* Vision board tiles lift on hover (pointer devices only) */
+.vision-card {
+  transition: transform 250ms var(--ease-out-strong), box-shadow 250ms ease-out, opacity 200ms ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .vision-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 20px rgba(175, 198, 255, 0.3);
+  }
+}
+
+/* Hover-revealed actions stay reachable on touch devices */
+@media (hover: none) {
+  .touch-show {
+    opacity: 0.65 !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars
+--------------------------------------------------------------------------- */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -44,6 +239,9 @@ body {
   border-radius: 10px;
 }
 
+/* ---------------------------------------------------------------------------
+   Trophies
+--------------------------------------------------------------------------- */
 .ultimate-goal-glow {
   box-shadow: 0 0 40px rgba(255, 215, 0, 0.3) !important;
   border: 2px solid rgba(255, 215, 0, 0.5) !important;
@@ -76,14 +274,22 @@ body {
 .glow-platinum { box-shadow: 0 0 25px rgba(229, 231, 235, 0.3); }
 .glow-primary { box-shadow: 0 0 20px rgba(175, 198, 255, 0.3); }
 
+/* ---------------------------------------------------------------------------
+   Motion
+--------------------------------------------------------------------------- */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes pulseGlow {
@@ -91,11 +297,66 @@ body {
   50% { box-shadow: 0 0 35px rgba(175, 198, 255, 0.5); }
 }
 
-.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes checkPop {
+  0% { transform: scale(0.5); }
+  70% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes trophyBurst {
+  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.45); }
+  100% { box-shadow: 0 0 0 56px rgba(255, 215, 0, 0); }
+}
+
+@keyframes trophyIconPop {
+  0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.18) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.animate-fade-in { animation: fadeIn 180ms ease-out; }
+.animate-slide-up { animation: slideUp 260ms var(--ease-out-strong); }
+.animate-pop-in { animation: popIn 160ms var(--ease-out-strong); transform-origin: top right; }
+.animate-check-pop { animation: checkPop 220ms var(--ease-out-strong); }
 .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
 
-/* Rich editor content — used in editor and reading view */
+.celebrate-burst { animation: trophyBurst 700ms ease-out; }
+.celebrate-icon { animation: trophyIconPop 500ms var(--ease-out-strong); }
+
+/* Cascading entrance for lists/sections */
+.stagger-children > * {
+  animation: slideUp 300ms var(--ease-out-strong) backwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 30ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 70ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 110ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 190ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 230ms; }
+.stagger-children > *:nth-child(n+7) { animation-delay: 260ms; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Rich editor content — used in editor and reading view
+--------------------------------------------------------------------------- */
 .rich-editor-content { color: #c1c6d8; font-size: 15px; line-height: 1.75; max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
 .rich-editor-content h1 { color: #e4e1e9; font-size: 2rem; font-weight: 800; margin: 1rem 0 0.5rem; line-height: 1.2; font-family: var(--font-jakarta); }
 .rich-editor-content h2 { color: #e4e1e9; font-size: 1.5rem; font-weight: 700; margin: 0.9rem 0 0.4rem; line-height: 1.3; font-family: var(--font-jakarta); }

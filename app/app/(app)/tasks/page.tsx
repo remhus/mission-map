@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import PageHeader from '@/components/PageHeader';
+import { useEscape } from '@/lib/useEscape';
 
 type Task = {
   id: number; title: string; skill: string; duration_minutes: number;
@@ -124,6 +127,10 @@ export default function TasksPage() {
   const [history, setHistory] = useState<Completion[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+
+  useEscape(showHistory, () => setShowHistory(false));
+  useEscape(showModal, () => setShowModal(false));
 
   const fetchTasks = useCallback(async () => {
     const res = await fetch('/api/tasks');
@@ -223,48 +230,41 @@ export default function TasksPage() {
   return (
     <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
-            Precision Schedule
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#8c90a1' }}>Weekly routine · repeats every 7 days</p>
-        </div>
+      <PageHeader title="Precision Schedule" subtitle="Weekly routine · repeats every 7 days">
         <button onClick={openHistory}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-          style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
+          className="btn-soft-accent flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold">
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>history</span>
           <span className="hidden sm:inline tracking-widest uppercase">View All</span>
         </button>
-      </div>
+      </PageHeader>
 
-      {/* Day Scroller */}
-      <div className="mb-6">
+      {/* Day Scroller — lift via transform so the row never reflows */}
+      <div className="mb-6 pt-2">
         <div className="flex gap-2 w-full">
           {DAYS.map((day, i) => {
             const active = i === activeDay;
             const dateNum = getDateForDay(i);
             return (
               <button key={i} onClick={() => setActiveDay(i)}
-                className="flex-1 flex flex-col items-center justify-center rounded-2xl transition-all duration-300 relative"
-                style={active ? {
-                  height: 96, cursor: 'pointer',
-                  background: 'rgba(84,141,255,0.2)',
-                  border: '1px solid rgba(175,198,255,0.5)',
-                  boxShadow: '0 0 15px rgba(175,198,255,0.25)',
-                  marginTop: -6, marginBottom: 6,
-                } : {
-                  height: 80, cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  opacity: 0.65,
+                className="flex-1 flex flex-col items-center justify-center rounded-2xl relative"
+                style={{
+                  height: 84,
+                  transition: 'transform 250ms var(--ease-out-strong), background-color 250ms ease-out, border-color 250ms ease-out, box-shadow 250ms ease-out, opacity 250ms ease-out',
+                  ...(active ? {
+                    background: 'rgba(84,141,255,0.2)',
+                    border: '1px solid rgba(175,198,255,0.5)',
+                    boxShadow: '0 0 15px rgba(175,198,255,0.25)',
+                    transform: 'translateY(-5px)',
+                  } : {
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    opacity: 0.65,
+                  }),
                 }}>
-                <span className="font-bold tracking-widest uppercase"
-                  style={{ color: active ? '#afc6ff' : '#c1c6d8', fontSize: active ? '11px' : '9px' }}>{day}</span>
-                <span className="font-black mt-0.5"
-                  style={{ fontFamily: 'var(--font-jakarta)', color: active ? '#afc6ff' : '#e4e1e9', fontSize: active ? '22px' : '18px', lineHeight: 1 }}>
+                <span className="font-bold tracking-widest uppercase text-[10px]"
+                  style={{ color: active ? '#afc6ff' : '#c1c6d8' }}>{day}</span>
+                <span className="font-black mt-0.5 text-xl"
+                  style={{ fontFamily: 'var(--font-jakarta)', color: active ? '#afc6ff' : '#e4e1e9', lineHeight: 1 }}>
                   {dateNum}
                 </span>
                 {active && <div className="absolute bottom-2 w-1 h-1 rounded-full" style={{ background: '#afc6ff' }} />}
@@ -298,55 +298,46 @@ export default function TasksPage() {
           <span className="material-symbols-outlined text-5xl mb-4" style={{ color: '#414655' }}>task_alt</span>
           <p className="font-semibold" style={{ color: '#8c90a1' }}>No tasks for {DAYS[activeDay]}</p>
           <p className="text-sm mt-1 mb-5" style={{ color: '#414655' }}>Add your first task to build your routine</p>
-          <button onClick={openAdd} className="px-5 py-2.5 rounded-xl text-sm font-bold"
-            style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
+          <button onClick={openAdd} className="btn-soft-accent px-5 py-2.5 rounded-xl text-sm font-bold">
             + Add Task
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 stagger-children">
           {dayTasks.map(task => {
             const meta = SKILL_META[task.skill] || SKILL_META.energy;
             const done = isEffectivelyComplete(task, activeDay, completions);
             return (
               <div key={task.id}
-                className="glass-card rounded-2xl p-5 flex gap-4 group transition-all"
+                className="glass-card rounded-2xl p-5 flex gap-4 group"
                 style={{
                   borderLeft: `4px solid ${meta.color}`,
                   opacity: done ? 0.55 : 1,
-                  transform: done ? 'scale(0.99)' : 'scale(1)',
+                  transition: 'opacity 250ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out',
                 }}>
 
                 {/* Checkbox */}
                 <div className="flex flex-col items-center justify-start pt-0.5">
                   <button onClick={() => toggleTask(task)}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                    aria-label={done ? `Mark "${task.title}" as not done` : `Mark "${task.title}" as done`}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center"
                     style={{
                       border: `2px solid ${done ? meta.color : meta.color + '60'}`,
                       background: done ? meta.color : 'transparent',
-                      cursor: 'pointer',
+                      transition: 'background-color 180ms ease-out, border-color 180ms ease-out, transform 150ms var(--ease-out-strong)',
                     }}>
                     {done && (
-                      <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#000', fontVariationSettings: "'FILL' 1" }}>check</span>
+                      <span className="material-symbols-outlined animate-check-pop" style={{ fontSize: '14px', color: '#000', fontVariationSettings: "'FILL' 1" }}>check</span>
                     )}
                   </button>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold tracking-widest uppercase" style={{ color: meta.color }}>
-                      {task.skill.toUpperCase()}
-                      {task.every_day && ' · EVERY DAY'}
-                    </span>
-                    {task.time_of_day && (
-                      <span className="text-xs" style={{ color: '#8c90a1' }}>{task.time_of_day}</span>
-                    )}
-                  </div>
                   <h3 className="font-semibold text-base mb-2" style={{ color: '#e4e1e9', textDecoration: done ? 'line-through' : 'none' }}>
                     {task.title}
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-2 py-0.5 rounded-md text-xs font-bold"
                       style={{ background: meta.bg, color: meta.color, outline: `1px solid ${meta.color}30` }}>
                       {task.skill.toUpperCase()}
@@ -355,19 +346,26 @@ export default function TasksPage() {
                       style={{ background: 'rgba(53,52,58,0.8)', color: '#c1c6d8' }}>
                       {task.duration_minutes} MIN
                     </span>
+                    {task.every_day && (
+                      <span className="px-2 py-0.5 rounded-md text-xs font-bold"
+                        style={{ background: 'rgba(175,198,255,0.1)', color: '#afc6ff', outline: '1px solid rgba(175,198,255,0.2)' }}>
+                        EVERY DAY
+                      </span>
+                    )}
+                    {task.time_of_day && (
+                      <span className="text-xs" style={{ color: '#8c90a1' }}>{task.time_of_day}</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => openEdit(task)} className="p-1 rounded-lg" style={{ color: '#8c90a1' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#afc6ff'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                <div className="touch-show flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => openEdit(task)} aria-label={`Edit "${task.title}"`}
+                    className="icon-btn icon-btn-accent p-1 rounded-lg">
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
                   </button>
-                  <button onClick={() => deleteTask(task.id)} className="p-1 rounded-lg" style={{ color: '#8c90a1' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                  <button onClick={() => setDeleteTarget(task)} aria-label={`Delete "${task.title}"`}
+                    className="icon-btn icon-btn-danger p-1 rounded-lg">
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
                   </button>
                 </div>
@@ -378,9 +376,9 @@ export default function TasksPage() {
       )}
 
       {/* FAB */}
-      <button onClick={openAdd}
-        className="fixed bottom-24 md:bottom-8 right-6 md:right-8 w-14 h-14 rounded-2xl flex items-center justify-center z-40 transition-all active:scale-90"
-        style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 30px rgba(175,198,255,0.4)', cursor: 'pointer' }}>
+      <button onClick={openAdd} aria-label="Add task"
+        className="btn-primary fixed bottom-24 md:bottom-8 right-6 md:right-8 w-14 h-14 rounded-full flex items-center justify-center z-40 hover:scale-105 active:scale-95"
+        style={{ boxShadow: '0 0 30px rgba(175,198,255,0.4)' }}>
         <span className="material-symbols-outlined" style={{ fontSize: '28px', fontVariationSettings: "'wght' 600" }}>add</span>
       </button>
 
@@ -395,11 +393,8 @@ export default function TasksPage() {
               <h2 className="text-2xl font-black tracking-tight" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>Task History</h2>
               <p className="text-sm mt-0.5" style={{ color: '#8c90a1' }}>Every task completed, sorted by day</p>
             </div>
-            <button onClick={() => setShowHistory(false)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'}>
+            <button onClick={() => setShowHistory(false)} aria-label="Close history"
+              className="btn-ghost w-10 h-10 rounded-full flex items-center justify-center">
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
             </button>
           </div>
@@ -428,9 +423,7 @@ export default function TasksPage() {
                     <div key={group.date} className="rounded-2xl overflow-hidden"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                       <button onClick={toggleDay}
-                        className="w-full flex items-center justify-between px-5 py-4 transition-colors"
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        className="menu-item w-full flex items-center justify-between px-5 py-4">
                         <div className="flex items-center gap-3 text-left">
                           <span className="material-symbols-outlined" style={{ color: '#afc6ff', fontSize: '18px' }}>calendar_today</span>
                           <div>
@@ -514,7 +507,7 @@ export default function TasksPage() {
               <h3 className="font-black text-lg" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
                 {editTask ? 'Edit Task' : 'New Task'}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ color: '#8c90a1' }}>
+              <button onClick={() => setShowModal(false)} aria-label="Close" className="icon-btn">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -525,9 +518,7 @@ export default function TasksPage() {
                 <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Task Name</label>
                 <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Morning run, Read 30 pages..."
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => e.target.style.borderColor = '#afc6ff'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  className="input-field w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
 
@@ -607,18 +598,14 @@ export default function TasksPage() {
                 <div>
                   <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Time <span style={{ color: '#414655', textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
                   <input type="time" value={form.time_of_day} onChange={e => setForm(f => ({ ...f, time_of_day: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                    onFocus={e => e.target.style.borderColor = '#afc6ff'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                    className="input-field w-full px-3 py-2.5 rounded-xl text-sm"
                   />
                 </div>
               </div>
 
               <div className="flex gap-3 mt-1">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
-                <button onClick={saveTask} className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.25)' }}>
+                <button onClick={() => setShowModal(false)} className="btn-quiet flex-1 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
+                <button onClick={saveTask} className="btn-primary flex-1 py-2.5 rounded-xl text-sm font-bold">
                   {editTask ? 'Save Changes' : 'Add Task'}
                 </button>
               </div>
@@ -626,6 +613,16 @@ export default function TasksPage() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Task?"
+        message={deleteTarget ? `"${deleteTarget.title}" and its schedule will be removed. Completed history is kept.` : ''}
+        confirmLabel="Delete Task"
+        onConfirm={() => { if (deleteTarget) deleteTask(deleteTarget.id); setDeleteTarget(null); }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

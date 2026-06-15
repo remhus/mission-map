@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import PageHeader from '@/components/PageHeader';
+import { useEscape } from '@/lib/useEscape';
 
 type VisionImage = { id: number; title: string; sort_order: number };
 
@@ -212,6 +214,8 @@ export default function VisionBoardPage() {
 
   const lightboxImg = lightbox !== null ? images[lightbox] : null;
 
+  useEscape(fullscreen, () => setFullscreen(false));
+
   useEffect(() => {
     if (lightbox === null) return;
     function handleKey(e: KeyboardEvent) {
@@ -225,36 +229,21 @@ export default function VisionBoardPage() {
 
   return (
     <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
-      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-2" style={{ fontFamily: 'var(--font-jakarta)', color: '#afc6ff' }}>
-            Vision Board
-          </h1>
-          <p className="text-sm max-w-xl leading-relaxed" style={{ color: '#8c90a1' }}>
-            Curating the life you are building. Each image represents a cornerstone of your future reality.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {images.length > 0 && (
-            <button onClick={() => setFullscreen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#afc6ff' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}>
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fullscreen</span>
-              <span className="text-xs font-bold tracking-widest uppercase hidden sm:inline">Visualise</span>
-            </button>
-          )}
-          <button onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="flex items-center gap-3 px-6 py-3 rounded-full transition-all group"
-            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#e4e1e9' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'}>
-            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300" style={{ fontSize: '20px' }}>add</span>
-            <span className="text-xs font-bold tracking-widest uppercase">{uploading ? 'Uploading...' : 'Upload'}</span>
+      <PageHeader title="Vision Board"
+        subtitle="Curating the life you are building. Each image represents a cornerstone of your future reality.">
+        {images.length > 0 && (
+          <button onClick={() => setFullscreen(true)}
+            className="btn-soft-accent flex items-center gap-2 px-4 py-2.5 rounded-full">
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fullscreen</span>
+            <span className="text-xs font-bold tracking-widest uppercase hidden sm:inline">Visualise</span>
           </button>
-        </div>
-      </header>
+        )}
+        <button onClick={() => fileRef.current?.click()} disabled={uploading}
+          className="btn-ghost flex items-center gap-3 px-6 py-3 rounded-full group">
+          <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300" style={{ fontSize: '20px' }}>add</span>
+          <span className="text-xs font-bold tracking-widest uppercase">{uploading ? 'Uploading...' : 'Upload'}</span>
+        </button>
+      </PageHeader>
 
       <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
         onChange={e => handleFiles(e.target.files)} />
@@ -293,17 +282,6 @@ export default function VisionBoardPage() {
                   boxShadow: dragOverIdx === idx && dragIdx !== idx ? '0 0 24px rgba(175,198,255,0.35)' : undefined,
                 }}
                 onClick={() => setLightbox(idx)}
-                onMouseEnter={e => {
-                  if (dragIdx !== null) return;
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 20px rgba(175,198,255,0.3)';
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(175,198,255,0.4)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = '';
-                  (e.currentTarget as HTMLElement).style.transform = '';
-                  (e.currentTarget as HTMLElement).style.borderColor = '';
-                }}
                 onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDragIdx(idx); }}
                 onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverIdx(idx); }}
                 onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverIdx(d => d === idx ? null : d); }}
@@ -311,7 +289,7 @@ export default function VisionBoardPage() {
                 onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/api/vision-board/image?id=${img.id}`} alt={img.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
                   loading="lazy" onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
 
                 {/* Drag handle — desktop only */}
@@ -392,18 +370,20 @@ export default function VisionBoardPage() {
             {images.length > 1 && (
               <>
                 <button onClick={() => setLightbox((lightbox! - 1 + images.length) % images.length)}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(255,255,255,0.12)', color: '#e4e1e9' }}>
+                  aria-label="Previous image"
+                  className="absolute top-1/2 -translate-y-1/2 left-2 md:left-0 md:-translate-x-12 w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-150"
+                  style={{ background: 'rgba(10,10,15,0.6)', border: '1px solid rgba(255,255,255,0.15)', color: '#e4e1e9' }}>
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
                 <button onClick={() => setLightbox((lightbox! + 1) % images.length)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(255,255,255,0.12)', color: '#e4e1e9' }}>
+                  aria-label="Next image"
+                  className="absolute top-1/2 -translate-y-1/2 right-2 md:right-0 md:translate-x-12 w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-150"
+                  style={{ background: 'rgba(10,10,15,0.6)', border: '1px solid rgba(255,255,255,0.15)', color: '#e4e1e9' }}>
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
               </>
             )}
-            <button onClick={() => setLightbox(null)}
+            <button onClick={() => setLightbox(null)} aria-label="Close lightbox"
               className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(0,0,0,0.7)', color: '#e4e1e9' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
@@ -421,13 +401,11 @@ export default function VisionBoardPage() {
             <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-jakarta)', color: '#afc6ff' }}>Vision Board</h2>
             <div className="flex items-center gap-3">
               <button onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: '#e4e1e9' }}>
+                className="btn-ghost flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span> Upload
               </button>
               <button onClick={() => setFullscreen(false)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase transition-all"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: '#e4e1e9' }}>
+                className="btn-ghost flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen_exit</span> Close
               </button>
             </div>
@@ -477,11 +455,9 @@ export default function VisionBoardPage() {
                   Image {trophyStep + 1} of {uploadQueue.length} · Creates a platinum trophy
                 </p>
               </div>
-              <button onClick={cancelTrophyCreation}
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                style={{ background: 'rgba(255,255,255,0.06)', color: '#8c90a1' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#e4e1e9'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+              <button onClick={cancelTrophyCreation} aria-label="Cancel trophy creation"
+                className="icon-btn w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.06)' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
               </button>
             </div>
@@ -509,10 +485,7 @@ export default function VisionBoardPage() {
                 <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Short Description</label>
                 <textarea value={trophyDesc} onChange={e => setTrophyDesc(e.target.value)}
                   rows={2} placeholder="Describe this achievement or goal..."
-                  className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => e.target.style.borderColor = 'rgba(175,198,255,0.4)'}
-                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  className="input-field w-full px-3 py-2.5 rounded-xl text-sm resize-none"
                 />
               </div>
             </div>

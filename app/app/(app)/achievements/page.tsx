@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import RadarChart from '@/components/RadarChart';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import { useEscape } from '@/lib/useEscape';
 
 type Achievement = {
   id: number; title: string; description: string;
@@ -68,7 +70,12 @@ export default function AchievementsPage() {
   const [showAllAch, setShowAllAch] = useState(false);
   const [showAllDesktop, setShowAllDesktop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Achievement | null>(null);
+  const [justClaimed, setJustClaimed] = useState<number | null>(null);
   const sortRef = useRef<HTMLDivElement>(null);
+
+  useEscape(showSortMenu, () => setShowSortMenu(false));
+  useEscape(showModal, () => setShowModal(false));
 
   const fetchData = useCallback(async () => {
     const [achRes, statsRes] = await Promise.all([fetch('/api/achievements'), fetch('/api/stats')]);
@@ -122,6 +129,9 @@ export default function AchievementsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: ach.id, title: ach.title, description: ach.description, trophy_tier: ach.trophy_tier, is_locked: false }),
     });
+    // Claiming a trophy is a peak moment — give it a celebratory burst
+    setJustClaimed(ach.id);
+    setTimeout(() => setJustClaimed(null), 1400);
     fetchData();
   }
   async function deleteAch(id: number) {
@@ -183,27 +193,21 @@ export default function AchievementsPage() {
         <div className="flex justify-end mb-4" ref={sortRef}>
           <div className="relative">
             <button onClick={() => setShowSortMenu(v => !v)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all"
-              style={{
-                background: sortMode !== 'default' ? 'rgba(175,198,255,0.12)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${sortMode !== 'default' ? 'rgba(175,198,255,0.35)' : 'rgba(255,255,255,0.1)'}`,
-                color: sortMode !== 'default' ? '#afc6ff' : '#8c90a1',
-              }}>
+              aria-label="Sort achievements" aria-expanded={showSortMenu}
+              className={`${sortMode !== 'default' ? 'btn-soft-accent' : 'btn-ghost'} flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold`}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>sort</span>
               <span className="hidden sm:inline">{activeSortLabel}</span>
             </button>
             {showSortMenu && (
-              <div className="absolute right-0 top-[calc(100%+6px)] rounded-2xl overflow-hidden z-20 animate-fade-in"
+              <div className="absolute right-0 top-[calc(100%+6px)] rounded-2xl overflow-hidden z-20 animate-pop-in"
                 style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 32px rgba(0,0,0,0.5)', width: 'max-content', minWidth: '180px' }}>
                 <div className="px-3 pt-3 pb-1">
                   <p className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: '#8c90a1' }}>Sort by</p>
                 </div>
                 {SORT_OPTIONS.map(opt => (
                   <button key={opt.key} onClick={() => { setSortMode(opt.key); setShowSortMenu(false); }}
-                    className="flex items-center gap-2 w-full px-3 py-2.5 text-sm transition-colors"
-                    style={{ color: sortMode === opt.key ? '#afc6ff' : '#c1c6d8', background: sortMode === opt.key ? 'rgba(175,198,255,0.08)' : 'transparent', whiteSpace: 'nowrap' }}
-                    onMouseEnter={e => { if (sortMode !== opt.key) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-                    onMouseLeave={e => { if (sortMode !== opt.key) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    className="menu-item flex items-center gap-2 w-full px-3 py-2.5 text-sm"
+                    style={sortMode === opt.key ? { color: '#afc6ff', background: 'rgba(175,198,255,0.08)', whiteSpace: 'nowrap' } : { whiteSpace: 'nowrap' }}>
                     {sortMode === opt.key
                       ? <span className="material-symbols-outlined" style={{ fontSize: '14px', flexShrink: 0 }}>check</span>
                       : <span style={{ width: 14, flexShrink: 0 }} />}
@@ -230,20 +234,20 @@ export default function AchievementsPage() {
           <span className="material-symbols-outlined text-6xl mb-4" style={{ color: '#414655' }}>emoji_events</span>
           <p className="font-semibold text-lg mb-1" style={{ color: '#8c90a1' }}>No achievements yet</p>
           <p className="text-sm mb-6" style={{ color: '#414655' }}>Add your first trophy to start tracking your wins</p>
-          <button onClick={openAdd} className="px-5 py-2.5 rounded-xl text-sm font-bold"
-            style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
+          <button onClick={openAdd} className="btn-soft-accent px-5 py-2.5 rounded-xl text-sm font-bold">
             + Add Achievement
           </button>
         </div>
       ) : (
         <>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
           {(isMobile ? (showAllAch ? sorted : sorted.slice(0, 3)) : (showAllDesktop ? sorted : sorted.slice(0, 8))).map(ach => {
             const t = TROPHY[ach.trophy_tier];
             const isLocked = ach.is_locked;
+            const celebrating = !isLocked && justClaimed === ach.id;
             return (
               <div key={ach.id}
-                className={`relative rounded-3xl p-8 flex flex-col items-center text-center group cursor-pointer transition-all duration-300 hover:scale-[1.02] ${isLocked ? '' : `trophy-${ach.trophy_tier}`}`}
+                className={`relative rounded-3xl p-8 flex flex-col items-center text-center group transition-transform duration-300 hover:scale-[1.02] ${isLocked ? '' : `trophy-${ach.trophy_tier}`} ${celebrating ? 'celebrate-burst' : ''}`}
                 style={isLocked
                   ? { minHeight: '390px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }
                   : { minHeight: '390px', boxShadow: t.glow }}>
@@ -256,17 +260,15 @@ export default function AchievementsPage() {
                 )}
 
                 {/* Edit/Delete on hover */}
-                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <button onClick={() => openEdit(ach)} className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(20,20,28,0.85)', color: '#8c90a1' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#afc6ff'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                <div className="touch-show absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button onClick={() => openEdit(ach)} aria-label={`Edit "${ach.title}"`}
+                    className="icon-btn icon-btn-accent w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(20,20,28,0.85)' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>edit</span>
                   </button>
-                  <button onClick={() => deleteAch(ach.id)} className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(20,20,28,0.85)', color: '#8c90a1' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                  <button onClick={() => setDeleteTarget(ach)} aria-label={`Delete "${ach.title}"`}
+                    className="icon-btn icon-btn-danger w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(20,20,28,0.85)' }}>
                     <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>delete</span>
                   </button>
                 </div>
@@ -278,7 +280,7 @@ export default function AchievementsPage() {
                     <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'rgba(255,255,255,0.15)' }}>lock</span>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined" style={{ fontSize: '64px', color: t.iconColor, fontVariationSettings: "'FILL' 1" }}>
+                      <span className={`material-symbols-outlined ${celebrating ? 'celebrate-icon' : ''}`} style={{ fontSize: '64px', color: t.iconColor, fontVariationSettings: "'FILL' 1" }}>
                         {t.icon}
                       </span>
                       <div className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-80 transition-opacity blur-xl"
@@ -314,10 +316,8 @@ export default function AchievementsPage() {
                   {isLocked && (
                     <button
                       onClick={e => { e.stopPropagation(); markAchieved(ach); }}
-                      className="mt-3 w-full py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#6b7280' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#9ca3af'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#6b7280'; }}>
+                      className="mt-3 w-full py-2 rounded-xl text-xs font-bold tracking-widest uppercase transition-all duration-150 hover:brightness-125"
+                      style={{ background: `${t.color}12`, border: `1px solid ${t.color}35`, color: t.color }}>
                       Claim Trophy
                     </button>
                   )}
@@ -331,8 +331,7 @@ export default function AchievementsPage() {
         {isMobile && !showAllAch && sorted.length > 3 && (
           <div className="flex justify-center mt-4 sm:hidden">
             <button onClick={() => setShowAllAch(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
+              className="btn-soft-accent flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>expand_more</span>
               Show {sorted.length - 3} more
             </button>
@@ -343,10 +342,7 @@ export default function AchievementsPage() {
         {!isMobile && sorted.length > 8 && (
           <div className="hidden sm:flex justify-center mt-6">
             <button onClick={() => setShowAllDesktop(v => !v)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.18)', color: '#afc6ff' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
+              className="btn-soft-accent flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showAllDesktop ? 'expand_less' : 'expand_more'}</span>
               {showAllDesktop ? 'Show less' : `Show ${sorted.length - 8} more`}
             </button>
@@ -396,10 +392,10 @@ export default function AchievementsPage() {
       </div>
 
       {/* FAB */}
-      <button onClick={openAdd}
-        className="fixed bottom-24 md:bottom-8 right-6 md:right-8 w-16 h-16 rounded-full flex items-center justify-center z-40 transition-all hover:scale-110 active:scale-95"
-        style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 30px rgba(175,198,255,0.4)', cursor: 'pointer' }}>
-        <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'wght' 600" }}>add</span>
+      <button onClick={openAdd} aria-label="Add achievement"
+        className="btn-primary fixed bottom-24 md:bottom-8 right-6 md:right-8 w-14 h-14 rounded-full flex items-center justify-center z-40 hover:scale-105 active:scale-95"
+        style={{ boxShadow: '0 0 30px rgba(175,198,255,0.4)' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '28px', fontVariationSettings: "'wght' 600" }}>add</span>
       </button>
 
       {/* Modal — click backdrop to close */}
@@ -415,7 +411,7 @@ export default function AchievementsPage() {
               <h3 className="font-black text-lg" style={{ fontFamily: 'var(--font-jakarta)', color: '#e4e1e9' }}>
                 {editItem ? 'Edit Achievement' : 'New Achievement'}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ color: '#8c90a1' }}>
+              <button onClick={() => setShowModal(false)} aria-label="Close" className="icon-btn">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -425,9 +421,7 @@ export default function AchievementsPage() {
                 <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Title</label>
                 <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. First Million, Run Marathon..."
-                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => e.target.style.borderColor = '#afc6ff'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  className="input-field w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
 
@@ -435,9 +429,7 @@ export default function AchievementsPage() {
                 <label className="text-xs font-bold tracking-widest uppercase mb-1.5 block" style={{ color: '#c1c6d8' }}>Description</label>
                 <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2} placeholder="Describe this achievement or goal..."
-                  className="w-full px-3 py-2.5 rounded-xl text-sm resize-none outline-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => e.target.style.borderColor = '#afc6ff'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  className="input-field w-full px-3 py-2.5 rounded-xl text-sm resize-none"
                 />
               </div>
 
@@ -497,10 +489,8 @@ export default function AchievementsPage() {
               )}
 
               <div className="flex gap-3">
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
-                <button onClick={save} className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.25)' }}>
+                <button onClick={() => setShowModal(false)} className="btn-quiet flex-1 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
+                <button onClick={save} className="btn-primary flex-1 py-2.5 rounded-xl text-sm font-bold">
                   {editItem ? 'Save' : 'Add'}
                 </button>
               </div>
@@ -508,6 +498,16 @@ export default function AchievementsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Achievement?"
+        message={deleteTarget ? `"${deleteTarget.title}" will be permanently removed from your trophy room.` : ''}
+        confirmLabel="Delete Trophy"
+        onConfirm={() => { if (deleteTarget) deleteAch(deleteTarget.id); setDeleteTarget(null); }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

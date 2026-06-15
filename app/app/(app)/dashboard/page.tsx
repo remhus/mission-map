@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useEscape } from '@/lib/useEscape';
 const CapsuleEditor = dynamic(() => import('@/components/RichEditor'), { ssr: false });
 
 type Cell = { row_index: number; col_index: number; content: string; cell_type: string };
@@ -442,12 +443,32 @@ export default function DashboardPage() {
   const capsuleIsSealed = capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) > new Date();
   const capsuleIsUnlocked = capsule?.is_sealed && capsule.locked_until && new Date(capsule.locked_until) <= new Date();
 
+  // Escape closes the lightweight overlays. The capsule write/seal steps are
+  // deliberately excluded so a stray Escape can't discard an unsaved letter.
+  useEscape(fullscreen, () => setFullscreen(false));
+  useEscape(editing !== null, () => setEditing(null));
+  useEscape(showCapsule && (capsuleStep === 'intro' || capsuleStep === 'read'), () => setShowCapsule(false));
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <span className="material-symbols-outlined animate-spin text-4xl" style={{ color: '#afc6ff' }}>progress_activity</span>
-          <p className="mt-4 text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Loading Mission Map...</p>
+      <div className="px-4 md:px-8 py-6 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-3">
+          <div>
+            <div className="skeleton h-3 w-40 mb-3" />
+            <div className="skeleton h-10 w-64" />
+          </div>
+          <div className="flex gap-3">
+            <div className="skeleton h-8 w-20 rounded-xl" />
+            <div className="skeleton h-8 w-14 rounded-xl" />
+          </div>
+        </div>
+        <div className="skeleton w-full rounded-[2rem]" style={{ maxWidth: 900, aspectRatio: '1 / 1', margin: '0 auto' }} />
+        <div className="flex flex-col md:flex-row gap-4 mt-6">
+          <div className="skeleton md:w-1/2 h-64 rounded-3xl" />
+          <div className="md:w-1/2 flex flex-col gap-4">
+            <div className="skeleton h-36 rounded-3xl" />
+            <div className="skeleton h-24 rounded-3xl" />
+          </div>
         </div>
       </div>
     );
@@ -475,15 +496,14 @@ export default function DashboardPage() {
 
       {/* Mobile fullscreen button — above the grid card */}
       <div className="flex md:hidden justify-end mb-2">
-        <button onClick={() => setFullscreen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
+        <button onClick={() => setFullscreen(true)} aria-label="View grid fullscreen"
+          className="btn-ghost flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
           <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>fullscreen</span>
         </button>
       </div>
 
       {/* Grid outer card */}
-      <div className="relative rounded-[2rem] overflow-hidden p-2 md:p-6"
+      <div className="relative rounded-[2rem] overflow-hidden p-2 md:p-6 animate-slide-up"
         style={{ background: 'rgba(14,14,19,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.08)', filter: 'blur(80px)' }} />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.06)', filter: 'blur(80px)' }} />
@@ -491,21 +511,12 @@ export default function DashboardPage() {
         {/* Controls — top-right of the card (desktop only) */}
         <div className="absolute top-3 right-3 z-20 hidden md:flex items-center gap-1.5">
           <button onClick={() => setHalfSize(v => { localStorage.setItem('grid-half', String(!v)); return !v; })}
-            className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all"
-            style={{
-              background: halfSize ? 'rgba(175,198,255,0.15)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${halfSize ? 'rgba(175,198,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
-              color: halfSize ? '#afc6ff' : '#8c90a1',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = halfSize ? 'rgba(175,198,255,0.15)' : 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = halfSize ? '#afc6ff' : '#8c90a1'; }}>
+            aria-label={halfSize ? 'Show grid at full size' : 'Show grid at half size'}
+            className={`${halfSize ? 'btn-soft-accent' : 'btn-ghost'} hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold`}>
             {halfSize ? '×2' : '×0.5'}
           </button>
-          <button onClick={() => setFullscreen(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.12)'; (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+          <button onClick={() => setFullscreen(true)} aria-label="View grid fullscreen"
+            className="btn-ghost flex items-center gap-1 px-2.5 py-1.5 rounded-xl">
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>fullscreen</span>
           </button>
         </div>
@@ -519,7 +530,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats bento */}
-      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch md:h-[380px]">
+      <div className="flex flex-col md:flex-row gap-4 mt-6 md:items-stretch md:h-[380px] animate-slide-up" style={{ animationDelay: '80ms', animationFillMode: 'backwards' }}>
         {/* Today's Tasks */}
         <div className="md:w-1/2 glass-card p-6 rounded-3xl flex flex-col min-h-0 overflow-hidden">
           <h3 className="text-xs font-bold tracking-widest uppercase mb-4 flex-shrink-0" style={{ color: '#8c90a1' }}>Today's Tasks</h3>
@@ -555,9 +566,7 @@ export default function DashboardPage() {
           {upcomingTasks.length === 0 && tomorrowTasks.length > 0 && (
             <TomorrowSection tasks={tomorrowTasks} />
           )}
-          <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-center flex-shrink-0 transition-opacity" style={{ color: '#afc6ff' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.6'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+          <Link href="/tasks" className="text-xs font-bold mt-auto pt-3 self-center flex-shrink-0 transition-opacity duration-150 hover:opacity-60 text-accent">
             View all →
           </Link>
         </div>
@@ -579,7 +588,7 @@ export default function DashboardPage() {
                       <span className="text-xs font-bold" style={{ color: '#afc6ff' }}>{pts}</span>
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(pts / 1000) * 100}%`, background: '#afc6ff', transition: 'width 0.7s' }} />
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, (pts / 1000) * 100)}%`, background: '#afc6ff', transition: 'width 0.7s var(--ease-out-strong)' }} />
                     </div>
                   </div>
                 );
@@ -594,11 +603,8 @@ export default function DashboardPage() {
               <h3 className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Dream Capsule</h3>
               {capsule && userEmail === 'remcarter19@gmail.com' && (
                 <button onClick={resetCapsule}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
-                  style={{ color: '#414655' }}
-                  title="Reset capsule"
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#414655'}>
+                  className="icon-btn icon-btn-danger opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                  title="Reset capsule" aria-label="Reset capsule">
                   <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>restart_alt</span>
                 </button>
               )}
@@ -661,11 +667,8 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center animate-fade-in"
           style={{ background: 'rgba(10,10,15,0.97)', backdropFilter: 'blur(12px)', cursor: 'pointer' }}
           onClick={() => setFullscreen(false)}>
-          <button onClick={e => { e.stopPropagation(); setFullscreen(false); }}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-all"
-            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: '#e4e1e9' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.18)'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'}>
+          <button onClick={e => { e.stopPropagation(); setFullscreen(false); }} aria-label="Exit fullscreen"
+            className="btn-ghost absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10">
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>fullscreen_exit</span>
           </button>
           <div className="w-full h-full flex items-center justify-center p-3 md:p-6">
@@ -703,13 +706,11 @@ export default function DashboardPage() {
               </p>
               <div className="flex gap-3">
                 <button onClick={() => setShowCapsule(false)}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>
+                  className="btn-quiet px-5 py-2.5 rounded-xl text-sm font-semibold">
                   Cancel
                 </button>
                 <button onClick={() => setCapsuleStep('write')}
-                  className="px-8 py-2.5 rounded-xl font-bold text-sm transition-all"
-                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 20px rgba(175,198,255,0.3)' }}>
+                  className="btn-primary px-8 py-2.5 rounded-xl font-bold text-sm">
                   Begin →
                 </button>
               </div>
@@ -724,8 +725,8 @@ export default function DashboardPage() {
                     Sealed on {capsule?.sealed_at ? new Date(capsule.sealed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                   </p>
                 </div>
-                <button onClick={() => setShowCapsule(false)} className="w-9 h-9 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#8c90a1' }}>
+                <button onClick={() => setShowCapsule(false)} aria-label="Close capsule"
+                  className="btn-ghost w-9 h-9 rounded-full flex items-center justify-center">
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
                 </button>
               </div>
@@ -738,8 +739,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-shrink-0 px-6 py-4 border-t flex justify-end" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                 <button onClick={() => { setShowCapsule(false); setCapsule(null); setCapsuleId(null); setCapsuleContent(''); setCapsuleStep('write'); }}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.25)', color: '#afc6ff' }}>
+                  className="btn-soft-accent px-6 py-2.5 rounded-xl font-bold text-sm">
                   Write New Capsule
                 </button>
               </div>
@@ -753,8 +753,7 @@ export default function DashboardPage() {
                   <p className="text-xs mt-0.5" style={{ color: '#8c90a1' }}>A letter to your future self — sealed in time</p>
                 </div>
                 <button onClick={saveCapsuleDraft} disabled={savingDraft}
-                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#8c90a1' }}>
+                  className="btn-ghost px-4 py-2 rounded-xl text-xs font-bold">
                   {savingDraft ? 'Saving...' : 'Save Draft'}
                 </button>
               </div>
@@ -765,11 +764,9 @@ export default function DashboardPage() {
               </div>
               <div className="flex-shrink-0 px-6 py-4 border-t flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.8)' }}>
                 <button onClick={() => setShowCapsule(false)}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
+                  className="btn-quiet px-4 py-2 rounded-xl text-sm font-semibold">Cancel</button>
                 <button onClick={() => { setCapsuleYears(null); setCapsuleStep('timeframe'); }}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm"
-                  style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>
+                  className="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">
                   Continue →
                 </button>
               </div>
@@ -796,11 +793,9 @@ export default function DashboardPage() {
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setCapsuleStep('write')}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>← Back</button>
+                  className="btn-quiet px-5 py-2.5 rounded-xl text-sm font-semibold">← Back</button>
                 <button disabled={!capsuleYears} onClick={() => setCapsuleStep('confirm')}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
-                  style={{ background: capsuleYears ? '#afc6ff' : 'rgba(175,198,255,0.3)', color: '#002d6d', cursor: capsuleYears ? 'pointer' : 'not-allowed' }}>
+                  className="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">
                   Seal Capsule 🔒
                 </button>
               </div>
@@ -825,8 +820,7 @@ export default function DashboardPage() {
               )}
               <div className="flex gap-3">
                 <button onClick={() => setCapsuleStep('timeframe')}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>← Back</button>
+                  className="btn-quiet px-5 py-2.5 rounded-xl text-sm font-semibold">← Back</button>
                 <button onClick={sealCapsule} disabled={sealingCapsule}
                   className="px-6 py-2.5 rounded-xl font-bold text-sm"
                   style={{ background: 'rgba(175,198,255,0.15)', border: '1px solid rgba(175,198,255,0.4)', color: '#afc6ff', boxShadow: '0 0 15px rgba(175,198,255,0.15)' }}>
@@ -857,24 +851,22 @@ export default function DashboardPage() {
                    'A habit, task or practice to build this pillar'}
                 </p>
               </div>
-              <button onClick={() => setEditing(null)} style={{ color: '#8c90a1' }}>
+              <button onClick={() => setEditing(null)} aria-label="Close editor" className="icon-btn">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             <textarea value={editValue} onChange={e => setEditValue(e.target.value)}
               autoFocus rows={3} maxLength={60}
               placeholder="Enter text..."
-              className="w-full rounded-xl p-3 text-sm resize-none outline-none"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(175,198,255,0.3)', color: '#e4e1e9', boxShadow: '0 0 0 3px rgba(175,198,255,0.08)' }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveCell(); } }}
+              className="input-field w-full rounded-xl p-3 text-sm resize-none"
             />
             <div className="flex justify-end mb-4">
-              <span className="text-xs" style={{ color: '#414655' }}>{editValue.length}/60</span>
+              <span className="text-xs text-faint">{editValue.length}/60</span>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setEditing(null)} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
-              <button onClick={saveCell} className="flex-1 py-2.5 rounded-xl text-sm font-bold"
-                style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.3)' }}>Save</button>
+              <button onClick={() => setEditing(null)} className="btn-quiet flex-1 py-2.5 rounded-xl text-sm font-semibold">Cancel</button>
+              <button onClick={saveCell} className="btn-primary flex-1 py-2.5 rounded-xl text-sm font-bold">Save</button>
             </div>
           </div>
         </div>

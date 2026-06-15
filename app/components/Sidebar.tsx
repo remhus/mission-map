@@ -28,6 +28,13 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
 
   const w = collapsed ? 64 : 288;
 
+  const rowLayout = (extra?: React.CSSProperties): React.CSSProperties => ({
+    gap: collapsed ? 0 : 12,
+    padding: collapsed ? '11px 0' : '11px 12px',
+    justifyContent: collapsed ? 'center' : 'flex-start',
+    ...extra,
+  });
+
   return (
     <aside
       className="fixed left-0 top-0 h-full hidden md:flex flex-col z-40 pt-20 transition-all duration-300"
@@ -53,8 +60,8 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
               <span className="text-sm font-black" style={{ color: '#fff' }}>{username.charAt(0).toUpperCase()}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate" style={{ color: '#afc6ff' }}>{username}</p>
-              <p className="text-xs tracking-widest uppercase" style={{ color: '#8c90a1' }}>Mission Active</p>
+              <p className="font-semibold text-sm truncate text-accent">{username}</p>
+              <p className="text-xs tracking-widest uppercase text-muted">Mission Active</p>
             </div>
           </div>
         )}
@@ -67,18 +74,8 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
           return (
             <Link key={item.href} href={item.href}
               title={collapsed ? item.label : undefined}
-              className="flex items-center rounded-xl transition-all duration-150 flex-shrink-0"
-              style={{
-                gap: collapsed ? 0 : 12,
-                padding: collapsed ? '11px 0' : '11px 12px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                ...(active ? {
-                  background: 'rgba(84,141,255,0.18)',
-                  color: '#afc6ff',
-                } : { color: '#8c90a1' }),
-              }}
-              onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#e4e1e9'; } }}
-              onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; } }}>
+              className={`nav-item ${active ? 'nav-item-active' : ''} flex items-center rounded-xl flex-shrink-0`}
+              style={rowLayout()}>
               <span className="material-symbols-outlined flex-shrink-0"
                 style={{ fontSize: '22px', fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
                 {item.icon}
@@ -94,19 +91,13 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
       {/* Footer — collapse toggle sits directly above settings */}
       <div className="flex-shrink-0 px-2 py-2 flex flex-col gap-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
 
-        {/* Collapse / expand toggle — Gemini-style */}
+        {/* Collapse / expand toggle */}
         <button
           onClick={onToggle}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="flex items-center rounded-xl transition-all duration-150 w-full"
-          style={{
-            gap: collapsed ? 0 : 12,
-            padding: collapsed ? '11px 0' : '11px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            color: '#8c90a1',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#e4e1e9'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="nav-item flex items-center rounded-xl w-full"
+          style={rowLayout()}>
           <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '22px' }}>
             {collapsed ? 'left_panel_open' : 'left_panel_close'}
           </span>
@@ -116,15 +107,8 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
         {/* Settings */}
         <Link href="/settings"
           title={collapsed ? 'Settings' : undefined}
-          className="flex items-center rounded-xl transition-all duration-150"
-          style={{
-            gap: collapsed ? 0 : 12,
-            padding: collapsed ? '11px 0' : '11px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            color: '#8c90a1',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#e4e1e9'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+          className="nav-item flex items-center rounded-xl"
+          style={rowLayout()}>
           <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '22px' }}>settings</span>
           {!collapsed && <span className="text-sm font-medium whitespace-nowrap">Settings</span>}
         </Link>
@@ -132,15 +116,9 @@ export default function Sidebar({ username, collapsed, onToggle }: SidebarProps)
         {/* Sign out */}
         <button onClick={handleLogout}
           title={collapsed ? 'Sign Out' : undefined}
-          className="flex items-center rounded-xl transition-all duration-150 w-full"
-          style={{
-            gap: collapsed ? 0 : 12,
-            padding: collapsed ? '11px 0' : '11px 12px',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            color: '#8c90a1',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = '#ffb4ab'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+          aria-label="Sign out"
+          className="nav-item nav-item-to-danger flex items-center rounded-xl w-full"
+          style={rowLayout()}>
           <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '22px' }}>logout</span>
           {!collapsed && <span className="text-sm font-medium whitespace-nowrap">Sign Out</span>}
         </button>

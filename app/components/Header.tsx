@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEscape } from '@/lib/useEscape';
 
 const navItems = [
   { href: '/dashboard', icon: 'grid_view', label: 'Dashboard' },
@@ -35,13 +36,15 @@ export default function Header({ username }: { username: string }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [profileOpen]);
 
+  useEscape(profileOpen, () => setProfileOpen(false));
+
   return (
     <>
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center h-20 px-5 md:px-10"
-        style={{ background: 'rgba(31,31,37,0.7)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.37)' }}>
+        style={{ background: 'rgba(14,14,19,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
 
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="font-extrabold tracking-tighter text-lg" style={{ color: '#afc6ff', fontFamily: 'var(--font-jakarta)' }}>
+          <Link href="/dashboard" className="font-extrabold tracking-tighter text-lg text-accent" style={{ fontFamily: 'var(--font-jakarta)' }}>
             MISSION MAP
           </Link>
         </div>
@@ -51,7 +54,9 @@ export default function Header({ username }: { username: string }) {
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setProfileOpen(v => !v)}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all cursor-pointer"
+              aria-label="Open profile menu"
+              aria-expanded={profileOpen}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-150"
               style={{
                 background: profileOpen ? '#afc6ff' : '#548dff',
                 color: profileOpen ? '#002d6d' : '#fff',
@@ -61,7 +66,7 @@ export default function Header({ username }: { username: string }) {
             </button>
 
             {profileOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] w-52 rounded-2xl overflow-hidden animate-fade-in"
+              <div className="absolute right-0 top-[calc(100%+8px)] w-52 rounded-2xl overflow-hidden animate-pop-in"
                 style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
                 {/* User info */}
                 <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
@@ -71,15 +76,12 @@ export default function Header({ username }: { username: string }) {
                       {username.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: '#e4e1e9' }}>{username}</p>
-                      <p className="text-xs" style={{ color: '#8c90a1' }}>Mission Active</p>
+                      <p className="text-sm font-semibold truncate text-ink">{username}</p>
+                      <p className="text-xs text-muted">Mission Active</p>
                     </div>
                   </div>
                   <Link href="/book-club" onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-semibold transition-all"
-                    style={{ background: 'rgba(175,198,255,0.08)', border: '1px solid rgba(175,198,255,0.15)', color: '#afc6ff' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.15)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(175,198,255,0.08)'}>
+                    className="btn-soft-accent flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-semibold">
                     <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>menu_book</span>
                     Book Club
                   </Link>
@@ -88,18 +90,12 @@ export default function Header({ username }: { username: string }) {
                 {/* Menu items */}
                 <div className="py-1.5">
                   <Link href="/settings" onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
-                    style={{ color: '#c1c6d8' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    className="menu-item flex items-center gap-3 px-4 py-2.5 text-sm">
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
                     Settings
                   </Link>
                   <button onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm w-full text-left transition-colors"
-                    style={{ color: '#ffb4ab' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,180,171,0.08)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    className="menu-item menu-item-danger flex items-center gap-3 px-4 py-2.5 text-sm w-full text-left">
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span>
                     Sign Out
                   </button>
@@ -117,10 +113,10 @@ export default function Header({ username }: { username: string }) {
           const active = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link key={item.href} href={item.href}
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all"
+              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150"
               style={{ color: active ? '#afc6ff' : '#8c90a1' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '22px', fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>{item.icon}</span>
-              <span className="text-[9px] font-bold tracking-wider uppercase">{item.label}</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase">{item.label}</span>
             </Link>
           );
         })}

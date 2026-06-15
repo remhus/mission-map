@@ -61,7 +61,7 @@ export default function SignupPage() {
         </div>
       </section>
 
-      {/* Right â€” form */}
+      {/* Right — form */}
       <section className="w-full md:w-3/5 flex items-center justify-center p-6 md:p-10 min-h-screen" style={{ background: '#131318' }}>
         <div className="w-full max-w-sm animate-slide-up">
           <div className="md:hidden mb-8 text-center">
@@ -84,10 +84,7 @@ export default function SignupPage() {
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#8c90a1', fontSize: '18px' }}>{field.icon}</span>
                   <input type={field.type} value={form[field.key as keyof typeof form]}
                     onChange={e => update(field.key, e.target.value)} required placeholder={field.placeholder}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                    onFocus={e => { e.target.style.borderColor = '#afc6ff'; e.target.style.boxShadow = '0 0 0 3px rgba(175,198,255,0.1)'; }}
-                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                    className="input-field w-full pl-10 pr-4 py-3 rounded-xl text-sm"
                   />
                 </div>
               </div>
@@ -103,14 +100,12 @@ export default function SignupPage() {
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#8c90a1', fontSize: '18px' }}>lock</span>
                   <input type={showPass ? 'text' : 'password'} value={form[field.key as keyof typeof form]}
                     onChange={e => update(field.key, e.target.value)} required placeholder={field.placeholder}
-                    className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                    onFocus={e => { e.target.style.borderColor = '#afc6ff'; e.target.style.boxShadow = '0 0 0 3px rgba(175,198,255,0.1)'; }}
-                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                    className="input-field w-full pl-10 pr-10 py-3 rounded-xl text-sm"
                   />
                   {field.key === 'confirm' && (
                     <button type="button" onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#8c90a1' }}>
+                      aria-label={showPass ? 'Hide password' : 'Show password'}
+                      className="icon-btn absolute right-3 top-1/2 -translate-y-1/2">
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showPass ? 'visibility_off' : 'visibility'}</span>
                     </button>
                   )}
@@ -125,8 +120,7 @@ export default function SignupPage() {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all mt-2"
-              style={{ background: loading ? 'rgba(175,198,255,0.4)' : '#afc6ff', color: '#002d6d', boxShadow: loading ? 'none' : '0 0 20px rgba(175,198,255,0.3)' }}>
+              className="btn-primary w-full py-3 rounded-xl font-bold text-sm tracking-wide mt-2">
               {loading ? 'Creating account...' : 'Start My Mission'}
             </button>
           </form>

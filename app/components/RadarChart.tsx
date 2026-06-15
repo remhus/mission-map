@@ -3,10 +3,6 @@
 import { useState } from 'react';
 
 const SKILLS = ['energy','intelligence','strength','bravery','wealth','discipline','wisdom','influence'];
-const ICONS: Record<string, string> = {
-  energy: '⚡', intelligence: '🧠', strength: '💪', bravery: '🛡️',
-  wealth: '💰', discipline: '⚔️', wisdom: '📖', influence: '🌐',
-};
 // Minimum display radius so even 0-XP skills show a tiny shape on a new account
 const BASELINE = 20;
 
@@ -82,11 +78,11 @@ export default function RadarChart({ stats }: { stats: Record<string, number> })
               <text
                 x={lp.x.toFixed(1)} y={lp.y.toFixed(1)}
                 textAnchor="middle" dominantBaseline="middle"
-                fontSize="7.5"
+                fontSize="9" fontWeight="600" letterSpacing="0.5"
                 fill={isHovered ? '#afc6ff' : '#8c90a1'}
                 fontFamily="Inter, sans-serif"
                 style={{ transition: 'fill 0.15s', userSelect: 'none' }}>
-                {ICONS[s]} {s.slice(0, 3).toUpperCase()}
+                {s.slice(0, 3).toUpperCase()}
               </text>
             </g>
           );
@@ -112,7 +108,7 @@ export default function RadarChart({ stats }: { stats: Record<string, number> })
               color: '#e4e1e9',
               boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
             }}>
-            {ICONS[hovered]} {hovered.charAt(0).toUpperCase() + hovered.slice(1)}
+            {hovered.charAt(0).toUpperCase() + hovered.slice(1)}
             <span className="ml-1.5 font-normal" style={{ color: '#afc6ff' }}>{xp} XP</span>
           </div>
         );

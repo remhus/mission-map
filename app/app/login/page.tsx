@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-col md:flex-row min-h-screen w-full overflow-hidden" style={{ background: '#0A0A0F' }}>
-      {/* Left â€” cinematic panel (desktop only) */}
+      {/* Left — cinematic panel (desktop only) */}
       <section className="hidden md:flex md:w-3/5 relative h-screen overflow-hidden flex-col justify-between p-10">
         <div className="absolute inset-0 z-0" style={{
           background: 'linear-gradient(135deg, #0A0A0F 0%, #0d1a35 50%, #0A0A0F 100%)',
@@ -58,7 +58,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 text-xs font-bold tracking-widest uppercase"
             style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)', color: '#afc6ff' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            SYSTEM OPTIMISED
+            MISSION BRIEFING
           </div>
           <p className="text-xl font-semibold leading-relaxed italic" style={{ color: 'rgba(228,225,233,0.8)' }}>
             "Ambition is the path to success. Persistence is the vehicle you arrive in."
@@ -70,7 +70,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      {/* Right â€” login form */}
+      {/* Right — login form */}
       <section className="w-full md:w-2/5 flex items-center justify-center p-6 md:p-10 relative min-h-screen"
         style={{ background: '#131318' }}>
 
@@ -94,10 +94,7 @@ export default function LoginPage() {
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)} required
                   placeholder="your@email.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => { e.target.style.borderColor = '#afc6ff'; e.target.style.boxShadow = '0 0 0 3px rgba(175,198,255,0.1)'; }}
-                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                  className="input-field w-full pl-10 pr-4 py-3 rounded-xl text-sm"
                 />
               </div>
             </div>
@@ -109,13 +106,11 @@ export default function LoginPage() {
                 <input
                   type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
                   placeholder="Your password"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e4e1e9' }}
-                  onFocus={e => { e.target.style.borderColor = '#afc6ff'; e.target.style.boxShadow = '0 0 0 3px rgba(175,198,255,0.1)'; }}
-                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                  className="input-field w-full pl-10 pr-10 py-3 rounded-xl text-sm"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#8c90a1' }}>
+                  aria-label={showPass ? 'Hide password' : 'Show password'}
+                  className="icon-btn absolute right-3 top-1/2 -translate-y-1/2">
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showPass ? 'visibility_off' : 'visibility'}</span>
                 </button>
               </div>
@@ -128,8 +123,7 @@ export default function LoginPage() {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all mt-2"
-              style={{ background: loading ? 'rgba(175,198,255,0.4)' : '#afc6ff', color: '#002d6d', boxShadow: loading ? 'none' : '0 0 20px rgba(175,198,255,0.3)' }}>
+              className="btn-primary w-full py-3 rounded-xl font-bold text-sm tracking-wide mt-2">
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="material-symbols-outlined animate-spin text-sm" style={{ fontSize: '16px' }}>progress_activity</span>
