@@ -273,7 +273,7 @@ export default function JournalPage() {
       </div>
 
       {/* ---- Right: Editor / Viewer ---- */}
-      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col md:h-full md:overflow-hidden relative z-10`}>
+      <div className={`${mobileView === 'list' ? 'hidden md:flex' : 'flex'} flex-1 flex-col md:h-full md:overflow-y-auto md:custom-scrollbar relative z-10`}>
 
         {/* Mobile back button */}
         <div className="md:hidden flex items-center gap-2 px-4 py-3 flex-shrink-0 border-b"
@@ -309,7 +309,7 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="md:flex-1 md:overflow-y-auto md:custom-scrollbar px-6 md:px-10 py-4 flex flex-col gap-0">
+            <div className="px-6 md:px-10 py-4 flex flex-col gap-0">
               {/* Main entry */}
               <div className="glass-panel rounded-2xl border-l-4 overflow-hidden relative"
                 style={{ borderLeftColor: '#afc6ff' }}>
@@ -346,8 +346,8 @@ export default function JournalPage() {
               <div className="h-4" />
             </div>
 
-            <div className="flex-shrink-0 px-6 md:px-10 py-4 flex items-center justify-between border-t"
-              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.6)' }}>
+            <div className="sticky bottom-0 z-10 px-6 md:px-10 py-4 flex items-center justify-between border-t"
+              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(12px)' }}>
               <div className="flex gap-6">
                 <div>
                   <p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Words</p>
@@ -375,7 +375,7 @@ export default function JournalPage() {
         ) : active ? (
           /* ---- READING VIEW ---- */
           <>
-            <div className="px-6 md:px-10 py-8 flex flex-col gap-4 md:flex-1 md:overflow-hidden md:min-h-0">
+            <div className="px-6 md:px-10 py-8 flex flex-col gap-4">
               {/* Header — column on mobile so title takes full width */}
               <div className="flex-shrink-0 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                 <div className="flex-1">
@@ -413,8 +413,8 @@ export default function JournalPage() {
                 </div>
               </div>
 
-              {/* Scrollable content area — both entry and gratitude scroll together */}
-              <div className="flex flex-col gap-4 md:flex-1 md:overflow-y-auto md:custom-scrollbar md:min-h-0">
+              {/* Content flows naturally — right panel itself scrolls */}
+              <div className="flex flex-col gap-4">
                 {/* Content panel */}
                 <div className="glass-panel rounded-2xl border-l-4 overflow-x-hidden"
                   style={{ borderLeftColor: '#afc6ff' }}>
@@ -451,8 +451,8 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="px-6 md:px-10 py-4 flex items-center justify-between border-t flex-shrink-0"
-              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.6)' }}>
+            <div className="sticky bottom-0 z-10 px-6 md:px-10 py-4 flex items-center justify-between border-t"
+              style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(12px)' }}>
               <div className="flex gap-6">
                 <div><p className="text-xs font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Words</p>
                   <p className="font-bold" style={{ color: '#e4e1e9' }}>{wordCount(active.content)}</p></div>
