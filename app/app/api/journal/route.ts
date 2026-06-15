@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, content, mood } = await req.json();
+  const { title, content, mood, gratitude } = await req.json();
   const VALID_MOODS = new Set(['elite','focused','resilient','neutral','drained']);
   if (!title || typeof title !== 'string' || title.trim().length === 0 || title.length > 300) {
     return NextResponse.json({ error: 'Invalid title' }, { status: 400 });
@@ -30,9 +30,10 @@ export async function POST(req: NextRequest) {
   }
   const safeMood = VALID_MOODS.has(mood) ? mood : 'neutral';
   const safeContent = sanitizeRichHtml(content || '');
+  const safeGratitude = typeof gratitude === 'string' ? gratitude.trim().slice(0, 10000) : '';
   const [entry] = await sql`
-    INSERT INTO journal_entries (user_id, title, content, mood)
-    VALUES (${user.userId}, ${title.trim()}, ${safeContent}, ${safeMood})
+    INSERT INTO journal_entries (user_id, title, content, mood, gratitude)
+    VALUES (${user.userId}, ${title.trim()}, ${safeContent}, ${safeMood}, ${safeGratitude})
     RETURNING *
   `;
   return NextResponse.json({ entry });
@@ -52,9 +53,10 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  const safeGratitude = typeof body.gratitude === 'string' ? body.gratitude.trim().slice(0, 10000) : '';
   await sql`
     UPDATE journal_entries
-    SET title = ${body.title}, content = ${sanitizeRichHtml(body.content || '')}, mood = ${body.mood}, updated_at = NOW()
+    SET title = ${body.title}, content = ${sanitizeRichHtml(body.content || '')}, mood = ${body.mood}, gratitude = ${safeGratitude}, updated_at = NOW()
     WHERE id = ${id} AND user_id = ${user.userId}
   `;
   return NextResponse.json({ success: true });

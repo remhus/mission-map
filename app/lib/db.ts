@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 9;
+const SCHEMA_VERSION = 10;
 
 export async function initDB() {
   if (initialized) return;
@@ -221,6 +221,11 @@ export async function initDB() {
     // v9: add status column to books (read | wishlist)
     if (prevVersion < 9) {
       await sql`ALTER TABLE books ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'read'`;
+    }
+
+    // v10: add gratitude column to journal entries
+    if (prevVersion < 10) {
+      await sql`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS gratitude TEXT DEFAULT ''`;
     }
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;

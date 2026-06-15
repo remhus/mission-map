@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import { useEscape } from '@/lib/useEscape';
 
 const RichEditor = dynamic(() => import('@/components/RichEditor'), { ssr: false });
 
 type JournalEntry = {
-  id: number; title: string; content: string; mood: string;
+  id: number; title: string; content: string; mood: string; gratitude: string;
   is_favourite: boolean; created_at: string; updated_at: string;
 };
 
@@ -33,14 +35,17 @@ export default function JournalPage() {
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<JournalEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ title: '', content: '', mood: 'focused' });
+  const [form, setForm] = useState({ title: '', content: '', mood: 'focused', gratitude: '' });
   const [search, setSearch] = useState('');
   const [filterMood, setFilterMood] = useState<string | null>(null);
   const [filterFavourites, setFilterFavourites] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
+  const [deleteTarget, setDeleteTarget] = useState<JournalEntry | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
+
+  useEscape(showFilter, () => setShowFilter(false));
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch('/api/journal');
@@ -64,14 +69,14 @@ export default function JournalPage() {
 
   function startNew() {
     setActive(null);
-    setForm({ title: '', content: '', mood: 'focused' });
+    setForm({ title: '', content: '', mood: 'focused', gratitude: '' });
     setIsEditing(true);
     setMobileView('detail');
   }
 
   function startEdit(entry: JournalEntry) {
     setActive(entry);
-    setForm({ title: entry.title, content: entry.content, mood: entry.mood });
+    setForm({ title: entry.title, content: entry.content, mood: entry.mood, gratitude: entry.gratitude || '' });
     setIsEditing(true);
     setMobileView('detail');
   }
@@ -79,10 +84,11 @@ export default function JournalPage() {
   async function save() {
     if (!form.title.trim()) return;
     setSaving(true);
+    const payload = { title: form.title, content: form.content, mood: form.mood, gratitude: form.gratitude };
     if (active && isEditing && entries.find(e => e.id === active.id)) {
-      await fetch('/api/journal', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: active.id, ...form }) });
+      await fetch('/api/journal', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: active.id, ...payload }) });
     } else {
-      await fetch('/api/journal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      await fetch('/api/journal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     }
     const res = await fetch('/api/journal');
     const data = await res.json();
@@ -114,14 +120,14 @@ export default function JournalPage() {
   const activeFilter = filterMood || filterFavourites;
 
   const filtered = entries.filter(e => {
-    const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase()) || stripHtml(e.content).toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || e.title.toLowerCase().includes(search.toLowerCase()) || stripHtml(e.content).toLowerCase().includes(search.toLowerCase()) || (e.gratitude || '').toLowerCase().includes(search.toLowerCase());
     const matchMood = !filterMood || e.mood === filterMood;
     const matchFav = !filterFavourites || e.is_favourite;
     return matchSearch && matchMood && matchFav;
   });
 
   return (
-    <div className="md:flex md:h-[calc(100vh-80px)] md:overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="relative md:flex md:h-[calc(100vh-80px)] md:overflow-hidden" style={{ background: '#0A0A0F' }}>
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(175,198,255,0.04)', filter: 'blur(120px)' }} />
       <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'rgba(200,99,251,0.03)', filter: 'blur(100px)' }} />
 
@@ -134,10 +140,9 @@ export default function JournalPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-base" style={{ color: '#e4e1e9' }}>Archive</h3>
             <button onClick={startNew}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-              style={{ background: '#548dff', color: '#fff' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#fff' }}>edit_note</span>
-              <span style={{ color: '#fff' }}>New</span>
+              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>edit_note</span>
+              New
             </button>
           </div>
 
@@ -147,28 +152,21 @@ export default function JournalPage() {
               <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color: '#8c90a1', fontSize: '15px' }}>search</span>
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Find a memory..."
-                className="w-full pl-8 pr-3 py-2 rounded-lg text-sm outline-none transition-all"
-                style={{ background: 'rgba(42,41,47,0.6)', border: '1px solid rgba(255,255,255,0.08)', color: '#e4e1e9' }}
-                onFocus={e => e.target.style.borderColor = 'rgba(175,198,255,0.4)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                className="input-field w-full pl-8 pr-3 py-2 rounded-lg text-sm"
               />
             </div>
 
             {/* Filter button + dropdown */}
             <div className="relative flex-shrink-0" ref={filterRef}>
               <button onClick={() => setShowFilter(v => !v)}
-                className="flex items-center justify-center rounded-lg transition-all"
-                style={{
-                  width: 36, height: 36,
-                  background: activeFilter ? 'rgba(175,198,255,0.15)' : 'rgba(42,41,47,0.6)',
-                  border: `1px solid ${activeFilter ? 'rgba(175,198,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  color: activeFilter ? '#afc6ff' : '#8c90a1',
-                }}>
+                aria-label="Filter entries" aria-expanded={showFilter}
+                className={`${activeFilter ? 'btn-soft-accent' : 'btn-ghost'} flex items-center justify-center rounded-lg`}
+                style={{ width: 36, height: 36 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '17px' }}>filter_list</span>
               </button>
 
               {showFilter && (
-                <div className="absolute right-0 top-[calc(100%+6px)] w-48 rounded-2xl overflow-hidden z-20 animate-fade-in"
+                <div className="absolute right-0 top-[calc(100%+6px)] w-48 rounded-2xl overflow-hidden z-20 animate-pop-in"
                   style={{ background: '#1f1f25', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }}>
                   <div className="px-3 pt-3 pb-1">
                     <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#8c90a1' }}>Filter by</p>
@@ -176,10 +174,8 @@ export default function JournalPage() {
 
                   {/* Favourites */}
                   <button onClick={() => { setFilterFavourites(v => !v); setFilterMood(null); }}
-                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm transition-colors"
-                    style={{ color: filterFavourites ? '#ffd700' : '#c1c6d8', background: filterFavourites ? 'rgba(255,215,0,0.08)' : 'transparent' }}
-                    onMouseEnter={e => { if (!filterFavourites) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-                    onMouseLeave={e => { if (!filterFavourites) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    className="menu-item flex items-center gap-2.5 w-full px-3 py-2.5 text-sm"
+                    style={filterFavourites ? { color: '#ffd700', background: 'rgba(255,215,0,0.08)' } : undefined}>
                     <span className="material-symbols-outlined" style={{ fontSize: '16px', fontVariationSettings: filterFavourites ? "'FILL' 1" : "'FILL' 0", color: '#ffd700' }}>star</span>
                     Favourites
                   </button>
@@ -189,10 +185,8 @@ export default function JournalPage() {
                   {/* Mood filters */}
                   {MOODS.map(m => (
                     <button key={m.value} onClick={() => { setFilterMood(filterMood === m.value ? null : m.value); setFilterFavourites(false); }}
-                      className="flex items-center gap-2.5 w-full px-3 py-2 text-sm transition-colors"
-                      style={{ color: filterMood === m.value ? m.color : '#c1c6d8', background: filterMood === m.value ? `${m.color}12` : 'transparent' }}
-                      onMouseEnter={e => { if (filterMood !== m.value) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-                      onMouseLeave={e => { if (filterMood !== m.value) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      className="menu-item flex items-center gap-2.5 w-full px-3 py-2 text-sm"
+                      style={filterMood === m.value ? { color: m.color, background: `${m.color}12` } : undefined}>
                       <span>{m.emoji}</span>
                       {m.label}
                     </button>
@@ -203,10 +197,7 @@ export default function JournalPage() {
                     <>
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '4px 0' }} />
                       <button onClick={() => { setFilterMood(null); setFilterFavourites(false); }}
-                        className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold transition-colors"
-                        style={{ color: '#8c90a1' }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ffb4ab'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#8c90a1'}>
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-bold transition-colors duration-150 text-muted hover:text-danger">
                         <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>close</span>
                         Clear filter
                       </button>
@@ -246,22 +237,18 @@ export default function JournalPage() {
               const isActive = active?.id === entry.id && !isEditing;
               return (
                 <button key={entry.id} onClick={() => { setActive(entry); setIsEditing(false); setMobileView('detail'); }}
-                  className="w-full text-left p-3.5 rounded-xl transition-all"
-                  style={isActive
-                    ? { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(175,198,255,0.2)' }
-                    : { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
-                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
-                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}>
+                  className={`w-full text-left p-3.5 rounded-xl border transition-colors duration-150 ${isActive
+                    ? 'bg-white/[0.07] border-[rgba(175,198,255,0.2)]'
+                    : 'bg-white/[0.02] border-white/5 hover:bg-white/5'}`}>
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-xs font-bold tracking-widest uppercase" style={{ color: isActive ? '#afc6ff' : '#8c90a1' }}>
                       {new Date(entry.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
                     </span>
                     <button
                       onClick={e => { e.stopPropagation(); toggleFavourite(entry); }}
-                      className="flex items-center justify-center rounded transition-colors"
-                      style={{ width: 20, height: 20, color: entry.is_favourite ? '#ffd700' : 'rgba(255,255,255,0.2)', flexShrink: 0 }}
-                      onMouseEnter={e => { if (!entry.is_favourite) (e.currentTarget as HTMLElement).style.color = '#ffd700'; }}
-                      onMouseLeave={e => { if (!entry.is_favourite) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.2)'; }}>
+                      aria-label={entry.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
+                      className={`flex items-center justify-center rounded transition-colors duration-150 ${entry.is_favourite ? 'text-gold' : 'text-white/20 hover:text-gold'}`}
+                      style={{ width: 20, height: 20, flexShrink: 0 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: '14px', fontVariationSettings: entry.is_favourite ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                     </button>
                   </div>
@@ -322,12 +309,42 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <div className="md:flex-1 md:overflow-y-auto px-6 md:px-10 py-4">
+            <div className="md:flex-1 md:overflow-y-auto md:custom-scrollbar px-6 md:px-10 py-4 flex flex-col gap-0">
+              {/* Main entry */}
               <div className="glass-panel rounded-2xl border-l-4 overflow-hidden relative"
                 style={{ borderLeftColor: '#afc6ff' }}>
                 <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(175,198,255,0.05)' }} />
                 <RichEditor content={form.content} onChange={html => setForm(f => ({ ...f, content: html }))} />
               </div>
+
+              {/* Gratitude divider */}
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.2))' }} />
+                <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase px-1" style={{ color: '#ffd70066' }}>
+                  <span style={{ fontSize: 14 }}>✦</span> Gratitude <span style={{ fontSize: 14 }}>✦</span>
+                </span>
+                <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(255,215,0,0.2))' }} />
+              </div>
+
+              {/* Gratitude textarea */}
+              <div className="glass-panel rounded-2xl border-l-4 overflow-hidden"
+                style={{ borderLeftColor: 'rgba(255,215,0,0.5)' }}>
+                <textarea
+                  value={form.gratitude}
+                  onChange={e => {
+                    setForm(f => ({ ...f, gratitude: e.target.value }));
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                  placeholder="What are you grateful for today?"
+                  rows={4}
+                  className="w-full bg-transparent outline-none resize-none text-sm leading-relaxed"
+                  style={{ color: '#e4e1e9', padding: '16px 20px', minHeight: 100, fontFamily: 'inherit' }}
+                />
+              </div>
+
+              {/* Bottom spacer so last element isn't flush with footer */}
+              <div className="h-4" />
             </div>
 
             <div className="flex-shrink-0 px-6 md:px-10 py-4 flex items-center justify-between border-t"
@@ -344,11 +361,9 @@ export default function JournalPage() {
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={() => { setIsEditing(false); if (entries.length) setActive(entries[0]); }}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: '#c1c6d8' }}>Cancel</button>
+                  className="btn-quiet px-4 py-2 rounded-xl text-sm font-semibold">Cancel</button>
                 <button onClick={save} disabled={saving || !form.title.trim()}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
-                  style={{ background: saving || !form.title.trim() ? 'rgba(175,198,255,0.4)' : '#548dff', color: '#ffffff', boxShadow: '0 0 15px rgba(84,141,255,0.3)' }}>
+                  className="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">
                   {saving ? 'Saving...' : 'Submit'}
                 </button>
               </div>
@@ -382,31 +397,25 @@ export default function JournalPage() {
                 {/* Actions: star, edit, delete */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button onClick={() => toggleFavourite(active)}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all"
-                    style={{ background: active.is_favourite ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${active.is_favourite ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.08)'}`, color: active.is_favourite ? '#ffd700' : '#8c90a1' }}
-                    onMouseEnter={e => { if (!active.is_favourite) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,215,0,0.1)'; (e.currentTarget as HTMLElement).style.color = '#ffd700'; } }}
-                    onMouseLeave={e => { if (!active.is_favourite) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#8c90a1'; } }}>
+                    aria-label={active.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-colors duration-150 ${active.is_favourite
+                      ? 'text-gold bg-gold/10 border-[rgba(255,215,0,0.3)]'
+                      : 'text-muted bg-white/5 border-white/10 hover:text-gold hover:bg-gold/10'}`}>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: active.is_favourite ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                   </button>
-                  <button onClick={() => startEdit(active)}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#8c90a1' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#afc6ff'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+                  <button onClick={() => startEdit(active)} aria-label="Edit entry"
+                    className="icon-btn icon-btn-accent w-10 h-10 flex items-center justify-center rounded-xl border bg-white/5 border-white/10">
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
                   </button>
-                  <button onClick={() => deleteEntry(active.id)}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#8c90a1' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#ffb4ab'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8c90a1'; }}>
+                  <button onClick={() => setDeleteTarget(active)} aria-label="Delete entry"
+                    className="icon-btn icon-btn-danger w-10 h-10 flex items-center justify-center rounded-xl border bg-white/5 border-white/10">
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
                   </button>
                 </div>
               </div>
 
               {/* Content panel — natural height on mobile, internal scroll on desktop */}
-              <div className="glass-panel rounded-2xl border-l-4 shrink-0 md:shrink md:overflow-y-auto md:custom-scrollbar md:min-h-0 overflow-x-hidden"
+              <div className="glass-panel rounded-2xl border-l-4 shrink-0 overflow-x-hidden"
                 style={{ borderLeftColor: '#afc6ff', flexGrow: 0, flexBasis: 'auto' }}>
                 <div className="px-5 py-5">
                   {active.content && active.content !== '<p></p>' ? (
@@ -417,6 +426,27 @@ export default function JournalPage() {
                   )}
                 </div>
               </div>
+
+              {/* Gratitude section */}
+              {active.gratitude && (
+                <>
+                  <div className="flex items-center gap-3 my-2">
+                    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.2))' }} />
+                    <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase px-1" style={{ color: '#ffd70066' }}>
+                      <span style={{ fontSize: 14 }}>✦</span> Gratitude <span style={{ fontSize: 14 }}>✦</span>
+                    </span>
+                    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(255,215,0,0.2))' }} />
+                  </div>
+                  <div className="glass-panel rounded-2xl border-l-4 overflow-x-hidden"
+                    style={{ borderLeftColor: 'rgba(255,215,0,0.5)' }}>
+                    <div className="px-5 py-5">
+                      <p className="text-sm leading-relaxed" style={{ color: '#c1c6d8', whiteSpace: 'pre-wrap' }}>{active.gratitude}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="h-2" />
             </div>
 
             <div className="px-6 md:px-10 py-4 flex items-center justify-between border-t flex-shrink-0"
@@ -428,8 +458,7 @@ export default function JournalPage() {
                   <p className="font-bold" style={{ color: '#e4e1e9' }}>{entries.length}</p></div>
               </div>
               <button onClick={startNew}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
-                style={{ background: '#548dff', color: '#ffffff', boxShadow: '0 0 15px rgba(84,141,255,0.25)' }}>
+                className="btn-primary px-6 py-2.5 rounded-xl font-bold text-sm">
                 New Entry
               </button>
             </div>
@@ -441,13 +470,22 @@ export default function JournalPage() {
             <p className="text-xl font-black mb-2" style={{ fontFamily: 'var(--font-jakarta)', color: '#8c90a1' }}>Your journal awaits</p>
             <p className="text-sm mb-6" style={{ color: '#414655' }}>Document your journey, one entry at a time.</p>
             <button onClick={startNew}
-              className="px-6 py-3 rounded-xl font-bold transition-all"
-              style={{ background: '#afc6ff', color: '#002d6d', boxShadow: '0 0 15px rgba(175,198,255,0.25)' }}>
+              className="btn-primary px-6 py-3 rounded-xl font-bold">
               Write First Entry
             </button>
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Entry?"
+        message={deleteTarget ? `"${deleteTarget.title}" will be permanently deleted. This cannot be undone.` : ''}
+        confirmLabel="Delete Entry"
+        onConfirm={() => { if (deleteTarget) deleteEntry(deleteTarget.id); setDeleteTarget(null); }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
