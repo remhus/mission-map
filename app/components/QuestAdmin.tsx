@@ -86,10 +86,13 @@ export default function QuestAdmin() {
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <p className="text-sm text-muted mb-3">Paste it into any capable LLM (ChatGPT, Claude, etc.). It returns a JSON array of four quests.</p>
+            <p className="text-sm text-muted mb-3">
+              Paste it into any capable LLM (ChatGPT, Claude, etc.). It returns a JSON array of four quests.
+              {prompt && !loadingPrompt && <span className="text-ink-2"> This prompt already has your mission and grid baked in — scroll down inside it to see your data.</span>}
+            </p>
             <textarea readOnly value={loadingPrompt ? 'Building prompt from your grid…' : prompt}
               className="input-field w-full rounded-xl p-3 text-xs custom-scrollbar"
-              style={{ fontFamily: 'ui-monospace, monospace', height: 180, resize: 'vertical', lineHeight: 1.5 }} />
+              style={{ fontFamily: 'ui-monospace, monospace', height: 340, resize: 'vertical', lineHeight: 1.55 }} />
           </div>
 
           {/* Step 2 — paste */}
