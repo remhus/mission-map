@@ -15,6 +15,8 @@ const SKILL_COLORS: Record<string, string> = {
 };
 const RANK_COLORS: Record<Rank, string> = { C: '#7CFF00', B: '#00A8FF', A: '#FF2BD6', S: '#FFB000' };
 
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 type Quest = {
   id: number;
   version: number;
@@ -86,6 +88,7 @@ export default function Quests() {
   const [state, setState] = useState<State | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enabling, setEnabling] = useState(false);
   const [detailRank, setDetailRank] = useState<Rank | null>(null);
@@ -98,6 +101,36 @@ export default function Quests() {
   }, []);
 
   useEffect(() => { fetchState(); }, [fetchState]);
+
+  async function pollBoard() {
+    for (let i = 0; i < 30; i++) {
+      await sleep(2000);
+      const res = await fetch('/api/weekly-quest');
+      if (!res.ok) continue;
+      const d: State = await res.json();
+      if (d.offers || d.quest || !d.generating) { setState(d); return; }
+    }
+    await fetchState();
+  }
+
+  // AI generation (Gemini) — available via the Generate / Rescan buttons.
+  async function aiGenerate(endpoint: '/api/weekly-quest/board' | '/api/weekly-quest/reroll') {
+    setBusy(true); setGenerating(true); setError(null);
+    try {
+      const res = await fetch(endpoint, { method: 'POST' });
+      if (res.status === 422) { setError('grid'); await fetchState(); return; }
+      if (res.status === 429) { setError('rate_limited'); return; }
+      if (res.status === 202) { await pollBoard(); return; }
+      if (!res.ok) { setError('failed'); return; }
+      const d = await res.json();
+      if (d.offers) setState(s => s ? { ...s, offers: d.offers, quest: null, rerollAvailable: true } : s);
+      else if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null } : s);
+      else await pollBoard();
+    } catch { setError('failed'); }
+    finally { setBusy(false); setGenerating(false); }
+  }
+  const generateBoard = () => aiGenerate('/api/weekly-quest/board');
+  const rescan = () => aiGenerate('/api/weekly-quest/reroll');
 
   async function enableFeature() {
     setEnabling(true);
@@ -206,11 +239,34 @@ export default function Quests() {
 
   const quest = state.quest;
 
+  // AI generation in progress.
+  if (!quest && generating) {
+    return (
+      <Shell>
+        <div className="rounded-2xl p-10 flex flex-col items-center text-center animate-fade-in" style={{ ...cardStyle, minHeight: 240 }} role="status" aria-live="polite">
+          <span className="material-symbols-outlined animate-spin mb-4" style={{ color: '#afc6ff', fontSize: '40px' }}>progress_activity</span>
+          <h2 className="text-lg font-black mb-1 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Generating quests…</h2>
+          <p className="text-sm text-muted">Reading your mission and building a quest for each rank.</p>
+        </div>
+      </Shell>
+    );
+  }
+
+  const boardActions = (
+    <>
+      <button onClick={rescan} disabled={busy} className="btn-ghost flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold">
+        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>autorenew</span>
+        Rescan
+      </button>
+      {adminLink}
+    </>
+  );
+
   // Board (choose one).
   if (!quest && state.offers) {
     const detail = detailRank ? state.offers.find(o => o.rank === detailRank) : null;
     return (
-      <Shell action={adminLink}>
+      <Shell action={boardActions}>
         <div className="grid gap-4 sm:grid-cols-2 stagger-children">
           {state.offers.map(o => {
             const cfg = RANK_CONFIG[o.rank];
@@ -235,6 +291,12 @@ export default function Quests() {
             );
           })}
         </div>
+        {error === 'rate_limited' && (
+          <div className="mt-4 rounded-xl p-3.5 flex items-center gap-2.5" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#ffd700' }}>hourglass_top</span>
+            <p className="text-sm text-ink-2">The AI hit its free-tier rate limit. Wait a minute and Rescan, or use Quest Admin to paste a board in.</p>
+          </div>
+        )}
         {error === 'failed' && <p className="text-sm text-danger mt-4">Something went wrong. Try again.</p>}
 
         {detail && (
@@ -265,17 +327,24 @@ export default function Quests() {
     );
   }
 
-  // Enabled but no board yet → send to admin.
+  // Enabled but no board yet → generate (AI) or use admin.
   if (!quest) {
     return (
-      <Shell action={adminLink}>
+      <Shell>
         <div className="rounded-2xl p-8 text-center animate-slide-up" style={cardStyle}>
           <span className="material-symbols-outlined mb-4" style={{ color: '#414655', fontSize: '48px' }}>playlist_add</span>
           <h2 className="text-lg font-black mb-2 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>No quests yet this week</h2>
-          <p className="text-sm text-muted mb-6 max-w-sm mx-auto">Generate a board in Quest Admin: copy the prompt into any LLM, then paste the JSON response back.</p>
-          <Link href="/quest-admin" className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>Open Quest Admin
-          </Link>
+          <p className="text-sm text-muted mb-6 max-w-sm mx-auto">Generate a board with AI, or build one in Quest Admin (copy the prompt into any LLM, paste the JSON back).</p>
+          {error === 'rate_limited' && <p className="text-sm mb-4 text-muted">The AI hit its free-tier rate limit. Wait a minute and try again, or use Quest Admin.</p>}
+          {error === 'failed' && <p className="text-sm text-danger mb-4">Something went wrong. Try again.</p>}
+          <div className="flex flex-wrap justify-center gap-3">
+            <button onClick={generateBoard} disabled={busy} className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>swords</span>Generate with AI
+            </button>
+            <Link href="/quest-admin" className="btn-ghost inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>Quest Admin
+            </Link>
+          </div>
         </div>
       </Shell>
     );
