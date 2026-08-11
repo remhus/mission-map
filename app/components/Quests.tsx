@@ -285,7 +285,6 @@ export default function Quests() {
 
     return (
       <Shell action={rescanBtn}>
-        <p className="text-sm text-muted mb-4">Choose one quest to take on this week, or rescan for a new set. Higher ranks demand more and reward more.</p>
         <div className="grid gap-4 sm:grid-cols-2 stagger-children">
           {state.offers.map(o => {
             const cfg = RANK_CONFIG[o.rank];
