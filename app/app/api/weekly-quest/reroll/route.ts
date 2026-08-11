@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
 import sql, { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { weekStartFor, type Rank } from '@/lib/weeklyQuest';
-import { fetchContext, runGeneration, shapeQuest, type QuestRow } from '@/lib/weeklyQuestServer';
+import { weekStartFor, RANKS, type Rank } from '@/lib/weeklyQuest';
+import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, type QuestRow } from '@/lib/weeklyQuestServer';
 
-// One reroll per week. Retires version 1 and generates version 2 at the same
-// rank. The reroll is only consumed once version 2 is validated and stored.
+// Reforge the board once per week: retire the version-1 offers and generate a
+// fresh set of four. Only allowed before a quest has been accepted.
 export async function POST() {
   await initDB();
   const user = await getUser();
@@ -19,75 +19,66 @@ export async function POST() {
   if (settings?.weekly_quests_enabled !== true) {
     return NextResponse.json({ error: 'Weekly quests are not enabled' }, { status: 403 });
   }
-
-  const allowed = await checkRateLimit(`wq-gen:${user.userId}`, 8, 3600);
-  if (!allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!(await checkRateLimit(`wq-gen:${user.userId}`, 16, 3600))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
 
   const weekStart = weekStartFor();
 
-  // Reroll requires an active, incomplete version 1.
-  const [v1] = await sql`
-    SELECT * FROM weekly_quests
-    WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 1 AND status = 'active'
+  // Cannot reforge once a quest is chosen.
+  const [locked] = await sql`
+    SELECT id FROM weekly_quests
+    WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND status IN ('active', 'completed')
     LIMIT 1
-  ` as QuestRow[] & { rank: string }[];
-  if (!v1) {
-    return NextResponse.json({ error: 'Reroll is not available' }, { status: 409 });
-  }
+  ` as { id: number }[];
+  if (locked) return NextResponse.json({ error: 'A quest is already active' }, { status: 409 });
 
-  const rank = v1.rank as Rank;
+  // Reforge only the first board.
+  const [v1] = await sql`
+    SELECT id FROM weekly_quests
+    WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 1 AND status = 'offered'
+    LIMIT 1
+  ` as { id: number }[];
+  if (!v1) return NextResponse.json({ error: 'Reforge is not available' }, { status: 409 });
 
-  // Claim version 2 — the unique constraint prevents a double reroll.
+  // Claim version 2 — the unique index prevents a double reforge.
   const [claim] = await sql`
     INSERT INTO weekly_quests (user_id, week_start, version, status, rank, created_at)
-    VALUES (${user.userId}, ${weekStart}::date, 2, 'generating', ${rank}, NOW())
-    ON CONFLICT (user_id, week_start, version) DO NOTHING
+    VALUES
+      (${user.userId}, ${weekStart}::date, 2, 'generating', 'C', NOW()),
+      (${user.userId}, ${weekStart}::date, 2, 'generating', 'B', NOW()),
+      (${user.userId}, ${weekStart}::date, 2, 'generating', 'A', NOW()),
+      (${user.userId}, ${weekStart}::date, 2, 'generating', 'S', NOW())
+    ON CONFLICT (user_id, week_start, version, rank) DO NOTHING
     RETURNING id
   ` as { id: number }[];
-
   if (!claim) {
-    // Version 2 already exists — reroll was already used.
-    const [existing2] = await sql`
+    // Version 2 already exists — reforge already used.
+    const rows = await sql`
       SELECT * FROM weekly_quests
-      WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 2
-      ORDER BY id DESC LIMIT 1
+      WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 2 AND status = 'offered'
     ` as QuestRow[];
-    if (existing2?.status === 'generating') return NextResponse.json({ generating: true }, { status: 202 });
-    if (existing2?.status === 'active' || existing2?.status === 'completed') {
-      return NextResponse.json({ quest: shapeQuest(existing2) });
+    if (rows.length) {
+      const order = (r: string) => RANKS.indexOf(r as Rank);
+      return NextResponse.json({ offers: rows.sort((a, b) => order((a as unknown as { rank: string }).rank) - order((b as unknown as { rank: string }).rank)).map(shapeQuest) });
     }
-    return NextResponse.json({ error: 'Reroll already used' }, { status: 409 });
+    return NextResponse.json({ generating: true }, { status: 202 });
   }
 
   const ctx = await fetchContext(user.userId);
-  const result = await runGeneration(rank, ctx);
-  const q = result.quest;
+  const results = await Promise.all(RANKS.map(r => runGeneration(r as Rank, ctx)));
+  await Promise.all(results.map(res => storeGeneratedQuest(user.userId, weekStart, 2, res)));
 
-  const [saved] = await sql`
-    UPDATE weekly_quests SET
-      status = 'active',
-      title = ${q.title},
-      instructions = ${q.instructions},
-      success_criteria = ${q.successCriteria},
-      rationale = ${q.rationale},
-      skill_xp = ${JSON.stringify(q.skillXp)}::jsonb,
-      duration_minutes = ${q.durationMinutes},
-      source_row_index = ${q.sourceRowIndex},
-      source_col_index = ${q.sourceColIndex},
-      source_pillar = ${q.sourcePillar},
-      provider = ${result.provider},
-      model = ${result.model},
-      failure_code = ${result.failureCode},
-      generated_at = NOW()
-    WHERE id = ${claim.id} AND user_id = ${user.userId}
-    RETURNING *
-  ` as QuestRow[];
-
-  // Retire version 1 only after version 2 is stored.
+  // Retire the version-1 offers once the new board is stored.
   await sql`
     UPDATE weekly_quests SET status = 'superseded'
-    WHERE id = ${v1.id} AND user_id = ${user.userId} AND status = 'active'
+    WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 1 AND status = 'offered'
   `;
 
-  return NextResponse.json({ quest: shapeQuest(saved) });
+  const rows = await sql`
+    SELECT * FROM weekly_quests
+    WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = 2 AND status = 'offered'
+  ` as QuestRow[];
+  const order = (r: string) => RANKS.indexOf(r as Rank);
+  return NextResponse.json({ offers: rows.sort((a, b) => order((a as unknown as { rank: string }).rank) - order((b as unknown as { rank: string }).rank)).map(shapeQuest) });
 }

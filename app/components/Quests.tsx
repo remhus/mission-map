@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { RANK_CONFIG, RANKS, SKILLS, type Rank } from '@/lib/weeklyQuest';
+import { RANK_CONFIG, SKILLS, type Rank } from '@/lib/weeklyQuest';
 
 // ── Skill presentation (mirrors dashboard) ──────────────────────────────────
 const SKILL_ICONS: Record<string, string> = {
@@ -16,24 +16,22 @@ const SKILL_COLORS: Record<string, string> = {
 };
 
 const SYS = '#8cc6ff'; // System blue
-
-// Ascending menace: grey → teal → System-blue → gold.
-const RANK_COLORS: Record<Rank, string> = {
-  C: '#8c90a1', B: '#4ecdc4', A: '#8cc6ff', S: '#ffd700',
-};
+const RANK_COLORS: Record<Rank, string> = { C: '#8c90a1', B: '#4ecdc4', A: '#8cc6ff', S: '#ffd700' };
 
 type Quest = {
   id: number;
   version: number;
   status: string;
   title: string;
-  instructions: string;
-  successCriteria: string;
-  rationale: string;
+  flavor: string;
+  objective: string;
+  victoryCondition: string;
   rank: Rank;
+  targetPillar: string;
+  targetSubCell: string;
   skillXp: Record<string, number>;
-  durationMinutes: number;
-  sourcePillar: string;
+  totalXp: number;
+  estHours: number;
   isFallback: boolean;
   completedAt: string | null;
 };
@@ -44,36 +42,65 @@ type State = {
   weekStart: string;
   weekLabel: string;
   gridReady: 'empty' | 'goal-only' | 'ready';
+  boardVersion: number;
   generating: boolean;
   rerollAvailable: boolean;
+  offers: Quest[] | null;
   quest: Quest | null;
 };
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-// Four sharp corner ticks — the tell of a System window.
 function Corners({ color = SYS }: { color?: string }) {
-  const base: React.CSSProperties = { position: 'absolute', width: 13, height: 13, pointerEvents: 'none' };
+  const b: React.CSSProperties = { position: 'absolute', width: 12, height: 12, pointerEvents: 'none' };
   return (
     <>
-      <span style={{ ...base, top: -1, left: -1, borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
-      <span style={{ ...base, top: -1, right: -1, borderTop: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
-      <span style={{ ...base, bottom: -1, left: -1, borderBottom: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
-      <span style={{ ...base, bottom: -1, right: -1, borderBottom: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <span style={{ ...b, top: -1, left: -1, borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <span style={{ ...b, top: -1, right: -1, borderTop: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
+      <span style={{ ...b, bottom: -1, left: -1, borderBottom: `2px solid ${color}`, borderLeft: `2px solid ${color}` }} />
+      <span style={{ ...b, bottom: -1, right: -1, borderBottom: `2px solid ${color}`, borderRight: `2px solid ${color}` }} />
     </>
+  );
+}
+
+function Sigil({ rank, size = 44 }: { rank: Rank; size?: number }) {
+  const color = RANK_COLORS[rank];
+  return (
+    <div className="rounded-lg flex items-center justify-center font-black flex-shrink-0"
+      style={{ width: size, height: size, fontSize: size * 0.45, background: `${color}22`, border: `1px solid ${color}66`, color, fontFamily: 'var(--font-jakarta)', textShadow: `0 0 12px ${color}` }}>
+      {rank}
+    </div>
+  );
+}
+
+function Rewards({ skillXp, total, glow }: { skillXp: Record<string, number>; total: number; glow?: boolean }) {
+  const active = SKILLS.filter(s => (skillXp[s] || 0) > 0);
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {active.map(s => (
+        <span key={s} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold"
+          style={{ background: `${SKILL_COLORS[s]}14`, border: `1px solid ${SKILL_COLORS[s]}40`, color: SKILL_COLORS[s], boxShadow: glow ? `0 0 10px ${SKILL_COLORS[s]}30` : 'none' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>{SKILL_ICONS[s]}</span>
+          <span className="capitalize">{s}</span>
+          <span style={{ color: '#e4e1e9' }}>+{skillXp[s]}</span>
+        </span>
+      ))}
+      {active.length === 0 && <span className="text-xs text-faint">—</span>}
+    </div>
   );
 }
 
 export default function Quests() {
   const [state, setState] = useState<State | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedRank, setSelectedRank] = useState<Rank | null>(null);
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rerollConfirm, setRerollConfirm] = useState(false);
   const [enabling, setEnabling] = useState(false);
+  const [detailRank, setDetailRank] = useState<Rank | null>(null); // open offer detail
+  const [confirmAccept, setConfirmAccept] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const autoTriggered = useRef(false);
 
   const fetchState = useCallback(async () => {
     const res = await fetch('/api/weekly-quest');
@@ -82,6 +109,41 @@ export default function Quests() {
   }, []);
 
   useEffect(() => { fetchState(); }, [fetchState]);
+
+  async function pollBoard() {
+    for (let i = 0; i < 30; i++) {
+      await sleep(2000);
+      const res = await fetch('/api/weekly-quest');
+      if (!res.ok) continue;
+      const d: State = await res.json();
+      if (d.offers || d.quest || !d.generating) { setState(d); return; }
+    }
+    await fetchState();
+  }
+
+  const generateBoard = useCallback(async () => {
+    setBusy(true); setGenerating(true); setError(null);
+    try {
+      const res = await fetch('/api/weekly-quest/board', { method: 'POST' });
+      if (res.status === 422) { setError('grid'); await fetchState(); return; }
+      if (res.status === 202) { await pollBoard(); return; }
+      if (!res.ok) { setError('failed'); return; }
+      const d = await res.json();
+      if (d.offers) setState(s => s ? { ...s, offers: d.offers, generating: false, rerollAvailable: true } : s);
+      else if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null } : s);
+      else await pollBoard();
+    } catch { setError('failed'); }
+    finally { setBusy(false); setGenerating(false); }
+  }, [fetchState]);
+
+  // Auto-forge the board on first visit when eligible and none exists yet.
+  useEffect(() => {
+    if (autoTriggered.current || !state) return;
+    if (state.enabled && state.gridReady !== 'empty' && !state.offers && !state.quest && !state.generating) {
+      autoTriggered.current = true;
+      generateBoard();
+    }
+  }, [state, generateBoard]);
 
   async function enableFeature() {
     setEnabling(true);
@@ -93,47 +155,32 @@ export default function Quests() {
     setEnabling(false);
   }
 
-  async function pollUntilReady() {
-    for (let i = 0; i < 30; i++) {
-      await sleep(2000);
-      const res = await fetch('/api/weekly-quest');
-      if (!res.ok) continue;
-      const d: State = await res.json();
-      if (d.quest || !d.generating) { setState(d); return; }
-    }
-    await fetchState();
-  }
-
-  async function beginQuest() {
-    if (!selectedRank) return;
-    setBusy(true); setGenerating(true); setError(null);
-    try {
-      const res = await fetch('/api/weekly-quest/ensure', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rank: selectedRank }),
-      });
-      if (res.status === 422) { setError('grid'); await fetchState(); return; }
-      if (res.status === 202) { await pollUntilReady(); return; }
-      if (!res.ok) { setError('failed'); return; }
-      const d = await res.json();
-      if (d.quest) setState(s => s ? { ...s, quest: d.quest, generating: false, rerollAvailable: d.quest.version === 1 && d.quest.status === 'active' } : s);
-      else await pollUntilReady();
-    } catch { setError('failed'); }
-    finally { setBusy(false); setGenerating(false); }
-  }
-
-  async function doReroll() {
-    setRerollConfirm(false);
+  async function reforge() {
     setBusy(true); setGenerating(true); setError(null);
     try {
       const res = await fetch('/api/weekly-quest/reroll', { method: 'POST' });
-      if (res.status === 202) { await pollUntilReady(); return; }
+      if (res.status === 202) { await pollBoard(); return; }
       if (!res.ok) { setError('failed'); return; }
       const d = await res.json();
-      if (d.quest) setState(s => s ? { ...s, quest: d.quest, rerollAvailable: false } : s);
-      else await pollUntilReady();
+      if (d.offers) setState(s => s ? { ...s, offers: d.offers, rerollAvailable: false } : s);
+      else await pollBoard();
     } catch { setError('failed'); }
     finally { setBusy(false); setGenerating(false); }
+  }
+
+  async function acceptQuest(rank: Rank) {
+    setConfirmAccept(false); setDetailRank(null);
+    setBusy(true); setError(null);
+    try {
+      const res = await fetch('/api/weekly-quest/select', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rank }),
+      });
+      if (!res.ok) { setError('failed'); return; }
+      const d = await res.json();
+      if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null, rerollAvailable: false } : s);
+    } catch { setError('failed'); }
+    finally { setBusy(false); }
   }
 
   async function completeQuest() {
@@ -147,23 +194,22 @@ export default function Quests() {
       if (res.ok) {
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 1200);
-        setState(s => s && s.quest ? { ...s, quest: { ...s.quest, status: 'completed' }, rerollAvailable: false } : s);
+        setState(s => s && s.quest ? { ...s, quest: { ...s.quest, status: 'completed' } } : s);
       } else setError('failed');
     } catch { setError('failed'); }
     finally { setBusy(false); }
   }
 
-  // ── Shell + System header ──
-  function Shell({ children }: { children: React.ReactNode }) {
+  function Shell({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-      <div className="px-4 md:px-8 py-6 max-w-2xl mx-auto">
+      <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto">
         <div className="mb-7">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-sm sys-glow" style={{ color: SYS }}>◈</span>
             <p className="sys-mono text-[11px] font-bold uppercase" style={{ color: SYS }}>The System</p>
             {state && <span className="sys-mono text-[10px] uppercase ml-auto" style={{ color: 'rgba(140,198,255,0.5)' }}>{state.weekLabel}</span>}
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>Weekly Quest</h1>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>{title}</h1>
         </div>
         {children}
       </div>
@@ -171,34 +217,26 @@ export default function Quests() {
   }
 
   if (loading) {
-    return (
-      <Shell>
-        <div className="sys-panel rounded-xl p-8" style={{ minHeight: 260, opacity: 0.6 }}>
-          <div className="sys-scanbar" />
-        </div>
-      </Shell>
-    );
+    return <Shell title="Boss Board"><div className="sys-panel rounded-xl p-8" style={{ minHeight: 260, opacity: 0.6 }}><div className="sys-scanbar" /></div></Shell>;
   }
-
-  if (!state) return <Shell><p className="text-muted">The System is unreachable.</p></Shell>;
+  if (!state) return <Shell title="Boss Board"><p className="text-muted">The System is unreachable.</p></Shell>;
 
   // ── Not linked → awakening ──
   if (!state.enabled) {
     return (
-      <Shell>
+      <Shell title="Boss Board">
         <div className="sys-panel rounded-xl p-7 md:p-9 sys-appear text-center">
           <Corners />
           <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center sys-pulse"
-              style={{ background: 'radial-gradient(circle, rgba(140,198,255,0.25), transparent 70%)' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center sys-pulse" style={{ background: 'radial-gradient(circle, rgba(140,198,255,0.25), transparent 70%)' }}>
               <span className="text-3xl sys-glow" style={{ color: SYS }}>◈</span>
             </div>
           </div>
           <p className="sys-mono text-[11px] font-bold uppercase mb-3" style={{ color: SYS }}>[ Notification ]</p>
           <h2 className="text-2xl font-black mb-3 text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>You have been chosen.</h2>
           <p className="text-sm leading-relaxed text-ink-2 max-w-md mx-auto mb-6">
-            Each week the System will forge a single trial from your Mission — your grid, your growth, and the quests
-            you have already conquered. Clear it, and its power becomes yours. You set the difficulty.
+            Each week the System posts a board of Boss Fights forged from your Mission — one at every rank. Pick your battle,
+            or reforge the board. Clear it and its power is yours. These are not chores; they are milestones.
           </p>
           <button onClick={enableFeature} disabled={enabling}
             className="relative inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg font-bold text-sm uppercase tracking-wider transition-all"
@@ -207,8 +245,7 @@ export default function Quests() {
             {enabling ? 'Linking…' : 'Link to the System'}
           </button>
           <p className="text-[11px] leading-relaxed mt-5 max-w-md mx-auto" style={{ color: 'rgba(140,144,161,0.7)' }}>
-            To divine each trial the System consults an external oracle (Google Gemini); the text it reads leaves your device.
-            Sever the link anytime in Settings.
+            To forge each board the System consults an external oracle (Google Gemini); the text it reads leaves your device. Sever anytime in Settings.
           </p>
         </div>
       </Shell>
@@ -218,15 +255,14 @@ export default function Quests() {
   // ── Grid too empty ──
   if (state.gridReady === 'empty' || error === 'grid') {
     return (
-      <Shell>
+      <Shell title="Boss Board">
         <div className="sys-panel rounded-xl p-8 text-center sys-appear">
           <Corners color="#8c90a1" />
           <span className="material-symbols-outlined mb-3 sys-pulse" style={{ color: SYS, fontSize: '44px' }}>grid_view</span>
           <p className="sys-mono text-[11px] font-bold uppercase mb-2" style={{ color: 'rgba(140,198,255,0.7)' }}>[ Signal Lost ]</p>
           <h2 className="text-lg font-black mb-2 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>The System cannot read your Mission</h2>
-          <p className="text-sm text-muted mb-6 max-w-sm mx-auto">Inscribe your ultimate goal at the centre of the grid and at least one pillar around it. Only then can a trial be forged.</p>
-          <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider"
-            style={{ background: 'rgba(140,198,255,0.1)', border: `1px solid ${SYS}55`, color: SYS }}>
+          <p className="text-sm text-muted mb-6 max-w-sm mx-auto">Inscribe your ultimate goal at the centre of the grid and at least one pillar around it. Only then can bosses be forged.</p>
+          <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider" style={{ background: 'rgba(140,198,255,0.1)', border: `1px solid ${SYS}55`, color: SYS }}>
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
             Inscribe Your Mission
           </Link>
@@ -236,215 +272,215 @@ export default function Quests() {
   }
 
   const quest = state.quest;
-  const isCompleted = quest?.status === 'completed';
 
-  // ── Forging ──
-  if (generating || state.generating || (busy && !quest)) {
+  // ── Forging the board ──
+  if (!quest && (generating || state.generating || (busy && !state.offers))) {
     return (
-      <Shell>
+      <Shell title="Boss Board">
         <div className="sys-panel rounded-xl p-8 flex flex-col items-center text-center overflow-hidden" role="status" aria-live="polite" style={{ minHeight: 260 }}>
           <div className="sys-scanbar" />
           <Corners />
           <span className="text-3xl mb-5 sys-pulse sys-glow" style={{ color: SYS }}>◈</span>
-          <h2 className="text-lg font-black mb-4 text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>Forging your trial…</h2>
+          <h2 className="text-lg font-black mb-4 text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>Forging your bosses…</h2>
           <div className="sys-mono text-[11px] leading-6 text-left" style={{ color: 'rgba(140,198,255,0.65)' }}>
             <p>&gt; reading mandala grid</p>
-            <p>&gt; weighing your pillars</p>
-            <p className="sys-pulse" style={{ color: SYS }}>&gt; inscribing the quest_</p>
+            <p>&gt; scouting weak pillars</p>
+            <p className="sys-pulse" style={{ color: SYS }}>&gt; summoning four bosses_</p>
           </div>
         </div>
       </Shell>
     );
   }
 
-  // ── Difficulty select ──
-  if (!quest) {
+  // ── Quest Board (choose one) ──
+  if (!quest && state.offers) {
+    const detail = detailRank ? state.offers.find(o => o.rank === detailRank) : null;
     return (
-      <Shell>
+      <Shell title="Boss Board">
         <div className="sys-appear">
-          <p className="sys-mono text-[11px] font-bold uppercase mb-1" style={{ color: SYS }}>[ Select Difficulty ]</p>
-          <p className="text-sm text-muted mb-5">Higher gates demand more, and grant more power. Choose the trial you will face this week.</p>
-          <div className="grid gap-3 sm:grid-cols-2 mb-6" role="radiogroup" aria-label="Quest rank">
-            {RANKS.map((r, i) => {
-              const cfg = RANK_CONFIG[r];
-              const active = selectedRank === r;
-              const color = RANK_COLORS[r];
+          <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
+            <p className="sys-mono text-[11px] font-bold uppercase" style={{ color: SYS }}>[ Choose Your Boss ]</p>
+            {state.rerollAvailable && (
+              <button onClick={reforge} disabled={busy}
+                className="btn-ghost flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider">
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>autorenew</span>
+                Reforge Board · 1
+              </button>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {state.offers.map((o, i) => {
+              const color = RANK_COLORS[o.rank];
+              const cfg = RANK_CONFIG[o.rank];
               return (
-                <button key={r} role="radio" aria-checked={active}
-                  onClick={() => setSelectedRank(r)}
-                  className="relative text-left rounded-lg p-4 transition-all sys-appear"
-                  style={{
-                    animationDelay: `${i * 60}ms`,
-                    background: active ? `${color}1c` : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${active ? color : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? `0 0 22px ${color}44` : 'none',
-                  }}>
-                  {active && <Corners color={color} />}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-11 h-11 rounded-lg flex items-center justify-center font-black text-xl flex-shrink-0"
-                      style={{ background: `${color}22`, border: `1px solid ${color}66`, color, fontFamily: 'var(--font-jakarta)', textShadow: `0 0 12px ${color}88` }}>
-                      {r}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="sys-mono text-[10px] uppercase" style={{ color: 'rgba(193,198,216,0.5)' }}>Gate Rank {r}</p>
-                      <p className="text-sm font-bold text-ink">{cfg.minMinutes}–{cfg.maxMinutes} min · <span style={{ color }}>{cfg.minXp}–{cfg.maxXp} XP</span></p>
+                <button key={o.rank} onClick={() => setDetailRank(o.rank)}
+                  className={`relative text-left rounded-xl p-4 flex flex-col gap-3 transition-all sys-appear ${o.rank === 'S' ? 'sys-panel sys-panel-gold' : 'sys-panel'}`}
+                  style={{ animationDelay: `${i * 70}ms` }}>
+                  <div className="flex items-center gap-3">
+                    <Sigil rank={o.rank} />
+                    <div className="min-w-0 flex-1">
+                      <p className="sys-mono text-[10px] uppercase" style={{ color: `${color}cc` }}>Rank {o.rank} · {cfg.friction.split('—')[1]?.trim() || ''}</p>
+                      <h3 className="text-base font-black text-white leading-tight" style={{ fontFamily: 'var(--font-jakarta)' }}>{o.title}</h3>
                     </div>
                   </div>
-                  <p className="text-xs leading-relaxed text-muted">{cfg.blurb}</p>
+                  <p className="text-xs leading-relaxed text-ink-2 italic" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.flavor}</p>
+                  <div className="flex items-center justify-between gap-2 mt-auto">
+                    <span className="sys-mono text-[11px] font-bold" style={{ color }}>{o.totalXp} XP</span>
+                    <span className="sys-mono text-[10px] uppercase flex items-center gap-1" style={{ color: 'rgba(193,198,216,0.5)' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>schedule</span>~{o.estHours}h
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider" style={{ background: `${color}18`, border: `1px solid ${color}55`, color }}>
+                    View & Accept <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>chevron_right</span>
+                  </div>
                 </button>
               );
             })}
           </div>
-          {state.gridReady === 'goal-only' && (
-            <p className="text-xs text-muted mb-4 flex items-center gap-1.5">
-              <span className="material-symbols-outlined" style={{ fontSize: '15px', color: SYS }}>lightbulb</span>
-              Only your ultimate goal is inscribed — this trial will help you forge your first pillar.
-            </p>
-          )}
-          {error === 'failed' && <p className="text-sm text-danger mb-3 sys-mono uppercase text-[12px]">[ System error — try again ]</p>}
-          <button onClick={beginQuest} disabled={!selectedRank || busy}
-            className="btn-primary flex items-center justify-center gap-2 px-7 py-3 rounded-lg font-bold text-sm uppercase tracking-wider w-full sm:w-auto">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bolt</span>
-            Summon {selectedRank ? `Rank ${selectedRank} ` : ''}Trial
+          {error === 'failed' && <p className="text-sm text-danger sys-mono uppercase text-[12px] mt-4">[ System error — try again ]</p>}
+        </div>
+
+        {/* Offer detail / accept */}
+        {detail && (
+          <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center p-4 animate-fade-in"
+            style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} onClick={() => { setDetailRank(null); setConfirmAccept(false); }}>
+            <div className={`w-full max-w-md rounded-xl sys-appear ${detail.rank === 'S' ? 'sys-panel sys-panel-gold' : 'sys-panel'}`}
+              style={{ maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+              <Corners color={RANK_COLORS[detail.rank]} />
+              <QuestBody quest={detail} />
+              <div className="px-6 pb-6 flex flex-col gap-2">
+                {confirmAccept ? (
+                  <>
+                    <p className="sys-mono text-[11px] uppercase text-center mb-1" style={{ color: 'rgba(255,180,171,0.9)' }}>This locks your week — the board is spent.</p>
+                    <button onClick={() => acceptQuest(detail.rank)} disabled={busy}
+                      className="btn-primary w-full py-3 rounded-lg font-bold text-sm uppercase tracking-wider">
+                      {busy ? 'Engaging…' : `Engage the ${detail.rank}-Rank Boss`}
+                    </button>
+                    <button onClick={() => setConfirmAccept(false)} className="btn-quiet w-full py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wider">Not yet</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => setConfirmAccept(true)}
+                      className="w-full py-3 rounded-lg font-bold text-sm uppercase tracking-wider"
+                      style={{ background: `${RANK_COLORS[detail.rank]}1c`, border: `1px solid ${RANK_COLORS[detail.rank]}`, color: RANK_COLORS[detail.rank], boxShadow: `0 0 20px ${RANK_COLORS[detail.rank]}33` }}>
+                      Accept This Boss
+                    </button>
+                    <button onClick={() => setDetailRank(null)} className="btn-quiet w-full py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wider">Back to board</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Shell>
+    );
+  }
+
+  // ── No quest and no offers (edge): prompt to summon ──
+  if (!quest) {
+    return (
+      <Shell title="Boss Board">
+        <div className="sys-panel rounded-xl p-8 text-center sys-appear">
+          <Corners />
+          <p className="sys-mono text-[11px] font-bold uppercase mb-3" style={{ color: SYS }}>[ Standby ]</p>
+          <h2 className="text-lg font-black mb-4 text-white sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>No bosses posted this week</h2>
+          {error === 'failed' && <p className="text-sm text-danger sys-mono uppercase text-[12px] mb-3">[ System error — try again ]</p>}
+          <button onClick={generateBoard} disabled={busy} className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-sm uppercase tracking-wider">
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>bolt</span>Summon the Board
           </button>
         </div>
       </Shell>
     );
   }
 
-  // ── Active / completed quest window ──
+  // ── Active / completed boss ──
   const color = RANK_COLORS[quest.rank];
-  const activeSkills = SKILLS.filter(s => (quest.skillXp[s] || 0) > 0);
+  const isCompleted = quest.status === 'completed';
   const panelClass = isCompleted ? 'sys-panel sys-panel-done' : quest.rank === 'S' ? 'sys-panel sys-panel-gold' : 'sys-panel';
 
   return (
-    <Shell>
+    <Shell title="Boss Fight">
       <div className={`${panelClass} rounded-xl overflow-hidden sys-appear ${celebrate ? 'celebrate-burst' : ''}`}>
         <Corners color={isCompleted ? '#c3f400' : color} />
-
-        {/* System window title bar */}
-        <div className="flex items-center gap-2 px-5 py-2.5" style={{ borderBottom: `1px solid ${color}33`, background: `${color}12` }}>
-          <span className="sys-glow" style={{ color }}>◈</span>
-          <p className="sys-mono text-[11px] font-bold uppercase" style={{ color }}>
-            {isCompleted ? 'Quest Cleared' : quest.version === 2 ? 'Quest · Reforged' : 'Quest'}
-          </p>
-          <span className="sys-mono text-[10px] uppercase ml-auto flex items-center gap-1" style={{ color: 'rgba(193,198,216,0.5)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>schedule</span>{quest.durationMinutes}m
-          </span>
-        </div>
-
-        <div className="px-6 pt-5 pb-6">
-          {/* Rank sigil + title */}
-          <div className="flex items-start gap-4 mb-5">
-            <div className="w-14 h-14 rounded-lg flex items-center justify-center font-black text-2xl flex-shrink-0"
-              style={{ background: `${color}22`, border: `1px solid ${color}66`, color, fontFamily: 'var(--font-jakarta)', textShadow: `0 0 14px ${color}` }}>
-              {quest.rank}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-xl md:text-2xl font-black text-white leading-tight sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>{quest.title}</h2>
-              {quest.sourcePillar && (
-                <p className="sys-mono text-[10px] uppercase mt-1 truncate" style={{ color: 'rgba(140,198,255,0.6)' }}>via {quest.sourcePillar}</p>
-              )}
-            </div>
-            {isCompleted && (
-              <span className="sys-stamp sys-mono text-[11px] font-black uppercase px-2 py-1 rounded flex-shrink-0"
-                style={{ border: '2px solid #c3f400', color: '#c3f400', textShadow: '0 0 10px rgba(195,244,0,0.6)' }}>Clear</span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <Field label="Objective" color={color}><p className="text-sm leading-relaxed text-ink-2">{quest.instructions}</p></Field>
-            <Field label="Clear Condition" color={color}><p className="text-sm leading-relaxed text-ink-2">{quest.successCriteria}</p></Field>
-            {quest.rationale && (
-              <Field label="System Note" color={color}><p className="text-sm leading-relaxed text-muted italic">{quest.rationale}</p></Field>
-            )}
-
-            {/* Rewards */}
-            <div>
-              <p className="sys-mono text-[11px] font-bold uppercase mb-2.5" style={{ color: 'rgba(140,198,255,0.7)' }}>
-                ◆ Rewards {isCompleted ? '· Absorbed' : ''}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {activeSkills.map(s => (
-                  <span key={s} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold"
-                    style={{ background: `${SKILL_COLORS[s]}14`, border: `1px solid ${SKILL_COLORS[s]}40`, color: SKILL_COLORS[s], boxShadow: isCompleted ? `0 0 10px ${SKILL_COLORS[s]}30` : 'none' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>{SKILL_ICONS[s]}</span>
-                    <span className="capitalize">{s}</span>
-                    <span style={{ color: '#e4e1e9' }}>+{quest.skillXp[s]}</span>
-                  </span>
-                ))}
-                {activeSkills.length === 0 && <span className="text-xs text-faint">—</span>}
+        <QuestBody quest={quest} completed={isCompleted} celebrate={celebrate} />
+        <div className="px-6 pb-6">
+          {!isCompleted ? (
+            <button onClick={completeQuest} disabled={busy}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm uppercase tracking-wider transition-all"
+              style={{ background: `${color}1c`, border: `1px solid ${color}`, color, boxShadow: `0 0 20px ${color}33` }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span>
+              {busy ? 'Recording…' : 'Boss Defeated'}
+            </button>
+          ) : (
+            <div className="rounded-lg p-4 flex items-center gap-3" style={{ background: 'rgba(195,244,0,0.06)', border: '1px solid rgba(195,244,0,0.22)' }}>
+              <span className="material-symbols-outlined celebrate-icon" style={{ fontSize: '24px', color: '#c3f400' }}>military_tech</span>
+              <div>
+                <p className="text-sm font-bold text-ink">Boss defeated — {quest.totalXp} XP absorbed.</p>
+                <p className="sys-mono text-[10px] uppercase" style={{ color: 'rgba(140,144,161,0.8)' }}>A new board is posted next week</p>
               </div>
             </div>
-
-            {quest.isFallback && !isCompleted && (
-              <p className="sys-mono text-[10px] uppercase flex items-center gap-1.5" style={{ color: 'rgba(140,144,161,0.7)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>wifi_off</span>
-                Oracle offline — trial forged by the System alone
-              </p>
-            )}
-
-            {/* Actions */}
-            {!isCompleted ? (
-              <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                <button onClick={completeQuest} disabled={busy}
-                  className="relative flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm uppercase tracking-wider transition-all"
-                  style={{ background: `${color}1c`, border: `1px solid ${color}`, color, boxShadow: `0 0 20px ${color}33` }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span>
-                  {busy ? 'Recording…' : 'Clear Quest'}
-                </button>
-                {state.rerollAvailable && (
-                  <button onClick={() => setRerollConfirm(true)} disabled={busy}
-                    className="btn-ghost flex items-center justify-center gap-2 py-3 px-5 rounded-lg font-bold text-sm uppercase tracking-wider">
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>autorenew</span>
-                    Reforge · 1
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="rounded-lg p-4 flex items-center gap-3" style={{ background: 'rgba(195,244,0,0.06)', border: '1px solid rgba(195,244,0,0.22)' }}>
-                <span className="material-symbols-outlined celebrate-icon" style={{ fontSize: '24px', color: '#c3f400' }}>military_tech</span>
-                <div>
-                  <p className="text-sm font-bold text-ink">Power absorbed.</p>
-                  <p className="sys-mono text-[10px] uppercase" style={{ color: 'rgba(140,144,161,0.8)' }}>The System will issue a new trial next week</p>
-                </div>
-              </div>
-            )}
-
-            {error === 'failed' && <p className="text-sm text-danger sys-mono uppercase text-[12px]">[ System error — try again ]</p>}
-          </div>
+          )}
+          {error === 'failed' && <p className="text-sm text-danger sys-mono uppercase text-[12px] mt-3">[ System error — try again ]</p>}
         </div>
       </div>
-
-      {/* Reforge confirmation */}
-      {rerollConfirm && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-fade-in"
-          style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setRerollConfirm(false)} role="dialog" aria-modal="true" aria-label="Confirm reforge">
-          <div className="sys-panel rounded-xl p-6 w-full max-w-sm sys-appear" onClick={e => e.stopPropagation()}>
-            <Corners />
-            <p className="sys-mono text-[11px] font-bold uppercase mb-3" style={{ color: SYS }}>[ Confirm ]</p>
-            <h3 className="font-black text-base text-white mb-2 sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>Reject this trial?</h3>
-            <p className="text-sm mb-5 leading-relaxed text-ink-2">
-              The System permits <strong>one reforging each week</strong>. This discards your current Rank {quest.rank} quest for a new one at the same rank. It cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setRerollConfirm(false)} className="btn-quiet flex-1 py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wider">Keep it</button>
-              <button onClick={doReroll} className="flex-1 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wider"
-                style={{ background: 'rgba(140,198,255,0.14)', border: `1px solid ${SYS}`, color: SYS }}>Reforge</button>
-            </div>
-          </div>
-        </div>
-      )}
     </Shell>
   );
 }
 
-function Field({ label, color, children }: { label: string; color: string; children: React.ReactNode }) {
+// Shared quest window body (used by the board detail modal + the active view).
+function QuestBody({ quest, completed, celebrate }: { quest: Quest; completed?: boolean; celebrate?: boolean }) {
+  const color = RANK_COLORS[quest.rank];
   return (
-    <div>
-      <p className="sys-mono text-[11px] font-bold uppercase mb-1.5" style={{ color: `${color}bb` }}>▸ {label}</p>
-      {children}
-    </div>
+    <>
+      <div className="flex items-center gap-2 px-5 py-2.5" style={{ borderBottom: `1px solid ${color}33`, background: `${color}12` }}>
+        <span className="sys-glow" style={{ color }}>◈</span>
+        <p className="sys-mono text-[11px] font-bold uppercase" style={{ color }}>{completed ? 'Boss Defeated' : `Rank ${quest.rank} Boss`}</p>
+        <span className="sys-mono text-[10px] uppercase ml-auto flex items-center gap-1" style={{ color: 'rgba(193,198,216,0.5)' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>schedule</span>~{quest.estHours}h
+        </span>
+      </div>
+
+      <div className="px-6 pt-5 pb-5">
+        <div className="flex items-start gap-4 mb-4">
+          <Sigil rank={quest.rank} size={52} />
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-black text-white leading-tight sys-glow" style={{ fontFamily: 'var(--font-jakarta)' }}>{quest.title}</h2>
+            {(quest.targetPillar || quest.targetSubCell) && (
+              <p className="sys-mono text-[10px] uppercase mt-1 truncate" style={{ color: 'rgba(140,198,255,0.6)' }}>
+                {quest.targetPillar}{quest.targetSubCell ? ` › ${quest.targetSubCell}` : ''}
+              </p>
+            )}
+          </div>
+          {completed && (
+            <span className={`${celebrate ? 'sys-stamp' : ''} sys-mono text-[11px] font-black uppercase px-2 py-1 rounded flex-shrink-0`}
+              style={{ border: '2px solid #c3f400', color: '#c3f400', textShadow: '0 0 10px rgba(195,244,0,0.6)' }}>Clear</span>
+          )}
+        </div>
+
+        {quest.flavor && <p className="text-sm leading-relaxed text-ink-2 italic mb-4" style={{ borderLeft: `2px solid ${color}55`, paddingLeft: 12 }}>{quest.flavor}</p>}
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="sys-mono text-[11px] font-bold uppercase mb-1.5" style={{ color: `${color}bb` }}>▸ Objective</p>
+            <p className="text-sm leading-relaxed text-ink-2">{quest.objective}</p>
+          </div>
+          <div>
+            <p className="sys-mono text-[11px] font-bold uppercase mb-1.5" style={{ color: `${color}bb` }}>▸ Victory Condition</p>
+            <p className="text-sm leading-relaxed text-ink-2">{quest.victoryCondition}</p>
+          </div>
+          <div>
+            <p className="sys-mono text-[11px] font-bold uppercase mb-2.5" style={{ color: 'rgba(140,198,255,0.7)' }}>◆ Rewards · {quest.totalXp} XP {completed ? '· Absorbed' : ''}</p>
+            <Rewards skillXp={quest.skillXp} total={quest.totalXp} glow={completed} />
+          </div>
+          {quest.isFallback && !completed && (
+            <p className="sys-mono text-[10px] uppercase flex items-center gap-1.5" style={{ color: 'rgba(140,144,161,0.7)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>wifi_off</span>
+              Oracle offline — boss forged by the System alone
+            </p>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

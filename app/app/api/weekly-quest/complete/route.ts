@@ -36,15 +36,18 @@ export async function POST(req: NextRequest) {
   }
 
   const xp = completed.skill_xp || {};
-  // Award each non-zero skill as points into skill_stats (same store the radar reads).
+  // Boss fights pay REAL XP (1 XP = 1 hour = 60 points), unlike raw daily-task
+  // minutes. So award skillXp * 60 points into skill_stats (the store the radar
+  // reads as floor(points/60) XP).
   for (const s of SKILLS as readonly Skill[]) {
-    const amount = Math.max(0, Math.floor(Number(xp[s]) || 0));
-    if (amount <= 0) continue;
+    const questXp = Math.max(0, Math.floor(Number(xp[s]) || 0));
+    if (questXp <= 0) continue;
+    const points = questXp * 60;
     await sql`
       INSERT INTO skill_stats (user_id, skill, points)
-      VALUES (${user.userId}, ${s}, ${amount})
+      VALUES (${user.userId}, ${s}, ${points})
       ON CONFLICT (user_id, skill)
-      DO UPDATE SET points = LEAST(60000, skill_stats.points + ${amount}), updated_at = NOW()
+      DO UPDATE SET points = LEAST(60000, skill_stats.points + ${points}), updated_at = NOW()
     `;
   }
 

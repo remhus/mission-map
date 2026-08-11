@@ -97,6 +97,39 @@ export async function runGeneration(rank: Rank, ctx: QuestContext): Promise<Gene
   return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp), provider: 'deterministic-fallback', model: null, failureCode: outcome.failureCode };
 }
 
+// Write a generated quest into its pre-claimed board row (status → 'offered').
+export async function storeGeneratedQuest(
+  userId: string,
+  weekStart: string,
+  version: number,
+  result: GenerationResult,
+): Promise<QuestRow> {
+  const q = result.quest;
+  const [saved] = await sql`
+    UPDATE weekly_quests SET
+      status = 'offered',
+      title = ${q.title},
+      flavor = ${q.flavor},
+      instructions = ${q.objective},
+      success_criteria = ${q.victoryCondition},
+      rationale = '',
+      skill_xp = ${JSON.stringify(q.skillXp)}::jsonb,
+      duration_minutes = ${q.estHours * 60},
+      est_hours = ${q.estHours},
+      source_row_index = ${q.sourceRowIndex},
+      source_col_index = ${q.sourceColIndex},
+      source_pillar = ${q.targetPillar},
+      target_sub_cell = ${q.targetSubCell},
+      provider = ${result.provider},
+      model = ${result.model},
+      failure_code = ${result.failureCode},
+      generated_at = NOW()
+    WHERE user_id = ${userId} AND week_start = ${weekStart}::date AND version = ${version} AND rank = ${q.rank}
+    RETURNING *
+  ` as QuestRow[];
+  return saved;
+}
+
 // Shape a DB row into the client payload (never leaks failure internals except
 // a coarse provider flag).
 export type QuestRow = {
@@ -105,30 +138,35 @@ export type QuestRow = {
   version: number;
   status: string;
   title: string;
-  instructions: string;
-  success_criteria: string;
-  rationale: string;
+  instructions: string;       // objective
+  success_criteria: string;   // victory condition
+  flavor: string;
   rank: string;
   skill_xp: Record<string, number>;
-  duration_minutes: number;
-  source_pillar: string;
+  est_hours: number;
+  source_pillar: string;      // target pillar
+  target_sub_cell: string;
   provider: string;
   completed_at: string | null;
 };
 
 export function shapeQuest(row: QuestRow) {
+  const skillXp = row.skill_xp || {};
+  const totalXp = Object.values(skillXp).reduce((n, v) => n + (Number(v) || 0), 0);
   return {
     id: row.id,
     version: row.version,
     status: row.status,
     title: row.title,
-    instructions: row.instructions,
-    successCriteria: row.success_criteria,
-    rationale: row.rationale,
+    flavor: row.flavor || '',
+    objective: row.instructions,
+    victoryCondition: row.success_criteria,
     rank: row.rank,
-    skillXp: row.skill_xp,
-    durationMinutes: row.duration_minutes,
-    sourcePillar: row.source_pillar,
+    targetPillar: row.source_pillar || '',
+    targetSubCell: row.target_sub_cell || '',
+    skillXp,
+    totalXp,
+    estHours: row.est_hours || 0,
     isFallback: row.provider === 'deterministic-fallback',
     completedAt: row.completed_at,
   };

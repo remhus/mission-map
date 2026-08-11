@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 12;
 
 export async function initDB() {
   if (initialized) return;
@@ -244,7 +244,7 @@ export async function initDB() {
         generated_at TIMESTAMPTZ,
         completed_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW(),
-        UNIQUE(user_id, week_start, version)
+        UNIQUE(user_id, week_start, version, rank)
       )
     `;
 
@@ -268,6 +268,16 @@ export async function initDB() {
     // v10: add gratitude column to journal entries
     if (prevVersion < 10) {
       await sql`ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS gratitude TEXT DEFAULT ''`;
+    }
+
+    // v12: boss-fight quest fields + quest-board support (4 quests per board).
+    if (prevVersion < 12) {
+      await sql`ALTER TABLE weekly_quests ADD COLUMN IF NOT EXISTS flavor TEXT DEFAULT ''`;
+      await sql`ALTER TABLE weekly_quests ADD COLUMN IF NOT EXISTS target_sub_cell TEXT DEFAULT ''`;
+      await sql`ALTER TABLE weekly_quests ADD COLUMN IF NOT EXISTS est_hours INTEGER DEFAULT 0`;
+      // A board offers one quest per rank, so uniqueness must include rank.
+      await sql`ALTER TABLE weekly_quests DROP CONSTRAINT IF EXISTS weekly_quests_user_id_week_start_version_key`;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_weekly_quests_board ON weekly_quests(user_id, week_start, version, rank)`;
     }
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;
