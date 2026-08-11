@@ -7,10 +7,10 @@
 import sql from './db';
 import { generateQuestJson } from './gemini';
 import {
-  buildHierarchy, buildUserPrompt, deterministicQuest, gridReadiness,
+  buildHierarchy, buildUserPrompt, deterministicQuest,
   responseSchema, SYSTEM_PROMPT, validateQuest, SKILLS,
   type GeneratedQuest, type MandalaHierarchy, type Rank, type Skill,
-  type TaskHistoryItem, type QuestHistoryItem,
+  type TaskHistoryItem, type QuestHistoryItem, type FocusTarget,
 } from './weeklyQuest';
 
 export type QuestContext = {
@@ -67,14 +67,12 @@ export type GenerationResult = {
 };
 
 // Run one provider call, validate, and fall back deterministically on any
-// failure rather than spending more quota.
-export async function runGeneration(rank: Rank, ctx: QuestContext): Promise<GenerationResult> {
-  const readiness = gridReadiness(ctx.hierarchy);
-  // Caller guarantees not 'empty'. goal-only is allowed (conservative quest).
-
+// failure rather than spending more quota. `focus` pins this call to a specific
+// pillar/sub-cell so a board of four covers different areas of the grid.
+export async function runGeneration(rank: Rank, ctx: QuestContext, focus?: FocusTarget | null): Promise<GenerationResult> {
   const outcome = await generateQuestJson(
     SYSTEM_PROMPT,
-    buildUserPrompt({ rank, hierarchy: ctx.hierarchy, skillXp: ctx.skillXp, taskHistory: ctx.taskHistory, questHistory: ctx.questHistory }),
+    buildUserPrompt({ rank, hierarchy: ctx.hierarchy, skillXp: ctx.skillXp, taskHistory: ctx.taskHistory, questHistory: ctx.questHistory, focus }),
     responseSchema(),
   );
 
@@ -86,15 +84,28 @@ export async function runGeneration(rank: Rank, ctx: QuestContext): Promise<Gene
       return { quest: validated.quest, provider: 'gemini', model: outcome.model, failureCode: null };
     }
     // Model produced unusable output → deterministic fallback.
-    return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp), provider: 'deterministic-fallback', model: outcome.model, failureCode: validated.reason };
+    return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp, focus), provider: 'deterministic-fallback', model: outcome.model, failureCode: validated.reason };
   }
 
   // Provider failure → deterministic fallback (still gives the user a quest).
-  if (readiness === 'empty') {
-    // Should be blocked upstream, but guard anyway.
-    return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp), provider: 'deterministic-fallback', model: null, failureCode: outcome.failureCode };
+  return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp, focus), provider: 'deterministic-fallback', model: null, failureCode: outcome.failureCode };
+}
+
+// Randomly seed each rank with a different pillar/sub-cell so a board covers
+// varied areas of the grid (and a rescan explores new ones). Not forced — the
+// generator treats it as a starting point.
+export function assignFocus(ctx: QuestContext, ranks: readonly Rank[]): (FocusTarget | null)[] {
+  const targets: FocusTarget[] = [];
+  for (const p of ctx.hierarchy.pillars) {
+    if (p.actions.length) for (const a of p.actions) targets.push({ pillar: p.name, sub: a.content });
+    else targets.push({ pillar: p.name, sub: '' });
   }
-  return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp), provider: 'deterministic-fallback', model: null, failureCode: outcome.failureCode };
+  // Shuffle (Fisher–Yates) so picks are random each call.
+  for (let i = targets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [targets[i], targets[j]] = [targets[j], targets[i]];
+  }
+  return ranks.map((_, i) => (targets.length ? targets[i % targets.length] : null));
 }
 
 // Write a generated quest into its pre-claimed board row (status → 'offered').

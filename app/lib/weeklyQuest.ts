@@ -109,12 +109,15 @@ export function normalize(s: string): string {
 export type TaskHistoryItem = { title: string; skill?: string; status: string; date?: string };
 export type QuestHistoryItem = { title: string; rank: Rank | string; status: string; sourcePillar?: string };
 
+export type FocusTarget = { pillar: string; sub: string };
+
 export type PromptContext = {
   rank: Rank;
   hierarchy: MandalaHierarchy;
   skillXp: Partial<Record<Skill, number>>;
   taskHistory: TaskHistoryItem[];
   questHistory: QuestHistoryItem[];
+  focus?: FocusTarget | null; // server-assigned pillar/sub-cell for board variety
 };
 
 // ── Prompt construction (the RPG Quest Master) ──────────────────────────────
@@ -148,6 +151,9 @@ export function buildUserPrompt(ctx: PromptContext): string {
 
   lines.push(`REQUESTED RANK: ${ctx.rank} — ${cfg.friction}. Total XP reward MUST equal exactly ${cfg.totalXp}. Estimated effort this week ~${cfg.estHours} hours.`);
   lines.push(`Valid skills (assign XP only to these, others 0): ${SKILLS.join(', ')}.`);
+  if (ctx.focus?.pillar) {
+    lines.push(`FOCUS FOR THIS QUEST: base it on the pillar "${ctx.focus.pillar}"${ctx.focus.sub ? ` and its sub-cell "${ctx.focus.sub}"` : ''} — a different area is picked for each rank so the board stays varied. Craft the quest naturally around this; you don't have to be literal.`);
+  }
   lines.push('');
   lines.push('<USER_DATA>');
   lines.push(`ULTIMATE MISSION (centre goal): ${ctx.hierarchy.ultimateGoal || '(empty)'}`);
@@ -361,23 +367,26 @@ export function deterministicQuest(
   rank: Rank,
   hierarchy: MandalaHierarchy,
   skillXp: Partial<Record<Skill, number>>,
+  assigned?: FocusTarget | null,
 ): GeneratedQuest {
   const cfg = RANK_CONFIG[rank];
 
-  const candidates = hierarchy.pillars.filter(p => p.actions.length > 0);
   let pillar: PillarNode | null = null;
-  if (candidates.length) {
-    pillar = candidates.reduce((lo, p) => {
-      const px = skillXp[inferSkill(p.name)] ?? 0;
-      const lx = skillXp[inferSkill(lo.name)] ?? 0;
-      return px < lx ? p : lo;
-    }, candidates[0]);
-  } else {
-    pillar = hierarchy.pillars[0] ?? null;
-  }
+  let action: PillarNode['actions'][number] | null = null;
 
-  const action = pillar?.actions[0] ?? null;
-  const subCell = action?.content || pillar?.name || hierarchy.ultimateGoal || 'your mission';
+  // Use the randomly-assigned target so each rank's fallback differs.
+  if (assigned?.pillar) {
+    pillar = hierarchy.pillars.find(p => normalize(p.name) === normalize(assigned.pillar)) ?? null;
+    if (pillar && assigned.sub) action = pillar.actions.find(a => normalize(a.content) === normalize(assigned.sub)) ?? null;
+  }
+  if (!pillar) {
+    // No assignment → pick a random filled pillar.
+    const filled = hierarchy.pillars.filter(p => p.actions.length > 0);
+    const pool = filled.length ? filled : hierarchy.pillars;
+    pillar = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
+  if (!action && pillar?.actions.length) action = pillar.actions[Math.floor(Math.random() * pillar.actions.length)];
+  const subCell = action?.content || assigned?.sub || pillar?.name || hierarchy.ultimateGoal || 'your mission';
   const primary = inferSkill(subCell + ' ' + (pillar?.name || ''));
 
   const secondary: Skill = rank === 'S' ? 'wealth' : rank === 'A' ? 'bravery' : 'discipline';

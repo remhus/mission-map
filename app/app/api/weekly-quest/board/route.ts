@@ -4,7 +4,7 @@ import { getUser } from '@/lib/auth';
 import sql, { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { weekStartFor, gridReadiness, RANKS, type Rank } from '@/lib/weeklyQuest';
-import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, type QuestRow } from '@/lib/weeklyQuestServer';
+import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, assignFocus, type QuestRow } from '@/lib/weeklyQuestServer';
 
 const STALE_MINUTES = 5;
 
@@ -76,8 +76,10 @@ export async function POST() {
     }
   }
 
-  // Generate all four ranks in parallel, then persist each into its claim row.
-  const results = await Promise.all(RANKS.map(r => runGeneration(r as Rank, ctx)));
+  // Generate all four ranks in parallel — each pinned to a different pillar/
+  // sub-cell so the board covers the grid rather than repeating one area.
+  const focus = assignFocus(ctx, RANKS);
+  const results = await Promise.all(RANKS.map((r, i) => runGeneration(r as Rank, ctx, focus[i])));
   await Promise.all(results.map(res => storeGeneratedQuest(user.userId, weekStart, version, res)));
 
   return NextResponse.json({ offers: await loadOffers(user.userId, weekStart, version) });

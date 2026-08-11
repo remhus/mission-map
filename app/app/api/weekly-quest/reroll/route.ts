@@ -4,7 +4,7 @@ import { getUser } from '@/lib/auth';
 import sql, { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { weekStartFor, gridReadiness, RANKS, type Rank } from '@/lib/weeklyQuest';
-import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, type QuestRow } from '@/lib/weeklyQuestServer';
+import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, assignFocus, type QuestRow } from '@/lib/weeklyQuestServer';
 
 // Reforge the board: retire the current offers and generate a fresh set of
 // four. Allowed any number of times until a quest is accepted.
@@ -58,7 +58,8 @@ export async function POST() {
   ` as { id: number }[];
   if (!claim) return NextResponse.json({ generating: true }, { status: 202 });
 
-  const results = await Promise.all(RANKS.map(r => runGeneration(r as Rank, ctx)));
+  const focus = assignFocus(ctx, RANKS);
+  const results = await Promise.all(RANKS.map((r, i) => runGeneration(r as Rank, ctx, focus[i])));
   await Promise.all(results.map(res => storeGeneratedQuest(user.userId, weekStart, version, res)));
 
   // Retire every older still-offered board.

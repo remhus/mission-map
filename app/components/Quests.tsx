@@ -15,9 +15,8 @@ const SKILL_COLORS: Record<string, string> = {
   wealth: '#4ecdc4', discipline: '#e9b3ff', wisdom: '#f97316', influence: '#fd79a8',
 };
 
-// Rank is its own ascending scale (not medals) — a cool→hot ramp drawn from the
-// app palette: muted → accent-blue → purple → orange (S = highest threat).
-const RANK_COLORS: Record<Rank, string> = { C: '#8c90a1', B: '#548dff', A: '#e9b3ff', S: '#f97316' };
+// Rank scale (its own colour system, distinct from trophy tiers).
+const RANK_COLORS: Record<Rank, string> = { C: '#7CFF00', B: '#00A8FF', A: '#FF2BD6', S: '#FFB000' };
 
 type Quest = {
   id: number;
