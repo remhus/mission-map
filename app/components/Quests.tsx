@@ -23,7 +23,6 @@ type Quest = {
   version: number;
   status: string;
   title: string;
-  flavor: string;
   objective: string;
   victoryCondition: string;
   rank: Rank;
@@ -324,7 +323,7 @@ export default function Quests() {
                       <h3 className="text-base font-black text-white leading-tight" style={{ fontFamily: 'var(--font-jakarta)' }}>{o.title}</h3>
                     </div>
                   </div>
-                  <p className="text-xs leading-relaxed text-ink-2 italic" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.flavor}</p>
+                  <p className="text-xs leading-relaxed text-ink-2" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.objective}</p>
                   <div className="flex items-center justify-between gap-2 mt-auto">
                     <span className="sys-mono text-[11px] font-bold" style={{ color }}>{o.totalXp} XP</span>
                     <span className="sys-mono text-[10px] uppercase flex items-center gap-1" style={{ color: 'rgba(193,198,216,0.5)' }}>
@@ -457,8 +456,6 @@ function QuestBody({ quest, completed, celebrate }: { quest: Quest; completed?: 
               style={{ border: '2px solid #c3f400', color: '#c3f400', textShadow: '0 0 10px rgba(195,244,0,0.6)' }}>Clear</span>
           )}
         </div>
-
-        {quest.flavor && <p className="text-sm leading-relaxed text-ink-2 italic mb-4" style={{ borderLeft: `2px solid ${color}55`, paddingLeft: 12 }}>{quest.flavor}</p>}
 
         <div className="flex flex-col gap-4">
           <div>

@@ -109,7 +109,7 @@ export async function storeGeneratedQuest(
     UPDATE weekly_quests SET
       status = 'offered',
       title = ${q.title},
-      flavor = ${q.flavor},
+      flavor = '',
       instructions = ${q.objective},
       success_criteria = ${q.victoryCondition},
       rationale = '',
@@ -158,7 +158,6 @@ export function shapeQuest(row: QuestRow) {
     version: row.version,
     status: row.status,
     title: row.title,
-    flavor: row.flavor || '',
     objective: row.instructions,
     victoryCondition: row.success_criteria,
     rank: row.rank,

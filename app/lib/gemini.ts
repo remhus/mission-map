@@ -44,8 +44,10 @@ async function callOnce(
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: 'user', parts: [{ text: user }] }],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 1200,
+          // Roomy cap: a truncated response is invalid JSON and forces a
+          // needless deterministic fallback, so give the model space to finish.
+          temperature: 0.5,
+          maxOutputTokens: 2048,
           responseMimeType: 'application/json',
           responseSchema: schema,
         },
