@@ -427,12 +427,6 @@ function QuestBody({ quest, completed, accentBar }: { quest: Quest; completed?: 
             </div>
             <Rewards skillXp={quest.skillXp} glow={completed} />
           </div>
-          {quest.isFallback && !completed && (
-            <p className="text-xs text-muted flex items-center gap-1.5">
-              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>wifi_off</span>
-              Generated offline — rescan for an AI quest when the service is available.
-            </p>
-          )}
         </div>
       </div>
     </>

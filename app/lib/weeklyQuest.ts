@@ -126,14 +126,14 @@ export const SYSTEM_PROMPT = `You are the RPG Quest Master for a gamified self-i
 
 STRICT RULES
 1. NEVER output abstract or vague instructions. BANNED phrasings: "produce a deliverable", "work on your goals", "clear the blocker", "study hard", "make progress", "ship something", "take a step", "build momentum". Every quest must name a concrete artefact and a number.
-2. The objective MUST be a hyper-specific, real-world physical or digital action stating exactly WHAT to make/do/send and HOW MUCH. It must reference the chosen sub-cell's wording. Examples of the REQUIRED specificity:
+2. The objective MUST be a hyper-specific, real-world physical or digital action stating exactly WHAT to make/do/send and HOW MUCH. Examples of the REQUIRED specificity:
    - "Write a 500-word teardown comparing 3 named competitors in your niche and post it publicly on LinkedIn or X."
    - "Cold-email 10 specific named prospects with a tailored one-line offer; log each in a sheet."
    - "Build and deploy a one-page landing site for <sub-cell> with a working email-capture form."
    - "Film, edit, and upload a 60-second video explaining <sub-cell>."
    - "Publish a paid offer with a live checkout link and secure 1 real payment."
 3. Quests are NOT daily habits or time-logged tasks. BANNED: meditation, "read for X minutes", journaling, "practice/study for N sessions/minutes", streaks, anything measured in hours logged. A quest is a ONE-TIME weekly milestone with high friction or tangible output.
-4. Pick exactly ONE pillar and ONE sub-cell from the chart, and invent a concrete project tailored to that EXACT sub-cell. Prefer pillars tied to LOW current skill XP. E.g. if the sub-cell is "Study Trends", do NOT say "study trends" — say "Write a 500-word memo dissecting 3 emerging tools in your niche and publish it."
+4. Pick ONE pillar and ONE sub-cell and report them in targetPillar/targetSubCell — but DERIVE the quest from them. NEVER name, quote, or allude to the pillar or sub-cell in the title or objective. The objective must read as a standalone, concrete action that stands on its own. Ask yourself: "if the user wants to develop this area, what is the single highest-impact thing I'd have them DO this week?" E.g. sub-cell "Study Trends" → objective "Write a 500-word memo dissecting 3 emerging tools in your niche and publish it" — note it never says "study trends" or names the pillar.
 5. Difficulty MUST scale by rank and be obvious in the objective:
    - C (5 XP): a quick structural / organisation / baseline-setup win. Low friction. (set up the tool, define the offer, outline the plan in a doc.)
    - B (10 XP): active outreach OR a focused research/analysis deliverable. Moderate social friction. (10 tailored outreaches, or a published written analysis.)
@@ -152,7 +152,7 @@ export function buildUserPrompt(ctx: PromptContext): string {
   lines.push(`REQUESTED RANK: ${ctx.rank} — ${cfg.friction}. Total XP reward MUST equal exactly ${cfg.totalXp}. Estimated effort this week ~${cfg.estHours} hours.`);
   lines.push(`Valid skills (assign XP only to these, others 0): ${SKILLS.join(', ')}.`);
   if (ctx.focus?.pillar) {
-    lines.push(`FOCUS FOR THIS QUEST: base it on the pillar "${ctx.focus.pillar}"${ctx.focus.sub ? ` and its sub-cell "${ctx.focus.sub}"` : ''} — a different area is picked for each rank so the board stays varied. Craft the quest naturally around this; you don't have to be literal.`);
+    lines.push(`FOCUS FOR THIS QUEST: derive it from the pillar "${ctx.focus.pillar}"${ctx.focus.sub ? ` / sub-cell "${ctx.focus.sub}"` : ''} — a different area is picked per rank to keep the board varied. Do NOT mention this pillar or sub-cell by name; just design a concrete task that would develop this area.`);
   }
   lines.push('');
   lines.push('<USER_DATA>');
@@ -400,28 +400,27 @@ export function deterministicQuest(
     skillXpOut[secondary] = cfg.totalXp - primAmt;
   }
 
-  // Concrete, rank-scaled objective + binary victory. Used only when the AI
-  // provider is unavailable, so it must still be specific rather than vague.
-  const focus = pillar ? `"${subCell}" (under your ${pillar.name} pillar)` : `"${subCell}"`;
+  // Concrete, rank-scaled objective derived from the target area — WITHOUT
+  // naming the pillar/sub-cell. Used only when the AI provider is unavailable.
   const plan: Record<Rank, { title: string; objective: string; victory: string }> = {
     C: {
       title: `Set Up the Foundation`,
-      objective: `Create the single document or workspace for ${focus} and write a one-page plan: the exact outcome you want, the 3 concrete next actions, and the one metric you'll track. No research spirals — just decide and write it down.`,
+      objective: `Create one planning document for this focus area: write the exact outcome you want, the 3 concrete next actions to get there, and the single metric you'll track. Decide and commit — no endless research.`,
       victory: `A named doc exists containing an outcome, 3 next actions, and 1 metric.`,
     },
     B: {
       title: `Send 10 Cold Outreaches`,
-      objective: `Identify 10 specific, named people or targets relevant to ${focus} and send each a personalised outreach message (email/DM) with one clear ask. Log all 10 in a sheet with who, when, and their reply.`,
+      objective: `Identify 10 specific, named people who could help you move this forward and send each a personalised message (email/DM) with one clear ask. Track who, when, and their reply in a sheet.`,
       victory: `10/10 personalised messages sent and logged in a sheet.`,
     },
     A: {
       title: `Publish One Public Piece`,
-      objective: `Create and publish ONE public piece of content about ${focus} where strangers can see and respond — a written post/thread, or a short recorded video (60–120s). Put your name on it and share the link.`,
+      objective: `Create and publish ONE public piece of content in this area where strangers can see and respond — a written post/thread, or a short recorded video (60–120s). Put your name on it and share the link.`,
       victory: `The post/video is live and publicly visible at a shareable URL.`,
     },
     S: {
       title: `Land Your First Payment`,
-      objective: `Turn ${focus} into a minimal paid offer: write the offer, stand up a live checkout/payment link (Stripe, Gumroad, PayPal, invoice), pitch it to at least 10 real prospects, and close 1 paying customer.`,
+      objective: `Package this into a minimal paid offer: write the offer, stand up a live checkout/payment link (Stripe, Gumroad, PayPal, invoice), pitch it to at least 10 real prospects, and close 1 paying customer.`,
       victory: `A live checkout link exists AND at least 1 real payment is received.`,
     },
   };
