@@ -161,7 +161,7 @@ export default function Quests() {
       if (res.status === 202) { await pollBoard(); return; }
       if (!res.ok) { setError('failed'); return; }
       const d = await res.json();
-      if (d.offers) setState(s => s ? { ...s, offers: d.offers, rerollAvailable: false } : s);
+      if (d.offers) setState(s => s ? { ...s, offers: d.offers, rerollAvailable: true } : s);
       else await pollBoard();
     } catch { setError('failed'); }
     finally { setBusy(false); setGenerating(false); }
@@ -303,7 +303,7 @@ export default function Quests() {
               <button onClick={reforge} disabled={busy}
                 className="btn-ghost flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>autorenew</span>
-                Reforge Board · 1
+                Reforge Board
               </button>
             )}
           </div>

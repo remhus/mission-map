@@ -51,7 +51,7 @@ export async function GET() {
     gridReady,
     boardVersion: latestVersion,
     generating: !chosen && generatingRows.length > 0,
-    rerollAvailable: !chosen && offered.length > 0 && latestVersion === 1,
+    rerollAvailable: !chosen && offered.length > 0,
     offers: !chosen && offered.length > 0 ? offered.map(shapeQuest) : null,
     quest: chosen ? shapeQuest(chosen) : null,
   });
