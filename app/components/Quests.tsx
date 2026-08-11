@@ -115,6 +115,7 @@ export default function Quests() {
     try {
       const res = await fetch('/api/weekly-quest/board', { method: 'POST' });
       if (res.status === 422) { setError('grid'); await fetchState(); return; }
+      if (res.status === 429) { setError('rate_limited'); return; }
       if (res.status === 202) { await pollBoard(); return; }
       if (!res.ok) { setError('failed'); return; }
       const d = await res.json();
@@ -148,6 +149,7 @@ export default function Quests() {
     setBusy(true); setGenerating(true); setError(null);
     try {
       const res = await fetch('/api/weekly-quest/reroll', { method: 'POST' });
+      if (res.status === 429) { setError('rate_limited'); return; }
       if (res.status === 202) { await pollBoard(); return; }
       if (!res.ok) { setError('failed'); return; }
       const d = await res.json();
@@ -311,6 +313,12 @@ export default function Quests() {
             );
           })}
         </div>
+        {error === 'rate_limited' && (
+          <div className="mt-4 rounded-xl p-3.5 flex items-center gap-2.5" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#ffd700' }}>hourglass_top</span>
+            <p className="text-sm text-ink-2">The AI hit its free-tier rate limit. Wait about a minute, then Rescan.</p>
+          </div>
+        )}
         {error === 'failed' && <p className="text-sm text-danger mt-4">Something went wrong. Try Rescan again.</p>}
 
         {/* Detail / accept modal */}
@@ -348,6 +356,7 @@ export default function Quests() {
       <Shell>
         <div className="rounded-2xl p-8 text-center animate-slide-up" style={cardStyle}>
           <h2 className="text-lg font-black mb-4 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>No quests posted this week</h2>
+          {error === 'rate_limited' && <p className="text-sm mb-4 text-muted">The AI hit its free-tier rate limit. Wait about a minute, then try again.</p>}
           {error === 'failed' && <p className="text-sm text-danger mb-3">Something went wrong. Try again.</p>}
           <button onClick={generateBoard} disabled={busy} className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>swords</span>Generate Quests

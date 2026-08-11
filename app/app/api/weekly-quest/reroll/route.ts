@@ -4,7 +4,7 @@ import { getUser } from '@/lib/auth';
 import sql, { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { weekStartFor, gridReadiness, RANKS, type Rank } from '@/lib/weeklyQuest';
-import { fetchContext, runGeneration, storeGeneratedQuest, shapeQuest, assignFocus, type QuestRow } from '@/lib/weeklyQuestServer';
+import { fetchContext, generateBoardQuests, boardWasRateLimited, storeGeneratedQuest, shapeQuest, assignFocus, type QuestRow } from '@/lib/weeklyQuestServer';
 
 // Reforge the board: retire the current offers and generate a fresh set of
 // four. Allowed any number of times until a quest is accepted.
@@ -59,10 +59,17 @@ export async function POST() {
   if (!claim) return NextResponse.json({ generating: true }, { status: 202 });
 
   const focus = assignFocus(ctx, RANKS);
-  const results = await Promise.all(RANKS.map((r, i) => runGeneration(r as Rank, ctx, focus[i])));
+  const results = await generateBoardQuests(ctx, RANKS as Rank[], focus);
+
+  // Rate-limited → roll back the new board and keep the current one intact.
+  if (boardWasRateLimited(results)) {
+    await sql`DELETE FROM weekly_quests WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version = ${version}`;
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  }
+
   await Promise.all(results.map(res => storeGeneratedQuest(user.userId, weekStart, version, res)));
 
-  // Retire every older still-offered board.
+  // Retire every older still-offered board only once the new one is stored.
   await sql`
     UPDATE weekly_quests SET status = 'superseded'
     WHERE user_id = ${user.userId} AND week_start = ${weekStart}::date AND version < ${version} AND status = 'offered'

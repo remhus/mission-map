@@ -91,6 +91,28 @@ export async function runGeneration(rank: Rank, ctx: QuestContext, focus?: Focus
   return { quest: deterministicQuest(rank, ctx.hierarchy, ctx.skillXp, focus), provider: 'deterministic-fallback', model: null, failureCode: outcome.failureCode };
 }
 
+// Generate a full board (one per rank). Retries only transient failures (bad
+// output) once — never retries rate-limits, which would burn more quota.
+export async function generateBoardQuests(
+  ctx: QuestContext,
+  ranks: readonly Rank[],
+  focus: (FocusTarget | null)[],
+): Promise<GenerationResult[]> {
+  const results = await Promise.all(ranks.map((r, i) => runGeneration(r, ctx, focus[i])));
+  const retryIdx = results
+    .map((res, i) => (res.provider !== 'gemini' && res.failureCode !== 'provider_rate_limited' ? i : -1))
+    .filter(i => i >= 0);
+  if (retryIdx.length) {
+    const retried = await Promise.all(retryIdx.map(i => runGeneration(ranks[i], ctx, focus[i])));
+    retryIdx.forEach((i, k) => { results[i] = retried[k]; });
+  }
+  return results;
+}
+
+export function boardWasRateLimited(results: GenerationResult[]): boolean {
+  return results.some(r => r.failureCode === 'provider_rate_limited');
+}
+
 // Randomly seed each rank with a different pillar/sub-cell so a board covers
 // varied areas of the grid (and a rescan explores new ones). Not forced — the
 // generator treats it as a starting point.
