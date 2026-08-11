@@ -275,6 +275,72 @@ button:not(:disabled):active {
 .glow-primary { box-shadow: 0 0 20px rgba(175, 198, 255, 0.3); }
 
 /* ---------------------------------------------------------------------------
+   The System — immersive Quests interface (Solo-Levelling-style windows)
+--------------------------------------------------------------------------- */
+.sys-mono {
+  font-family: ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+  letter-spacing: 0.22em;
+}
+
+/* Glowing translucent System window */
+.sys-panel {
+  position: relative;
+  background:
+    linear-gradient(157deg, rgba(88,166,255,0.10), rgba(10,13,22,0.30) 55%),
+    rgba(9,12,20,0.72);
+  border: 1px solid rgba(120,190,255,0.32);
+  box-shadow: 0 0 34px rgba(77,163,255,0.16), inset 0 0 46px rgba(77,163,255,0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.sys-panel-gold {
+  background:
+    linear-gradient(157deg, rgba(255,215,0,0.09), rgba(16,13,7,0.30) 55%),
+    rgba(14,12,7,0.72);
+  border-color: rgba(255,215,0,0.32);
+  box-shadow: 0 0 34px rgba(255,200,0,0.16), inset 0 0 46px rgba(255,200,0,0.05);
+}
+.sys-panel-done {
+  border-color: rgba(195,244,0,0.32);
+  box-shadow: 0 0 34px rgba(195,244,0,0.15), inset 0 0 46px rgba(195,244,0,0.05);
+}
+.sys-glow { text-shadow: 0 0 14px rgba(140,198,255,0.6); }
+.sys-glow-gold { text-shadow: 0 0 14px rgba(255,215,0,0.55); }
+
+/* Scanline sweeping down a forging window */
+@keyframes sysScan {
+  0% { top: 0; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.sys-scanbar {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(140,198,255,0.9), transparent);
+  box-shadow: 0 0 12px rgba(120,190,255,0.8);
+  animation: sysScan 1.8s var(--ease-out-strong) infinite;
+}
+
+@keyframes sysPulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.sys-pulse { animation: sysPulse 2.6s ease-in-out infinite; }
+
+@keyframes sysAppear {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.sys-appear { animation: sysAppear 460ms var(--ease-out-strong) backwards; }
+
+@keyframes sysStamp {
+  0% { opacity: 0; transform: scale(1.6) rotate(-8deg); }
+  60% { opacity: 1; transform: scale(0.94) rotate(-8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+}
+.sys-stamp { animation: sysStamp 520ms var(--ease-out-strong) backwards; }
+
+/* ---------------------------------------------------------------------------
    Motion
 --------------------------------------------------------------------------- */
 @keyframes fadeIn {
