@@ -7,6 +7,7 @@ const navItems = [
   { href: '/dashboard',    icon: 'grid_view',    label: 'Dashboard'    },
   { href: '/achievements', icon: 'emoji_events', label: 'Achievements' },
   { href: '/tasks',        icon: 'task_alt',     label: 'Daily Tasks'  },
+  { href: '/quests',       icon: 'swords',       label: 'Quests'       },
   { href: '/journal',      icon: 'menu_book',    label: 'Journal'      },
   { href: '/vision-board', icon: 'wb_sunny',     label: 'Vision Board' },
 ];

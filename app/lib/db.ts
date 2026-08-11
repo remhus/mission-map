@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 export async function initDB() {
   if (initialized) return;
@@ -207,6 +207,47 @@ export async function initDB() {
       )
     `;
 
+    // Per-user preferences (weekly AI quest consent + timezone). One row per user.
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_settings (
+        user_id TEXT PRIMARY KEY,
+        weekly_quests_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        timezone TEXT NOT NULL DEFAULT 'Europe/London',
+        consent_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
+
+    // AI-generated weekly quests. Tracked separately from ordinary tasks.
+    // status: generating | active | completed | superseded | failed
+    // rank: C | B | A | S. skill_xp: JSON object with all 8 skills.
+    await sql`
+      CREATE TABLE IF NOT EXISTS weekly_quests (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        week_start DATE NOT NULL,
+        version INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'generating',
+        title TEXT DEFAULT '',
+        instructions TEXT DEFAULT '',
+        success_criteria TEXT DEFAULT '',
+        rationale TEXT DEFAULT '',
+        rank TEXT NOT NULL,
+        skill_xp JSONB DEFAULT '{}'::jsonb,
+        duration_minutes INTEGER DEFAULT 30,
+        source_row_index INTEGER,
+        source_col_index INTEGER,
+        source_pillar TEXT DEFAULT '',
+        provider TEXT DEFAULT '',
+        model TEXT,
+        failure_code TEXT,
+        generated_at TIMESTAMPTZ,
+        completed_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, week_start, version)
+      )
+    `;
+
     // Indexes — safe to re-run, never break existing queries
     await sql`CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_task_completions_user_date ON task_completions(user_id, completed_date DESC)`;
@@ -217,6 +258,7 @@ export async function initDB() {
     await sql`CREATE INDEX IF NOT EXISTS idx_dream_capsules_user_id ON dream_capsules(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_grid_cells_user_id ON grid_cells(user_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_weekly_quests_user_week ON weekly_quests(user_id, week_start DESC)`;
 
     // v9: add status column to books (read | wishlist)
     if (prevVersion < 9) {
