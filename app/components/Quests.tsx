@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { RANK_CONFIG, SKILLS, type Rank } from '@/lib/weeklyQuest';
 
-// Skill presentation (mirrors dashboard palette).
 const SKILL_ICONS: Record<string, string> = {
   energy: 'bolt', intelligence: 'psychology', strength: 'fitness_center',
   bravery: 'shield', wealth: 'payments', discipline: 'military_tech',
@@ -14,8 +13,6 @@ const SKILL_COLORS: Record<string, string> = {
   energy: '#ffd700', intelligence: '#afc6ff', strength: '#ff6b6b', bravery: '#c3f400',
   wealth: '#4ecdc4', discipline: '#e9b3ff', wisdom: '#f97316', influence: '#fd79a8',
 };
-
-// Rank scale (its own colour system, distinct from trophy tiers).
 const RANK_COLORS: Record<Rank, string> = { C: '#7CFF00', B: '#00A8FF', A: '#FF2BD6', S: '#FFB000' };
 
 type Quest = {
@@ -48,8 +45,6 @@ type State = {
   quest: Quest | null;
 };
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
 function RankBadge({ rank, size = 44 }: { rank: Rank; size?: number }) {
   const c = RANK_COLORS[rank];
   return (
@@ -80,16 +75,21 @@ function Rewards({ skillXp, glow }: { skillXp: Record<string, number>; glow?: bo
   );
 }
 
+const adminLink = (
+  <Link href="/quest-admin" className="btn-ghost flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold">
+    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
+    Quest Admin
+  </Link>
+);
+
 export default function Quests() {
   const [state, setState] = useState<State | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enabling, setEnabling] = useState(false);
   const [detailRank, setDetailRank] = useState<Rank | null>(null);
   const [confirmAccept, setConfirmAccept] = useState(false);
-  const autoTriggered = useRef(false);
 
   const fetchState = useCallback(async () => {
     const res = await fetch('/api/weekly-quest');
@@ -99,42 +99,6 @@ export default function Quests() {
 
   useEffect(() => { fetchState(); }, [fetchState]);
 
-  async function pollBoard() {
-    for (let i = 0; i < 30; i++) {
-      await sleep(2000);
-      const res = await fetch('/api/weekly-quest');
-      if (!res.ok) continue;
-      const d: State = await res.json();
-      if (d.offers || d.quest || !d.generating) { setState(d); return; }
-    }
-    await fetchState();
-  }
-
-  const generateBoard = useCallback(async () => {
-    setBusy(true); setGenerating(true); setError(null);
-    try {
-      const res = await fetch('/api/weekly-quest/board', { method: 'POST' });
-      if (res.status === 422) { setError('grid'); await fetchState(); return; }
-      if (res.status === 429) { setError('rate_limited'); return; }
-      if (res.status === 202) { await pollBoard(); return; }
-      if (!res.ok) { setError('failed'); return; }
-      const d = await res.json();
-      if (d.offers) setState(s => s ? { ...s, offers: d.offers, generating: false, rerollAvailable: true } : s);
-      else if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null } : s);
-      else await pollBoard();
-    } catch { setError('failed'); }
-    finally { setBusy(false); setGenerating(false); }
-  }, [fetchState]);
-
-  // Auto-generate the quests on first visit when eligible and none exist yet.
-  useEffect(() => {
-    if (autoTriggered.current || !state) return;
-    if (state.enabled && state.gridReady !== 'empty' && !state.offers && !state.quest && !state.generating) {
-      autoTriggered.current = true;
-      generateBoard();
-    }
-  }, [state, generateBoard]);
-
   async function enableFeature() {
     setEnabling(true);
     await fetch('/api/settings/weekly-quest', {
@@ -143,20 +107,6 @@ export default function Quests() {
     });
     await fetchState();
     setEnabling(false);
-  }
-
-  async function rescan() {
-    setBusy(true); setGenerating(true); setError(null);
-    try {
-      const res = await fetch('/api/weekly-quest/reroll', { method: 'POST' });
-      if (res.status === 429) { setError('rate_limited'); return; }
-      if (res.status === 202) { await pollBoard(); return; }
-      if (!res.ok) { setError('failed'); return; }
-      const d = await res.json();
-      if (d.offers) setState(s => s ? { ...s, offers: d.offers, rerollAvailable: true } : s);
-      else await pollBoard();
-    } catch { setError('failed'); }
-    finally { setBusy(false); setGenerating(false); }
   }
 
   async function acceptQuest(rank: Rank) {
@@ -169,7 +119,7 @@ export default function Quests() {
       });
       if (!res.ok) { setError('failed'); return; }
       const d = await res.json();
-      if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null, rerollAvailable: false } : s);
+      if (d.quest) setState(s => s ? { ...s, quest: d.quest, offers: null } : s);
     } catch { setError('failed'); }
     finally { setBusy(false); }
   }
@@ -188,31 +138,28 @@ export default function Quests() {
     finally { setBusy(false); }
   }
 
-  function Header({ action }: { action?: React.ReactNode }) {
+  function Shell({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-        <div>
-          <p className="text-xs font-bold tracking-widest uppercase mb-1 text-accent">Weekly Challenge</p>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Boss Quests</h1>
-          {state && <p className="text-sm mt-1 text-muted">Week of {state.weekLabel}</p>}
+      <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase mb-1 text-accent">Weekly Challenge</p>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Boss Quests</h1>
+            {state && <p className="text-sm mt-1 text-muted">Week of {state.weekLabel}</p>}
+          </div>
+          {action && <div className="flex items-center gap-2 flex-shrink-0">{action}</div>}
         </div>
-        {action && <div className="flex items-center gap-2 flex-shrink-0">{action}</div>}
+        {children}
       </div>
     );
   }
 
-  function Shell({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
-    return <div className="px-4 md:px-8 py-6 max-w-4xl mx-auto"><Header action={action} />{children}</div>;
-  }
-
   const cardStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' };
 
-  if (loading) {
-    return <Shell><div className="rounded-2xl skeleton" style={{ minHeight: 240 }} /></Shell>;
-  }
+  if (loading) return <Shell><div className="rounded-2xl skeleton" style={{ minHeight: 240 }} /></Shell>;
   if (!state) return <Shell><p className="text-muted">Could not load quests.</p></Shell>;
 
-  // Not enabled → consent.
+  // Not enabled → intro.
   if (!state.enabled) {
     return (
       <Shell>
@@ -220,30 +167,28 @@ export default function Quests() {
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(175,198,255,0.1)', border: '1px solid rgba(175,198,255,0.2)' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#afc6ff' }}>swords</span>
           </div>
-          <h2 className="text-xl font-black mb-2 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Weekly AI Boss Quests</h2>
-          <p className="text-sm leading-relaxed text-ink-2 mb-4 max-w-xl">
-            Each week you get a board of four boss quests — one per rank — built from your Mandala grid, your progress, and your past quests.
-            Pick your challenge and complete it to earn skill XP. Rescan any time for a fresh set.
+          <h2 className="text-xl font-black mb-2 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Weekly Boss Quests</h2>
+          <p className="text-sm leading-relaxed text-ink-2 mb-5 max-w-xl">
+            A board of four boss quests — one per rank — built from your Mandala grid. Generate them with any LLM in
+            <strong> Quest Admin</strong> (copy the prompt, paste the JSON back), then pick your challenge and complete it to earn skill XP.
           </p>
-          <div className="rounded-xl p-4 mb-5" style={{ background: 'rgba(255,215,0,0.05)', border: '1px solid rgba(255,215,0,0.15)' }}>
-            <div className="flex gap-2.5">
-              <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px', color: '#ffd700' }}>info</span>
-              <p className="text-xs leading-relaxed text-ink-2">
-                To generate quests, relevant text from your grid and progress is sent to Google Gemini. This isn&apos;t local or private, and free availability isn&apos;t guaranteed. You can turn it off any time in Settings.
-              </p>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <button onClick={enableFeature} disabled={enabling} className="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+              {enabling ? 'Enabling…' : 'Enable Quests'}
+            </button>
+            <Link href="/quest-admin" className="btn-ghost flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>
+              Open Quest Admin
+            </Link>
           </div>
-          <button onClick={enableFeature} disabled={enabling} className="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
-            {enabling ? 'Enabling…' : 'Enable Weekly Quests'}
-          </button>
         </div>
       </Shell>
     );
   }
 
   // Grid too empty.
-  if (state.gridReady === 'empty' || error === 'grid') {
+  if (state.gridReady === 'empty') {
     return (
       <Shell>
         <div className="rounded-2xl p-8 text-center animate-slide-up" style={cardStyle}>
@@ -261,37 +206,16 @@ export default function Quests() {
 
   const quest = state.quest;
 
-  // Generating.
-  if (!quest && (generating || state.generating || (busy && !state.offers))) {
-    return (
-      <Shell>
-        <div className="rounded-2xl p-10 flex flex-col items-center text-center animate-fade-in" style={{ ...cardStyle, minHeight: 240 }} role="status" aria-live="polite">
-          <span className="material-symbols-outlined animate-spin mb-4" style={{ color: '#afc6ff', fontSize: '40px' }}>progress_activity</span>
-          <h2 className="text-lg font-black mb-1 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>Scanning for quests…</h2>
-          <p className="text-sm text-muted">Reading your mission and generating a quest for each rank.</p>
-        </div>
-      </Shell>
-    );
-  }
-
-  // Quest board (choose one).
+  // Board (choose one).
   if (!quest && state.offers) {
     const detail = detailRank ? state.offers.find(o => o.rank === detailRank) : null;
-    const rescanBtn = state.rerollAvailable ? (
-      <button onClick={rescan} disabled={busy} className="btn-ghost flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold">
-        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>autorenew</span>
-        Rescan
-      </button>
-    ) : null;
-
     return (
-      <Shell action={rescanBtn}>
+      <Shell action={adminLink}>
         <div className="grid gap-4 sm:grid-cols-2 stagger-children">
           {state.offers.map(o => {
             const cfg = RANK_CONFIG[o.rank];
             return (
-              <button key={o.rank} onClick={() => setDetailRank(o.rank)}
-                className="glass-card rounded-2xl p-5 flex flex-col gap-3 text-left">
+              <button key={o.rank} onClick={() => setDetailRank(o.rank)} className="glass-card rounded-2xl p-5 flex flex-col gap-3 text-left">
                 <div className="flex items-center gap-3">
                   <RankBadge rank={o.rank} />
                   <div className="min-w-0 flex-1">
@@ -302,9 +226,7 @@ export default function Quests() {
                 <p className="text-xs leading-relaxed text-ink-2" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.objective}</p>
                 <div className="flex items-center justify-between gap-2 mt-auto pt-1">
                   <span className="text-sm font-black text-accent">{o.totalXp} XP</span>
-                  <span className="text-xs text-muted flex items-center gap-1">
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>~{o.estHours}h
-                  </span>
+                  <span className="text-xs text-muted flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>~{o.estHours}h</span>
                 </div>
                 <div className="btn-soft-accent flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold">
                   View &amp; Accept <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>chevron_right</span>
@@ -313,15 +235,8 @@ export default function Quests() {
             );
           })}
         </div>
-        {error === 'rate_limited' && (
-          <div className="mt-4 rounded-xl p-3.5 flex items-center gap-2.5" style={{ background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#ffd700' }}>hourglass_top</span>
-            <p className="text-sm text-ink-2">The AI hit its free-tier rate limit. Wait about a minute, then Rescan.</p>
-          </div>
-        )}
-        {error === 'failed' && <p className="text-sm text-danger mt-4">Something went wrong. Try Rescan again.</p>}
+        {error === 'failed' && <p className="text-sm text-danger mt-4">Something went wrong. Try again.</p>}
 
-        {/* Detail / accept modal */}
         {detail && (
           <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center p-4 animate-fade-in"
             style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }} onClick={() => { setDetailRank(null); setConfirmAccept(false); }}>
@@ -350,17 +265,17 @@ export default function Quests() {
     );
   }
 
-  // No quest, no offers (edge) → summon.
+  // Enabled but no board yet → send to admin.
   if (!quest) {
     return (
-      <Shell>
+      <Shell action={adminLink}>
         <div className="rounded-2xl p-8 text-center animate-slide-up" style={cardStyle}>
-          <h2 className="text-lg font-black mb-4 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>No quests posted this week</h2>
-          {error === 'rate_limited' && <p className="text-sm mb-4 text-muted">The AI hit its free-tier rate limit. Wait about a minute, then try again.</p>}
-          {error === 'failed' && <p className="text-sm text-danger mb-3">Something went wrong. Try again.</p>}
-          <button onClick={generateBoard} disabled={busy} className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>swords</span>Generate Quests
-          </button>
+          <span className="material-symbols-outlined mb-4" style={{ color: '#414655', fontSize: '48px' }}>playlist_add</span>
+          <h2 className="text-lg font-black mb-2 text-white" style={{ fontFamily: 'var(--font-jakarta)' }}>No quests yet this week</h2>
+          <p className="text-sm text-muted mb-6 max-w-sm mx-auto">Generate a board in Quest Admin: copy the prompt into any LLM, then paste the JSON response back.</p>
+          <Link href="/quest-admin" className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm">
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit_note</span>Open Quest Admin
+          </Link>
         </div>
       </Shell>
     );
@@ -370,7 +285,7 @@ export default function Quests() {
   const isCompleted = quest.status === 'completed';
   const rankColor = RANK_COLORS[quest.rank];
   return (
-    <Shell>
+    <Shell action={!isCompleted ? adminLink : undefined}>
       <div className="rounded-2xl overflow-hidden animate-slide-up" style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${isCompleted ? 'rgba(195,244,0,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
         <QuestBody quest={quest} completed={isCompleted} accentBar={rankColor} />
         <div className="px-6 pb-6">
@@ -384,7 +299,7 @@ export default function Quests() {
               <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#c3f400' }}>military_tech</span>
               <div>
                 <p className="text-sm font-bold text-ink">Quest complete — {quest.totalXp} XP earned.</p>
-                <p className="text-xs text-muted">A new board is posted next week.</p>
+                <p className="text-xs text-muted">Import a new board in Quest Admin any time.</p>
               </div>
             </div>
           )}
@@ -395,7 +310,6 @@ export default function Quests() {
   );
 }
 
-// Shared quest content (board detail modal + active view).
 function QuestBody({ quest, completed, accentBar }: { quest: Quest; completed?: boolean; accentBar?: string }) {
   const cfg = RANK_CONFIG[quest.rank];
   return (
@@ -417,7 +331,6 @@ function QuestBody({ quest, completed, accentBar }: { quest: Quest; completed?: 
             </span>
           )}
         </div>
-
         <div className="flex flex-col gap-4">
           <div>
             <p className="text-xs font-bold tracking-widest uppercase text-muted mb-1.5">Objective</p>
@@ -430,9 +343,7 @@ function QuestBody({ quest, completed, accentBar }: { quest: Quest; completed?: 
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-xs font-bold tracking-widest uppercase text-muted">Reward · {quest.totalXp} XP</p>
-              <span className="text-xs text-muted flex items-center gap-1">
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>~{quest.estHours}h
-              </span>
+              <span className="text-xs text-muted flex items-center gap-1"><span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>~{quest.estHours}h</span>
             </div>
             <Rewards skillXp={quest.skillXp} glow={completed} />
           </div>

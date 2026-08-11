@@ -195,6 +195,62 @@ export function buildUserPrompt(ctx: PromptContext): string {
   return lines.join('\n');
 }
 
+// A single self-contained prompt the user can paste into any LLM to get a full
+// board (all four ranks) back as a JSON array — used by the manual Quest Admin.
+export function buildFullBoardPrompt(ctx: {
+  hierarchy: MandalaHierarchy;
+  skillXp: Partial<Record<Skill, number>>;
+  taskHistory: TaskHistoryItem[];
+  questHistory: QuestHistoryItem[];
+}): string {
+  const lines: string[] = [];
+  lines.push(SYSTEM_PROMPT);
+  lines.push('');
+  lines.push('=== OUTPUT FOR THIS REQUEST ===');
+  lines.push('Return EXACTLY four quests — one for each rank C, B, A, S — as a single JSON ARRAY of four objects, ordered C, B, A, S.');
+  lines.push('Each quest targets a DIFFERENT pillar/sub-cell of the grid so the set is varied.');
+  lines.push('Per-rank total XP (skillXp must sum to EXACTLY this): C=5, B=10, A=18, S=30.');
+  lines.push('Each object MUST have exactly these keys:');
+  lines.push('  "title": string (<= 34 chars, punchy, no pillar name)');
+  lines.push('  "objective": string (concrete action; do NOT name the pillar/sub-cell)');
+  lines.push('  "victoryCondition": string (binary pass/fail by Sunday 23:59)');
+  lines.push('  "rank": "C" | "B" | "A" | "S"');
+  lines.push('  "targetPillar": string (the pillar it was derived from)');
+  lines.push('  "targetSubCell": string (the sub-cell it was derived from)');
+  lines.push('  "estimatedHours": integer');
+  lines.push(`  "skillXp": object with all 8 keys (${SKILLS.join(', ')}) as integers summing to the rank total, concentrated in 1-2 skills, others 0`);
+  lines.push('Output ONLY the raw JSON array. No markdown fences, no commentary.');
+  lines.push('');
+  lines.push('<USER_DATA>');
+  lines.push(`ULTIMATE MISSION (centre goal): ${ctx.hierarchy.ultimateGoal || '(empty)'}`);
+  lines.push('');
+  lines.push('MANDALA PILLARS AND SUB-CELLS:');
+  if (ctx.hierarchy.pillars.length === 0) {
+    lines.push('  (no pillars filled yet)');
+  } else {
+    for (const p of ctx.hierarchy.pillars) {
+      lines.push(`- Pillar "${p.name}"`);
+      if (p.actions.length === 0) lines.push('    (no sub-cells filled)');
+      else for (const a of p.actions) lines.push(`    • ${a.content}`);
+    }
+  }
+  lines.push('');
+  lines.push('CURRENT SKILL XP (prefer areas tied to LOW skills):');
+  lines.push('  ' + SKILLS.map(s => `${s}:${ctx.skillXp[s] ?? 0}`).join(', '));
+  if (ctx.taskHistory.length) {
+    lines.push('');
+    lines.push('DAILY TASKS / HABITS TO EXCLUDE (never make a quest one of these):');
+    for (const t of ctx.taskHistory.slice(0, 40)) lines.push(`  - ${clampText(t.title, 100)}`);
+  }
+  if (ctx.questHistory.length) {
+    lines.push('');
+    lines.push('PREVIOUS QUESTS TO AVOID DUPLICATING:');
+    for (const q of ctx.questHistory.slice(0, 40)) lines.push(`  - [${q.rank}] ${clampText(q.title, 100)}`);
+  }
+  lines.push('</USER_DATA>');
+  return lines.join('\n');
+}
+
 // Gemini responseSchema (OpenAPI subset). Flat 8-skill map for robustness.
 export function responseSchema() {
   const skillProps: Record<string, { type: string }> = {};
@@ -273,6 +329,7 @@ export function validateQuest(
   rank: Rank,
   hierarchy: MandalaHierarchy,
   history: { taskHistory: TaskHistoryItem[]; questHistory: QuestHistoryItem[] },
+  opts?: { allowDuplicates?: boolean },
 ): ValidationResult {
   if (!raw || typeof raw !== 'object') return { ok: false, reason: 'not_an_object' };
   const o = raw as Record<string, unknown>;
@@ -310,12 +367,15 @@ export function validateQuest(
   if (match) { sourceRowIndex = match.row; sourceColIndex = match.col; }
 
   // Duplicate rejection — TITLES only (against grid actions + task + quest history).
+  // Skipped for manual imports (the user deliberately supplied the quest).
   const nTitle = normalize(title);
   const titleTokens = new Set(nTitle.split(' ').filter(Boolean));
   const banned: string[] = [];
-  for (const p of hierarchy.pillars) for (const a of p.actions) banned.push(normalize(a.content));
-  for (const t of history.taskHistory) banned.push(normalize(t.title));
-  for (const q of history.questHistory) banned.push(normalize(q.title));
+  if (!opts?.allowDuplicates) {
+    for (const p of hierarchy.pillars) for (const a of p.actions) banned.push(normalize(a.content));
+    for (const t of history.taskHistory) banned.push(normalize(t.title));
+    for (const q of history.questHistory) banned.push(normalize(q.title));
+  }
   for (const b of banned) {
     if (!b) continue;
     if (b === nTitle) return { ok: false, reason: 'duplicate_title' };

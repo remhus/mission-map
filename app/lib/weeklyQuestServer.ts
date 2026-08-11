@@ -163,6 +163,30 @@ export async function storeGeneratedQuest(
   return saved;
 }
 
+// Insert a manually-imported board (all four ranks) as offered rows.
+export async function storeManualBoard(
+  userId: string,
+  weekStart: string,
+  version: number,
+  quests: GeneratedQuest[],
+): Promise<void> {
+  for (const q of quests) {
+    await sql`
+      INSERT INTO weekly_quests (
+        user_id, week_start, version, status, rank, title, flavor, instructions,
+        success_criteria, rationale, skill_xp, duration_minutes, est_hours,
+        source_row_index, source_col_index, source_pillar, target_sub_cell,
+        provider, generated_at, created_at
+      ) VALUES (
+        ${userId}, ${weekStart}::date, ${version}, 'offered', ${q.rank}, ${q.title}, '', ${q.objective},
+        ${q.victoryCondition}, '', ${JSON.stringify(q.skillXp)}::jsonb, ${q.estHours * 60}, ${q.estHours},
+        ${q.sourceRowIndex}, ${q.sourceColIndex}, ${q.targetPillar}, ${q.targetSubCell},
+        'manual', NOW(), NOW()
+      )
+    `;
+  }
+}
+
 // Shape a DB row into the client payload (never leaks failure internals except
 // a coarse provider flag).
 export type QuestRow = {
