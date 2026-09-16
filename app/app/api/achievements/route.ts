@@ -61,6 +61,9 @@ export async function PUT(req: NextRequest) {
   if (body.trophy_tier !== undefined && !VALID_TIERS.has(body.trophy_tier)) {
     return NextResponse.json({ error: 'Invalid trophy tier' }, { status: 400 });
   }
+  if (typeof body.description === 'string' && body.description.length > 500) {
+    return NextResponse.json({ error: 'Description too long' }, { status: 400 });
+  }
 
   const { id, title, description, trophy_tier, is_locked } = body;
   // COALESCE keeps fields a caller didn't send intact — markAchieved and the vision

@@ -73,14 +73,23 @@ export async function PUT(req: NextRequest) {
     slug = await findFreeSlug(user.username || user.email.split('@')[0] || 'trophies', user.userId);
   }
 
-  await sql`
-    INSERT INTO user_settings (user_id, public_trophies_enabled, public_slug, updated_at)
-    VALUES (${user.userId}, ${enabled}, ${slug}, NOW())
-    ON CONFLICT (user_id) DO UPDATE SET
-      public_trophies_enabled = ${enabled},
-      public_slug = ${slug},
-      updated_at = NOW()
-  `;
+  try {
+    await sql`
+      INSERT INTO user_settings (user_id, public_trophies_enabled, public_slug, updated_at)
+      VALUES (${user.userId}, ${enabled}, ${slug}, NOW())
+      ON CONFLICT (user_id) DO UPDATE SET
+        public_trophies_enabled = ${enabled},
+        public_slug = ${slug},
+        updated_at = NOW()
+    `;
+  } catch (err) {
+    // Two accounts can race between the check above and this write; the unique
+    // index is the real arbiter, so report the loser cleanly instead of a 500.
+    if ((err as { code?: string })?.code === '23505') {
+      return NextResponse.json({ error: 'That handle is already taken.' }, { status: 409 });
+    }
+    throw err;
+  }
 
   return NextResponse.json({ enabled, slug, url: feedUrl(slug) });
 }

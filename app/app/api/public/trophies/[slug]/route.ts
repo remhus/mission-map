@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import sql, { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { clientIp } from '@/lib/clientIp';
 import {
   TROPHY_TIERS, isValidSlug, toPublicTrophy,
   type PublicTrophy, type TrophyRow, type TrophyTier,
@@ -40,13 +41,20 @@ export async function OPTIONS() {
 }
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
-  const { slug } = await ctx.params;
+  try {
+    return await handleGet(req, await ctx.params);
+  } catch (err) {
+    // Never let a database or runtime error leak internals to an anonymous caller.
+    console.error('public trophy feed error:', err);
+    return NextResponse.json({ error: 'Feed temporarily unavailable.' }, { status: 503, headers: CORS });
+  }
+}
+
+async function handleGet(req: NextRequest, params: { slug: string }) {
+  const { slug } = params;
   if (!isValidSlug(slug)) return notFound();
 
-  const ip = req.headers.get('x-nf-client-connection-ip')
-    || req.headers.get('x-forwarded-for')?.split(',')[0].trim()
-    || 'unknown';
-  if (!(await checkRateLimit(`public-trophies:${ip}`, 300, 60))) {
+  if (!(await checkRateLimit(`public-trophies:${clientIp(req)}`, 300, 60))) {
     return NextResponse.json(
       { error: 'Too many requests.' },
       { status: 429, headers: { ...CORS, 'Retry-After': '60' } },
@@ -85,7 +93,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const body = {
     profile: {
       handle: slug,
-      display_name: owner.username || slug,
+      display_name: (owner.username || '').trim().slice(0, 80) || slug,
       source: 'Mission Map',
       app_url: (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/+$/, '') || null,
     },

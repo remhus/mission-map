@@ -5,6 +5,7 @@ import sql from '@/lib/db';
 import { createToken } from '@/lib/auth';
 import { initDB } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { clientIp } from '@/lib/clientIp';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'All fields required' }, { status: 400 });
     }
 
+    if (typeof username !== 'string' || username.trim().length === 0 || username.length > 80) {
+      return NextResponse.json({ error: 'Username must be 1-80 characters' }, { status: 400 });
+    }
+    if (typeof email !== 'string' || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+    }
+
     if (password.length < 10) {
       return NextResponse.json({ error: 'Password must be at least 10 characters' }, { status: 400 });
     }
@@ -22,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must contain at least one uppercase letter and one number' }, { status: 400 });
     }
 
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const ip = clientIp(req);
     const allowed = await checkRateLimit(`signup:${ip}`, 3, 60 * 60);
     if (!allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });

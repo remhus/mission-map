@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import sql, { initDB } from '@/lib/db';
 import { createToken } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { clientIp } from '@/lib/clientIp';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const ip = clientIp(req);
     const allowed = await checkRateLimit(`login:${ip}`, 5, 15 * 60);
     if (!allowed) {
       return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
