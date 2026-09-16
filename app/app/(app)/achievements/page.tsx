@@ -9,6 +9,7 @@ type Achievement = {
   id: number; title: string; description: string;
   trophy_tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   is_locked: boolean; unlocked_at: string;
+  is_public?: boolean;
   vision_board_image_id?: number | null;
 };
 
@@ -64,7 +65,7 @@ export default function AchievementsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Achievement | null>(null);
-  const [form, setForm] = useState({ title: '', description: '', trophy_tier: 'gold' as Achievement['trophy_tier'], is_locked: true });
+  const [form, setForm] = useState({ title: '', description: '', trophy_tier: 'gold' as Achievement['trophy_tier'], is_locked: true, is_public: true });
   const [sortMode, setSortMode] = useState<SortMode>('default');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showAllAch, setShowAllAch] = useState(false);
@@ -105,12 +106,12 @@ export default function AchievementsPage() {
 
   function openAdd() {
     setEditItem(null);
-    setForm({ title: '', description: '', trophy_tier: 'gold', is_locked: true });
+    setForm({ title: '', description: '', trophy_tier: 'gold', is_locked: true, is_public: true });
     setShowModal(true);
   }
   function openEdit(ach: Achievement) {
     setEditItem(ach);
-    setForm({ title: ach.title, description: ach.description, trophy_tier: ach.trophy_tier, is_locked: ach.is_locked });
+    setForm({ title: ach.title, description: ach.description, trophy_tier: ach.trophy_tier, is_locked: ach.is_locked, is_public: ach.is_public !== false });
     setShowModal(true);
   }
   async function save() {
@@ -256,6 +257,16 @@ export default function AchievementsPage() {
                 {isLocked && (
                   <div className="absolute top-3 left-3 z-10">
                     <span className="material-symbols-outlined" style={{ fontSize: '16px', color: t.iconColor + 'aa', fontVariationSettings: "'FILL' 1" }}>{t.icon}</span>
+                  </div>
+                )}
+
+                {/* Hidden from the public feed */}
+                {ach.is_public === false && (
+                  <div className={`absolute ${isLocked ? 'top-9' : 'top-3'} left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full`}
+                    title="Hidden from your public trophy feed"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px', color: '#8c90a1' }}>visibility_off</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: '#8c90a1' }}>Hidden</span>
                   </div>
                 )}
 
@@ -469,6 +480,30 @@ export default function AchievementsPage() {
                     Grade locked — vision board trophies are always platinum
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="text-xs font-bold tracking-widest uppercase mb-2 block" style={{ color: '#c1c6d8' }}>Visibility</label>
+                <button
+                  role="checkbox" aria-checked={!form.is_public}
+                  onClick={() => setForm(f => ({ ...f, is_public: !f.is_public }))}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all text-left"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center transition-all"
+                    style={form.is_public
+                      ? { border: '2px solid rgba(255,255,255,0.2)' }
+                      : { background: '#548dff', border: '2px solid #548dff' }}>
+                    {!form.is_public && (
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#fff', fontVariationSettings: "'wght' 700" }}>check</span>
+                    )}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: '#e4e1e9' }}>Hide from public trophy feed</p>
+                    <p className="text-xs" style={{ color: '#6b7280' }}>
+                      {form.is_public ? 'Shared publicly when trophy sharing is on' : 'Kept private — never leaves Mission Map'}
+                    </p>
+                  </div>
+                </button>
               </div>
 
               {editItem && (

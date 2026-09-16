@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, description, trophy_tier, is_locked, vision_board_image_id } = await req.json();
+  const { title, description, trophy_tier, is_locked, is_public, vision_board_image_id } = await req.json();
   if (!title || typeof title !== 'string' || title.trim().length === 0 || title.length > 200) {
     return NextResponse.json({ error: 'Invalid title' }, { status: 400 });
   }
@@ -39,9 +39,10 @@ export async function POST(req: NextRequest) {
   if (typeof description === 'string' && description.length > 500) {
     return NextResponse.json({ error: 'Description too long' }, { status: 400 });
   }
+  // Trophies are shareable by default; hiding one is an explicit choice.
   const [achievement] = await sql`
-    INSERT INTO achievements (user_id, title, description, trophy_tier, is_locked, vision_board_image_id)
-    VALUES (${user.userId}, ${title}, ${description || ''}, ${trophy_tier || 'bronze'}, ${is_locked !== false}, ${vision_board_image_id || null})
+    INSERT INTO achievements (user_id, title, description, trophy_tier, is_locked, is_public, vision_board_image_id)
+    VALUES (${user.userId}, ${title}, ${description || ''}, ${trophy_tier || 'bronze'}, ${is_locked !== false}, ${is_public !== false}, ${vision_board_image_id || null})
     RETURNING *
   `;
   return NextResponse.json({ achievement });
@@ -62,10 +63,15 @@ export async function PUT(req: NextRequest) {
   }
 
   const { id, title, description, trophy_tier, is_locked } = body;
+  // COALESCE keeps fields a caller didn't send intact — markAchieved and the vision
+  // board both post partial payloads.
+  const isPublic = body.is_public === undefined ? null : body.is_public === true;
   await sql`
     UPDATE achievements
     SET title = ${title}, description = ${description}, trophy_tier = ${trophy_tier}, is_locked = ${is_locked},
-        unlocked_at = CASE WHEN ${is_locked} = false AND is_locked = true THEN NOW() ELSE unlocked_at END
+        is_public = COALESCE(${isPublic}::boolean, is_public),
+        unlocked_at = CASE WHEN ${is_locked} = false AND is_locked = true THEN NOW() ELSE unlocked_at END,
+        updated_at = NOW()
     WHERE id = ${id} AND user_id = ${user.userId}
   `;
   return NextResponse.json({ success: true });

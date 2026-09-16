@@ -5,7 +5,7 @@ const sql = neon(process.env.DATABASE_URL!);
 export default sql;
 
 let initialized = false;
-const SCHEMA_VERSION = 12;
+const SCHEMA_VERSION = 13;
 
 export async function initDB() {
   if (initialized) return;
@@ -130,7 +130,9 @@ export async function initDB() {
         trophy_tier TEXT DEFAULT 'bronze',
         unlocked_at TIMESTAMPTZ DEFAULT NOW(),
         is_locked BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMPTZ DEFAULT NOW()
+        is_public BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       )
     `;
 
@@ -214,6 +216,8 @@ export async function initDB() {
         weekly_quests_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         timezone TEXT NOT NULL DEFAULT 'Europe/London',
         consent_at TIMESTAMPTZ,
+        public_trophies_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        public_slug TEXT,
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
     `;
@@ -278,6 +282,16 @@ export async function initDB() {
       // A board offers one quest per rank, so uniqueness must include rank.
       await sql`ALTER TABLE weekly_quests DROP CONSTRAINT IF EXISTS weekly_quests_user_id_week_start_version_key`;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_weekly_quests_board ON weekly_quests(user_id, week_start, version, rank)`;
+    }
+
+    // v13: public trophy sharing. Trophies are shareable by default; the account-level
+    // switch stays off until the owner opts in, so nothing is exposed without consent.
+    if (prevVersion < 13) {
+      await sql`ALTER TABLE achievements ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE`;
+      await sql`ALTER TABLE achievements ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`;
+      await sql`ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS public_trophies_enabled BOOLEAN NOT NULL DEFAULT FALSE`;
+      await sql`ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS public_slug TEXT`;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_user_settings_public_slug ON user_settings(public_slug) WHERE public_slug IS NOT NULL`;
     }
 
     await sql`INSERT INTO _schema_version (version) VALUES (${SCHEMA_VERSION}) ON CONFLICT DO NOTHING`;
