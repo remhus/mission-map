@@ -1,7 +1,66 @@
 # MISSION MAP — SECURITY AUDIT (OPEN ITEMS)
 
-**Last updated:** June 2026
+**Last updated:** 16 September 2026
 **Status:** Critical → Medium findings remediated. Items below remain open.
+
+**Latest pass (16 Sep 2026):** public trophy feed launch review + full re-audit of the
+API surface. One HIGH finding (14) found and fixed; five hardening items closed.
+Every claim below was verified against production, not read off the source.
+
+---
+
+## PUBLIC TROPHY FEED — LAUNCH REVIEW (16 Sep 2026)
+
+`GET /api/public/trophies/{handle}` is the first and only unauthenticated read
+surface in Mission Map. It was audited before and after going live.
+
+### Exposure model
+
+Two independent gates, both default-closed at the account level:
+
+1. `user_settings.public_trophies_enabled` — off until the owner opts in. While off
+   the handle returns 404 and no query against `achievements` is ever issued.
+2. `achievements.is_public` — per trophy, default true, owner-toggleable from
+   Edit Trophy.
+
+The query selects an explicit column list (`id, title, description, trophy_tier,
+is_locked, unlocked_at, created_at`) — never `SELECT *` — so a future column cannot
+silently become public. `unlocked_at` is nulled in the response whenever the trophy
+is unclaimed, because it defaults to `NOW()` on insert and would otherwise imply a
+date that means nothing.
+
+### Verified in production
+
+| Test | Result |
+|---|---|
+| SQL injection in the handle (5 payloads, incl. `UNION SELECT password_hash`) | 404, no error leakage — Neon tagged templates parameterise, plus a `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$` guard |
+| Path traversal / route escape (4 encodings) | 404 |
+| `POST` / `PUT` / `DELETE` / `PATCH` on the feed | 405 — read-only, no write path exists |
+| Response body field-by-field inspection | Only the 9 documented fields. No `user_id`, email, hash, token, or any other table's data |
+| Cross-origin `fetch` from a foreign origin **with a valid session cookie**, against `/api/journal`, `/api/achievements`, `/api/vision-board`, `/api/dream-capsule`, `/api/grid`, `/api/books`, `/api/auth/me` | **All blocked by the browser** |
+| Cross-origin `POST /api/journal` and `DELETE /api/achievements` with credentials | **Blocked** |
+| Same test against the trophy feed | 200 — works as designed |
+
+**Why a visitor on an external site cannot reach the account.** Three layers, each
+sufficient alone:
+
+- Private routes emit **no** `Access-Control-Allow-Origin` header, so a browser will
+  not hand their response to foreign JavaScript.
+- The session cookie is `SameSite=Strict`, so it is not attached to any request
+  originating from another site — a cross-site request arrives unauthenticated and
+  gets 401.
+- The feed sets `Access-Control-Allow-Origin: *` but deliberately **omits**
+  `Access-Control-Allow-Credentials`. A wildcard origin and credentials are mutually
+  exclusive by spec; browsers refuse to send or expose cookies on such a request.
+  The feed is therefore readable by anyone, as a stranger, and by no one as you.
+
+### Accepted residual risks
+
+| Item | Assessment |
+|---|---|
+| Handle enumeration | Guessing handles reveals only accounts that opted in, and only their non-hidden trophies. Rate limited to 300 req/min per IP. Working as intended. |
+| `trophies[].id` is a global `SERIAL` | Discloses the approximate total number of achievement rows across all accounts. Negligible; the id is needed as a stable key by consumers. |
+| Feed is cached 60s at the edge | Hiding a trophy can stay visible to a cached client for up to 60 seconds. Acceptable for this data; if a trophy must disappear instantly, turn the account switch off, which bypasses nothing — but the CDN copy still ages out. |
 
 ---
 
@@ -32,6 +91,40 @@ Material Symbols icons loaded from Google's CDN at runtime with no Subresource I
 **Risk:** CDN compromise delivers arbitrary CSS to all users. Google receives IP and browser fingerprint of every visitor.
 
 **Recommended Fix:** Self-host the Material Symbols variable font and CSS, or add an `integrity` SRI hash to the `<link>` tag.
+
+---
+
+### FINDING 14 — Rate Limit Bypass via `X-Forwarded-For` Spoofing *(FIXED 16 Sep 2026)*
+
+**Severity: HIGH** — recorded here because it is the most serious issue found in this pass.
+
+**Files:** `app/api/auth/login/route.ts`, `app/api/auth/signup/route.ts`
+
+The rate limiter keyed on the **first** entry of `X-Forwarded-For`:
+
+```ts
+const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+```
+
+That entry is supplied by the client. The proxy appends the observed IP *after* any
+value the caller sent, so the first element is attacker-controlled.
+
+**Confirmed against production**, not inferred: a login request carrying
+`X-Forwarded-For: 203.0.113.77` (a reserved TEST-NET address that cannot be a real
+client) produced the rate-limit row `login:203.0.113.77`.
+
+**Risk:** the 5-attempts-per-15-minutes login throttle — the only defence against
+password brute force — was bypassable by rotating one header. An attacker could make
+unlimited credential guesses against any known email address. Signup abuse and
+unbounded `rate_limits` growth followed from the same flaw.
+
+**Fix:** `app/lib/clientIp.ts` resolves the caller from `x-nf-client-connection-ip`,
+which Netlify overwrites on every request. A forged value was sent and confirmed to
+lose to the real IP. `X-Forwarded-For` is now only a fallback, and reads the **last**
+hop rather than the first.
+
+**Verified after deploy:** the same spoofed request no longer creates a
+`login:203.0.113.99` row; the limiter keys on the genuine client IP.
 
 ---
 
@@ -87,3 +180,9 @@ These require product/legal decisions, not just code:
 | 09 | Schema init on every serverless cold start | ✅ Early-exit version check; initDB added to missing handlers |
 | 10 | No password strength requirements | ✅ Min 10 chars, uppercase + number required |
 | 12 | Unused jsonwebtoken dependency | ✅ Removed from package.json |
+| 14 | **Rate limit bypass via `X-Forwarded-For` spoofing (HIGH)** | ✅ `lib/clientIp.ts` resolves the caller from `x-nf-client-connection-ip` |
+| 15 | `rate_limits` table grew without bound | ✅ Expired rows swept opportunistically |
+| 16 | Achievements `PUT` never length-checked `description` | ✅ Now matches `POST` (500 char cap) |
+| 17 | Signup accepted unbounded username / malformed email | ✅ 1–80 char username, email format validated |
+| 18 | Public handle race returned 500 | ✅ Unique-violation caught, returns 409 |
+| 19 | Local diagnostic scripts committable to a public repo | ✅ `app/_*.mjs` gitignored |

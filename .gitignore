@@ -24,3 +24,7 @@ app/public/uploads/
 
 # Local Netlify folder
 .netlify
+
+# Local diagnostic scripts — read .env.local and dump/delete user rows.
+# The GitHub repo is public; never let these get swept in by `git add -A`.
+app/_*.mjs

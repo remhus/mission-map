@@ -3,15 +3,18 @@
 A read-only JSON feed that publishes the trophy room from a Mission Map account so
 another website can display it. No SDK, no key, no account needed to read it.
 
-**Endpoint**
+**Status: live.** The feed is deployed and switched on. You can start building
+against it right now:
 
 ```
-GET https://mish-map.netlify.app/api/public/trophies/{handle}
+GET https://mish-map.netlify.app/api/public/trophies/rem
 ```
 
-The handle is set by the account owner in Mission Map → Settings → Public Trophy Feed.
-Ask the owner for the exact URL; the Settings panel has a Copy button that puts it on
-the clipboard.
+Try it: `curl https://mish-map.netlify.app/api/public/trophies/rem`
+
+The handle (`rem`) is set by the account owner in Mission Map → Settings → Public
+Trophy Feed, where a Copy button puts the full URL on the clipboard. If the owner
+changes it, the old URL 404s — ask them to re-copy it.
 
 ---
 
@@ -216,6 +219,26 @@ Two independent switches sit between a trophy and this feed. Both must be open.
 
 The owner can also change their handle in Settings, which changes the URL and breaks
 the old link. If the feed starts 404-ing, ask them to re-copy the Feed URL.
+
+## Security notes for implementers
+
+- **Treat every string as untrusted plain text.** `title`, `description` and
+  `display_name` are user-authored. They contain no HTML and are not escaped for you.
+  Render them as text (`{value}` in JSX, `textContent` in vanilla JS) — never
+  `dangerouslySetInnerHTML` or `innerHTML`.
+- **Do not send credentials.** The endpoint is anonymous and deliberately does not
+  accept them. `fetch(url, { credentials: 'include' })` will fail the CORS check;
+  plain `fetch(url)` is correct.
+- **There is nothing else to call.** Every other Mission Map endpoint is
+  session-authenticated and emits no CORS headers, so browser code on your site
+  cannot read it even for a visitor who happens to be logged into Mission Map. Don't
+  build against any other path — it will not work, by design.
+- **No key belongs in your code.** If you find yourself adding a token or secret to
+  talk to this feed, something is wrong: it takes none.
+- **Fail soft.** Handle `404` (feed switched off), `429` (rate limited, 300/min per
+  IP) and `503` (transient) by rendering your empty state, not by crashing the page.
+
+---
 
 ## What is never published
 
